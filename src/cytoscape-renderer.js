@@ -34,12 +34,14 @@ const actions = {
   // Module internal
 
   _initCytoscape (_, {container, box}) {
+    // console.log('_initCytoscape')
     cyHelper = new CytoscapeHelper(container, box)
     state.cy = cyHelper.cy
     svgReady = cyHelper.svgReady
   },
 
   _syncObject (_, object) {
+    console.log('_syncObject', object)
     state.object = object
   },
 
@@ -265,6 +267,7 @@ function createDetail (viewObject, ele) {
  * Creates a detail record for the current selection.
  */
 function createSelectionDetail () {
+  // console.log('createSelectionDetail', state.object)
   const id = eleId(state.ele)
   const viewObject = state.ele.isNode() ? state.topicmap.getTopic(id) :
                                           state.topicmap.getAssoc(id)
