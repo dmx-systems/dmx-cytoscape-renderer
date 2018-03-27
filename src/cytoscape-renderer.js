@@ -2,7 +2,6 @@ import CytoscapeHelper from './cytoscape-helper'
 import Vue from 'vue'
 import dm5 from 'dm5'
 
-var cyHelper
 var svgReady              // a promise resolved once the FontAwesome SVG is loaded
 var fisheyeAnimation
 
@@ -35,13 +34,13 @@ const actions = {
 
   _initCytoscape (_, {container, box}) {
     // console.log('_initCytoscape')
-    cyHelper = new CytoscapeHelper(container, box)
+    const cyHelper = new CytoscapeHelper(container, box)
     state.cy = cyHelper.cy
     svgReady = cyHelper.svgReady
   },
 
   _syncObject (_, object) {
-    console.log('_syncObject', object)
+    // console.log('_syncObject', object)
     state.object = object
   },
 
@@ -79,7 +78,7 @@ const actions = {
   },
 
   syncStyles (_, assocTypeColors) {
-    // console.log('syncStyles', assocTypeColors)
+    // console.log('syncStyles', state.cy, assocTypeColors)
     for (const typeUri in assocTypeColors) {
       state.cy.style().selector(`edge[typeUri='${typeUri}']`).style({'line-color': assocTypeColors[typeUri]})
     }

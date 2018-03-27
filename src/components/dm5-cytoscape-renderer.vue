@@ -12,7 +12,7 @@
 export default {
 
   created () {
-    // console.log('dm5-cytoscape-renderer created')
+    console.log('dm5-cytoscape-renderer created')
     this.$store.registerModule('cytoscapeRenderer', require('../cytoscape-renderer').default)
     // Note: this renderer is instantiated only when a topicmap becomes available. If the initial navigation contains
     // a selection it is indeterministic what arrives first, the topicmap, or the selected object.
@@ -25,19 +25,22 @@ export default {
     // TODO: dispatch '_syncWritable' as well?
   },
 
-  // Note: when the Cytoscape instance is created the DOM must be ready.
+  // create Cytoscape instance once DOM is ready
   mounted () {
-    // console.log('dm5-cytoscape-renderer mounted')
+    console.log('dm5-cytoscape-renderer mounted')
     this.$store.dispatch('_initCytoscape', {
       container: this.$refs['cytoscape-container'],
       box:       this.$refs['measurement-box']
     })
     this.eventHandlers()
     this.contextMenus()
+    // TODO: allow different renderers for the same topicmap type.
+    // At the moment we have a 1 to 1 relationship, so a renderer simply identifies themselves by topicmap type.
+    this.$emit('renderer-mounted', 'dm4.webclient.default_topicmap_renderer')
   },
 
   destroyed () {
-    console.log('dm5-cytoscape-renderer destroyed!')
+    console.log('dm5-cytoscape-renderer destroyed')
     this.$store.dispatch('_shutdownCytoscape')
   },
 
