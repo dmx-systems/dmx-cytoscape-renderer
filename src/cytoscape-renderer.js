@@ -2,7 +2,6 @@ import CytoscapeHelper from './cytoscape-helper'
 import Vue from 'vue'
 import dm5 from 'dm5'
 
-var cyHelper
 var svgReady              // a promise resolved once the FontAwesome SVG is loaded
 var fisheyeAnimation
 
@@ -34,12 +33,14 @@ const actions = {
   // Module internal
 
   _initCytoscape (_, {container, box}) {
-    cyHelper = new CytoscapeHelper(container, box)
+    // console.log('_initCytoscape')
+    const cyHelper = new CytoscapeHelper(container, box)
     state.cy = cyHelper.cy
     svgReady = cyHelper.svgReady
   },
 
   _syncObject (_, object) {
+    // console.log('_syncObject', object)
     state.object = object
   },
 
@@ -77,7 +78,7 @@ const actions = {
   },
 
   syncStyles (_, assocTypeColors) {
-    // console.log('syncStyles', assocTypeColors)
+    // console.log('syncStyles', state.cy, assocTypeColors)
     for (const typeUri in assocTypeColors) {
       state.cy.style().selector(`edge[typeUri='${typeUri}']`).style({'line-color': assocTypeColors[typeUri]})
     }
@@ -265,6 +266,7 @@ function createDetail (viewObject, ele) {
  * Creates a detail record for the current selection.
  */
 function createSelectionDetail () {
+  // console.log('createSelectionDetail', state.object)
   const id = eleId(state.ele)
   const viewObject = state.ele.isNode() ? state.topicmap.getTopic(id) :
                                           state.topicmap.getAssoc(id)
