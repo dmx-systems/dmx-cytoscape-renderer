@@ -34,9 +34,6 @@ export default {
     })
     this.eventHandlers()
     this.contextMenus()
-    // TODO: allow different renderers for the same topicmap type.
-    // At the moment we have a 1 to 1 relationship, so a renderer simply identifies themselves by topicmap type.
-    this.$emit('renderer-mounted', 'dm4.webclient.default_topicmap_renderer')
   },
 
   destroyed () {
