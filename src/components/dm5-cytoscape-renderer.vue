@@ -14,15 +14,6 @@ export default {
   created () {
     console.log('dm5-cytoscape-renderer created')
     this.$store.registerModule('cytoscapeRenderer', require('../cytoscape-renderer').default)
-    // Note: this renderer is instantiated only when a topicmap becomes available. If the initial navigation contains
-    // a selection it is indeterministic what arrives first, the topicmap, or the selected object.
-    // 2 cases:
-    // 1) Topicmap arrives first: when the object arrives the store will be updated ('_syncObject') through the watcher.
-    // 2) Selected object arrives first: when the topicmap arrives the object is available already, and the store must
-    // be updated ('_syncObject') here in the created hook. The watcher would *not* kick in as there is no object change
-    // since the watcher was registered.
-    this.$store.dispatch('_syncObject', this.object)
-    // TODO: dispatch '_syncWritable' as well?
   },
 
   // create Cytoscape instance once DOM is ready
@@ -42,8 +33,8 @@ export default {
   },
 
   mixins: [
-    require('./mixins/object').default,
-    require('./mixins/writable').default,
+    // require('./mixins/object').default,
+    require('./mixins/writable').default,     // FIXME: make "writable" data too?
     require('./mixins/object-renderers').default
   ],
 
@@ -54,6 +45,7 @@ export default {
 
   data () {
     return {
+      object: undefined,
       zoom: 1         // TODO: real init value
     }
   },
@@ -67,6 +59,7 @@ export default {
   watch: {
 
     object () {
+      // console.log('object watcher dm5-cytoscape-renderer')
       this.$store.dispatch('_syncObject', this.object)
     },
 
