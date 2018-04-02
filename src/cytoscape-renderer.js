@@ -73,7 +73,9 @@ const actions = {
     // console.log('syncTopicmap', topicmap.id)
     state.topicmap = topicmap
     return new Promise(resolve => {
-      svgReady.then(renderTopicmap).then(showPinnedDetails).then(resolve)
+      svgReady.then(renderTopicmap).then(showPinnedDetails).then(() => {
+        resolve(topicmap)
+      })
     })
   },
 

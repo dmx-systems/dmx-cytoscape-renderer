@@ -14,6 +14,7 @@ export default {
   created () {
     console.log('dm5-cytoscape-renderer created')
     this.$store.registerModule('cytoscapeRenderer', require('../cytoscape-renderer').default)
+    this.$store.registerModule('topicmapModel',     require('../topicmap-model').default)
   },
 
   // create Cytoscape instance once DOM is ready
