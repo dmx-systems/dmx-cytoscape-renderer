@@ -26,7 +26,7 @@ const svgReady = dm5.restClient.getXML(fa).then(svg => {
 cytoscape.use(coseBilkent)
 cytoscape.use(cxtmenu)
 
-export default class CytoscapeHelper {
+export default class CytoscapeView {
 
   constructor (container, _box) {
     this.cy = instantiateCy(container)

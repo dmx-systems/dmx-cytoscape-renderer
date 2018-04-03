@@ -21,7 +21,7 @@ export default {
 
   computed: {
     details () {
-      return this.$store.state.cytoscapeRenderer.details
+      return this.$store.state.topicmapModel.details
     }
   },
 
