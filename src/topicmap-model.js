@@ -164,6 +164,72 @@ const actions = {
     dispatch('syncRemoveAssoc', id)
   },
 
+  // WebSocket messages
+
+  _addTopicToTopicmap ({dispatch}, {topicmapId, viewTopic}) {
+    if (topicmapId === state.topicmap.id) {
+      state.topicmap.addTopic(new dm5.ViewTopic(viewTopic))               // update state
+      dispatch('syncAddTopic', viewTopic.id)                              // sync view
+    }
+  },
+
+  _addAssocToTopicmap ({dispatch}, {topicmapId, assoc}) {
+    if (topicmapId === state.topicmap.id) {
+      state.topicmap.addAssoc(new dm5.ViewAssoc(assoc))                   // update state
+      dispatch('syncAddAssoc', assoc.id)                                  // sync view
+    }
+  },
+
+  _setTopicPosition ({dispatch}, {topicmapId, topicId, pos}) {
+    if (topicmapId === state.topicmap.id) {
+      state.topicmap.getTopic(topicId).setPosition(pos)                   // update state
+      dispatch('syncTopicPosition', topicId)                              // sync view
+    }
+  },
+
+  _setTopicVisibility ({dispatch}, {topicmapId, topicId, visibility}) {
+    if (topicmapId === state.topicmap.id) {
+      // update state
+      if (!visibility) {
+        state.topicmap.removeAssocs(topicId)
+      }
+      state.topicmap.getTopic(topicId).setVisibility(visibility)
+      // sync view
+      dispatch('syncTopicVisibility', topicId)
+    }
+  },
+
+  _removeAssocFromTopicmap ({dispatch}, {topicmapId, assocId}) {
+    if (topicmapId === state.topicmap.id) {
+      // update state
+      state.topicmap.removeAssoc(assocId)
+      // sync view
+      dispatch('syncRemoveAssoc', assocId)
+    }
+  },
+
+  _processDirectives ({dispatch}, directives) {
+    // console.log(`Topicmap Panel: processing ${directives.length} directives`)
+    directives.forEach(dir => {
+      switch (dir.type) {
+      case "UPDATE_TOPIC":
+        updateTopic(dir.arg, dispatch)    // FIXME: construct dm5.Topic?
+        updateDetail(new dm5.Topic(dir.arg))
+        break
+      case "DELETE_TOPIC":
+        deleteTopic(dir.arg, dispatch)
+        break
+      case "UPDATE_ASSOCIATION":
+        updateAssoc(dir.arg, dispatch)
+        updateDetail(new dm5.Assoc(dir.arg))
+        break
+      case "DELETE_ASSOCIATION":
+        deleteAssoc(dir.arg, dispatch)
+        break
+      }
+    })
+  },
+
   // === Cytoscape View ===
 
   // TODO: transform these actions into CytoscapeView methods?
@@ -319,30 +385,6 @@ const actions = {
   resizeTopicmapRenderer () {
     // console.log('resizeTopicmapRenderer')
     state.cy.resize()
-  },
-
-  // WebSocket messages
-
-  _processDirectives ({dispatch}, directives) {
-    // console.log(`Topicmap Panel: processing ${directives.length} directives`)
-    directives.forEach(dir => {
-      switch (dir.type) {
-      case "UPDATE_TOPIC":
-        updateTopic(dir.arg, dispatch)    // FIXME: construct dm5.Topic?
-        updateDetail(new dm5.Topic(dir.arg))
-        break
-      case "DELETE_TOPIC":
-        deleteTopic(dir.arg, dispatch)
-        break
-      case "UPDATE_ASSOCIATION":
-        updateAssoc(dir.arg, dispatch)
-        updateDetail(new dm5.Assoc(dir.arg))
-        break
-      case "DELETE_ASSOCIATION":
-        deleteAssoc(dir.arg, dispatch)
-        break
-      }
-    })
   }
 }
 
@@ -368,7 +410,7 @@ function _revealTopic (topic, pos, select, dispatch) {
   if (op.type === 'add' || op.type === 'show') {
     dispatch('syncAddTopic', topic.id)
   }
-  select && dispatch('selectTopic', topic.id)
+  select && dispatch('selectTopic', topic.id)     // TODO: move to app as it is not renderer-specific
   return op
 }
 
@@ -379,7 +421,7 @@ function _revealAssoc (assoc, select, dispatch) {
   if (op.type === 'add') {
     dispatch('syncAddAssoc', assoc.id)
   }
-  select && dispatch('selectAssoc', assoc.id)
+  select && dispatch('selectAssoc', assoc.id)     // TODO: move to app as it is not renderer-specific
   return op
 }
 
