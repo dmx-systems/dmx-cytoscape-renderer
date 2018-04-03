@@ -7,14 +7,18 @@ var fisheyeAnimation
 
 const state = {
 
+  // Model
+
+  topicmap: undefined,          // the rendered topicmap (dm5.Topicmap)
+  topicmapWritable: undefined,  // True if the current user has WRITE permission for the rendered topicmap
+  object: undefined,            // the selected object (dm5.DeepaMehtaObject)
+  objectWritable: undefined,    // True if the current user has WRITE permission for the selected object
+
+  // Cytoscape View
+
   cy: undefined,          // the Cytoscape instance
   ele: undefined,         // Selected Cytoscape element (node or edge).
                           // Undefined if there is no selection.
-
-  topicmap: undefined,    // view model: the rendered topicmap (dm5.Topicmap)
-  object: undefined,      // view model: the selected object (dm5.DeepaMehtaObject)
-  writable: undefined,    // True if the current user has WRITE permission for the selected object
-
   details: {},            // In-map details. Detail records keyed by object ID:
                           //  {
                           //    id        ID of "object" (Number). May be set before "object" is available.
@@ -30,14 +34,61 @@ const state = {
 
 const actions = {
 
+  // === Model ===
+
   fetchTopicmap (_, id) {
     console.log('Loading topicmap', id)
     return dm5.restClient.getTopicmap(id)
   },
 
+  /**
+   * Reveals a topic on the topicmap panel.
+   *
+   * @param   topic   the topic to reveal (dm5.Topic).
+   * @param   pos     Optional: the topic position in model coordinates (object with "x", "y" props).
+   *                  If not given it's up to the topicmap renderer to position the topic.
+   * @param   select  Optional: if trueish the revealed topic is selected programmatically.
+   */
+  revealTopic ({dispatch}, {topic, pos, select}) {
+    // update state + sync view
+    const op = _revealTopic(topic, pos, select, dispatch)
+    // update server
+    if (state.topicmapWritable) {
+      if (op.type === 'add') {
+        dm5.restClient.addTopicToTopicmap(state.topicmap.id, topic.id, op.viewProps)
+      } else if (op.type === 'show') {
+        dm5.restClient.setTopicVisibility(state.topicmap.id, topic.id, true)
+      }
+    }
+  },
+
+  revealAssoc ({dispatch}, {assoc, select}) {
+    // update state + sync view
+    const op = _revealAssoc(assoc, select, dispatch)
+    // update server
+    if (state.topicmapWritable) {
+      if (op.type === 'add') {
+        dm5.restClient.addAssocToTopicmap(state.topicmap.id, assoc.id, op.viewProps)
+      }
+    }
+  },
+
+  // TODO: add "select" param?
+  revealRelatedTopic ({dispatch}, relTopic) {
+    // update state + sync view
+    const topicOp = _revealTopic(relTopic, undefined, true, dispatch)   // pos=undefined, select=true
+    const assocOp = _revealAssoc(relTopic.assoc, false, dispatch)       // select=false
+    // update server
+    if (state.topicmapWritable) {
+      if (topicOp.type || assocOp.type) {
+        dm5.restClient.addRelatedTopicToTopicmap(state.topicmap.id, relTopic.id, relTopic.assoc.id, topicOp.viewProps)
+      }
+    }
+  },
+
   // === Cytoscape View ===
 
-  // TODO: transform these actions into CytoscapeView methods
+  // TODO: transform these actions into CytoscapeView methods?
 
   // Module internal
 
@@ -54,7 +105,7 @@ const actions = {
   },
 
   _syncWritable (_, writable) {
-    state.writable = writable
+    state.objectWritable = writable
   },
 
   _syncDetailSize (_, id) {
@@ -78,9 +129,10 @@ const actions = {
   /**
    * @returns   a promise resolved once topicmap rendering is complete.
    */
-  renderTopicmap (_, topicmap) {
+  renderTopicmap (_, {topicmap, writable}) {
     // console.log('renderTopicmap', topicmap.id)
     state.topicmap = topicmap
+    state.topicmapWritable = writable
     return svgReady.then(renderTopicmap).then(showPinnedDetails)
   },
 
@@ -219,7 +271,39 @@ export default {
   actions
 }
 
-// ---
+// === Model ===
+
+// Update state + sync view
+
+/**
+ * @param   topic   the topic to reveal (dm5.Topic).
+ * @param   pos     Optional: the topic position in model coordinates (object with "x", "y" props).
+ *                  If not given it's up to the topicmap renderer to position the topic.
+ * @param   select  Optional: if trueish the revealed topic is selected programmatically.
+ */
+function _revealTopic (topic, pos, select, dispatch) {
+  // update state
+  const op = state.topicmap.revealTopic(topic, pos)
+  // sync view
+  if (op.type === 'add' || op.type === 'show') {
+    dispatch('syncAddTopic', topic.id)
+  }
+  select && dispatch('selectTopic', topic.id)
+  return op
+}
+
+function _revealAssoc (assoc, select, dispatch) {
+  // update state
+  const op = state.topicmap.revealAssoc(assoc)
+  // sync view
+  if (op.type === 'add') {
+    dispatch('syncAddAssoc', assoc.id)
+  }
+  select && dispatch('selectAssoc', assoc.id)
+  return op
+}
+
+// === Cytoscape View ===
 
 function showPinnedDetails () {
   state.topicmap.forEachTopic(viewTopic => {
@@ -285,7 +369,7 @@ function createSelectionDetail () {
     size: undefined,
     // Note: properties would not be reactive. With getters it works.
     get writable () {
-      return state.writable
+      return state.objectWritable
     },
     get pinned () {
       return viewObject.getViewProp('dm4.topicmaps.pinned')
