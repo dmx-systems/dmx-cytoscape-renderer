@@ -86,6 +86,84 @@ const actions = {
     }
   },
 
+  /**
+   * Preconditions:
+   * - the topic belongs to the selected topicmap
+   * - the view is up-to-date
+   * - the server is *not* yet up-to-date
+   */
+  setTopicPosition (_, {id, pos}) {
+    // update state
+    state.topicmap.getTopic(id).setPosition(pos)
+    // sync view (up-to-date already)
+    // update server
+    if (state.topicmapWritable) {
+      dm5.restClient.setTopicPosition(state.topicmap.id, id, pos)
+    }
+  },
+
+  hideTopic ({dispatch}, id) {
+    // update state
+    state.topicmap.removeAssocs(id)
+    state.topicmap.getTopic(id).setVisibility(false)
+    // sync view
+    dispatch('syncRemoveTopic', id)
+    // update server
+    if (state.topicmapWritable) {
+      dm5.restClient.setTopicVisibility(state.topicmap.id, id, false)
+    }
+  },
+
+  hideAssoc ({dispatch}, id) {
+    // update state
+    state.topicmap.removeAssoc(id)
+    // sync view
+    dispatch('syncRemoveAssoc', id)
+    // update server
+    if (state.topicmapWritable) {
+      dm5.restClient.removeAssocFromTopicmap(state.topicmap.id, id)
+    }
+  },
+
+  setTopicPinned ({dispatch}, {topicId, pinned}) {
+    console.log('setTopicPinned', topicId, pinned)
+    // update state
+    state.topicmap.setTopicViewProp(topicId, 'dm4.topicmaps.pinned', pinned)
+    // sync view
+    dispatch('syncPinned', {objectId: topicId, pinned})
+    // update server
+    dm5.restClient.setTopicViewProps(state.topicmap.id, topicId, {    // FIXME: check topicmapWritable?
+      'dm4.topicmaps.pinned': pinned
+    })
+  },
+
+  setAssocPinned ({dispatch}, {assocId, pinned}) {
+    console.log('setAssocPinned', assocId, pinned)
+    // update state
+    state.topicmap.setAssocViewProp(assocId, 'dm4.topicmaps.pinned', pinned)
+    // sync view
+    dispatch('syncPinned', {objectId: assocId, pinned})
+    // update server
+    dm5.restClient.setAssocViewProps(state.topicmap.id, assocId, {    // FIXME: check topicmapWritable?
+      'dm4.topicmaps.pinned': pinned
+    })
+  },
+
+  deleteTopic ({dispatch}, id) {
+    // update state
+    state.topicmap.removeAssocs(id)
+    state.topicmap.removeTopic(id)
+    // sync view
+    dispatch('syncRemoveTopic', id)
+  },
+
+  deleteAssoc ({dispatch}, id) {
+    // update state
+    state.topicmap.removeAssoc(id)
+    // sync view
+    dispatch('syncRemoveAssoc', id)
+  },
+
   // === Cytoscape View ===
 
   // TODO: transform these actions into CytoscapeView methods?
@@ -245,21 +323,23 @@ const actions = {
 
   // WebSocket messages
 
-  _processDirectives (_, directives) {
+  _processDirectives ({dispatch}, directives) {
     // console.log(`Topicmap Panel: processing ${directives.length} directives`)
     directives.forEach(dir => {
       switch (dir.type) {
       case "UPDATE_TOPIC":
+        updateTopic(dir.arg, dispatch)    // FIXME: construct dm5.Topic?
         updateDetail(new dm5.Topic(dir.arg))
         break
       case "DELETE_TOPIC":
-        // TODO?
+        deleteTopic(dir.arg, dispatch)
         break
       case "UPDATE_ASSOCIATION":
+        updateAssoc(dir.arg, dispatch)
         updateDetail(new dm5.Assoc(dir.arg))
         break
       case "DELETE_ASSOCIATION":
-        // TODO?
+        deleteAssoc(dir.arg, dispatch)
         break
       }
     })
@@ -301,6 +381,42 @@ function _revealAssoc (assoc, select, dispatch) {
   }
   select && dispatch('selectAssoc', assoc.id)
   return op
+}
+
+// Process directives
+
+function updateTopic (topic, dispatch) {
+  // console.log('updateTopic', topic)
+  const _topic = state.topicmap.getTopicIfExists(topic.id)
+  if (_topic) {
+    _topic.value = topic.value              // update state
+    dispatch('syncTopic', topic.id)         // sync view
+  }
+}
+
+function updateAssoc (assoc, dispatch) {
+  const _assoc = state.topicmap.getAssocIfExists(assoc.id)
+  if (_assoc) {
+    _assoc.value = assoc.value              // update state
+    _assoc.typeUri = assoc.typeUri          // update state
+    dispatch('syncAssoc', assoc.id)         // sync view
+  }
+}
+
+function deleteTopic (topic, dispatch) {
+  const _topic = state.topicmap.getTopicIfExists(topic.id)
+  if (_topic) {
+    state.topicmap.removeTopic(topic.id)    // update state
+    dispatch('syncRemoveTopic', topic.id)   // sync view
+  }
+}
+
+function deleteAssoc (assoc, dispatch) {
+  const _assoc = state.topicmap.getAssocIfExists(assoc.id)
+  if (_assoc) {
+    state.topicmap.removeAssoc(assoc.id)    // update state
+    dispatch('syncRemoveAssoc', assoc.id)   // sync view
+  }
 }
 
 // === Cytoscape View ===
