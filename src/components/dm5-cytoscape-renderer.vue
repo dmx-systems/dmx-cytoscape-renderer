@@ -80,7 +80,7 @@ export default {
         if (clicks === 1) {
           this.$parent.$emit('topic-select', id(e.target))
         } else if (clicks === 2) {
-          this.$parent.$emit('topic-double-click', id(e.target))
+          this.$parent.$emit('topic-double-click', e.target.data('viewTopic'))
         }
       }).on('tap', 'edge', e => {
         // console.log('"tap edge" event!', id(e.target))

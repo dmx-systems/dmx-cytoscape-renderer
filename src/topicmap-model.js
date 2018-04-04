@@ -37,7 +37,7 @@ const actions = {
   // === Model ===
 
   fetchTopicmap (_, id) {
-    console.log('Loading topicmap', id)
+    console.log('fetchTopicmap', id, '(topicmap-model)')
     return dm5.restClient.getTopicmap(id)
   },
 
@@ -737,27 +737,30 @@ function initPos (viewTopic) {
 function cyNode (viewTopic) {
   return {
     data: {
-      id:    viewTopic.id,
-      label: viewTopic.value,
-      icon:  viewTopic.getIcon()
+      id:      viewTopic.id,
+      typeUri: viewTopic.typeUri,
+      label:   viewTopic.value,
+      icon:    viewTopic.getIcon(),
+      viewTopic
     },
     position: viewTopic.getPosition()
   }
 }
 
 /**
- * Builds a Cytoscape edge from a dm5.Assoc
+ * Builds a Cytoscape edge from a dm5.ViewAssoc
  *
- * @param   assoc   A dm5.Assoc
+ * @param   viewAssoc   A dm5.ViewAssoc
  */
-function cyEdge (assoc) {
+function cyEdge (viewAssoc) {
   return {
     data: {
-      id:      assoc.id,
-      typeUri: assoc.typeUri,
-      label:   assoc.value,
-      source:  assoc.role1.topicId,
-      target:  assoc.role2.topicId
+      id:      viewAssoc.id,
+      typeUri: viewAssoc.typeUri,
+      label:   viewAssoc.value,
+      source:  viewAssoc.role1.topicId,
+      target:  viewAssoc.role2.topicId,
+      viewAssoc
     }
   }
 }
