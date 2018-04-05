@@ -13,7 +13,6 @@ export default {
 
   created () {
     console.log('dm5-cytoscape-renderer created')
-    this.$store.registerModule('topicmapModel', require('../topicmap-model').default)
   },
 
   // create Cytoscape instance once DOM is ready
@@ -52,7 +51,7 @@ export default {
 
   computed: {
     cy () {
-      return this.$store.state.topicmapModel.cy
+      return this.$store.state['dm4.webclient.default_topicmap_renderer'].cy
     }
   },
 

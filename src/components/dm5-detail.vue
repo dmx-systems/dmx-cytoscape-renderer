@@ -51,11 +51,11 @@ export default {
     // TODO: use Vuex mapState() helper. Requires object spread operator. Currently our Babel is too old.
 
     topicmap () {
-      return this.$store.state.topicmapModel.topicmap
+      return this.$store.state['dm4.webclient.default_topicmap_renderer'].topicmap
     },
 
     ele () {
-      return this.$store.state.topicmapModel.ele
+      return this.$store.state['dm4.webclient.default_topicmap_renderer'].ele
     },
 
     object () {

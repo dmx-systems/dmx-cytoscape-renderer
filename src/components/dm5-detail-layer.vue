@@ -21,7 +21,11 @@ export default {
 
   computed: {
     details () {
-      return this.$store.state.topicmapModel.details
+      const topicmapModel = this.$store.state['dm4.webclient.default_topicmap_renderer']
+      if (!topicmapModel) {
+        console.log('Cytoscape renderer already gone')
+      }
+      return topicmapModel && topicmapModel.details
     }
   },
 
