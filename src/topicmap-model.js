@@ -9,10 +9,10 @@ const state = {
 
   // Model
 
-  topicmap: undefined,          // the rendered topicmap (dm5.Topicmap)
-  topicmapWritable: undefined,  // True if the current user has WRITE permission for the rendered topicmap
-  object: undefined,            // the selected object (dm5.DeepaMehtaObject)
-  objectWritable: undefined,    // True if the current user has WRITE permission for the selected object
+  topicmap: undefined,            // the rendered topicmap (dm5.Topicmap)
+  topicmapWritable: undefined,    // True if the current user has WRITE permission for the rendered topicmap
+  object: undefined,              // the selected object (dm5.DeepaMehtaObject)
+  objectWritable: undefined,      // True if the current user has WRITE permission for the selected object
 
   // Cytoscape View
 

@@ -32,8 +32,6 @@ export default {
   },
 
   mixins: [
-    // require('./mixins/object').default,
-    require('./mixins/writable').default,     // FIXME: make "writable" data too?
     require('./mixins/object-renderers').default
   ],
 
@@ -44,8 +42,9 @@ export default {
 
   data () {
     return {
-      object: undefined,
-      zoom: 1         // TODO: real init value
+      object: undefined,      // updated by parent component
+      writable: undefined,    // updated by parent component
+      zoom: 1                 // TODO: real init value
     }
   },
 
@@ -58,11 +57,12 @@ export default {
   watch: {
 
     object () {
-      // console.log('object watcher dm5-cytoscape-renderer')
+      // console.log('object watcher dm5-cytoscape-renderer', this.object)
       this.$store.dispatch('_syncObject', this.object)
     },
 
     writable () {
+      // console.log('writable watcher dm5-cytoscape-renderer', this.writable)
       this.$store.dispatch('_syncWritable', this.writable)
     }
   },

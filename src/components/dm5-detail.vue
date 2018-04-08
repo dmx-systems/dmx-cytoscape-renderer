@@ -20,6 +20,7 @@
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import dm5 from 'dm5'
 
 export default {
@@ -42,21 +43,18 @@ export default {
     quillConfig: Object
   },
 
-  data: () => ({
-    locked: true
-  }),
+  data () {
+    return {
+      locked: true
+    }
+  },
 
   computed: {
 
-    // TODO: use Vuex mapState() helper. Requires object spread operator. Currently our Babel is too old.
-
-    topicmap () {
-      return this.$store.state['dm4.webclient.default_topicmap_renderer'].topicmap
-    },
-
-    ele () {
-      return this.$store.state['dm4.webclient.default_topicmap_renderer'].ele
-    },
+    ...mapState({
+      topicmap: state => state['dm4.webclient.default_topicmap_renderer'].topicmap,
+      ele:      state => state['dm4.webclient.default_topicmap_renderer'].ele
+    }),
 
     object () {
       return this.detail.object
