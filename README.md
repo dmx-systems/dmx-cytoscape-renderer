@@ -4,6 +4,10 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.3** -- Apr 10, 2018
+
+* Fix: sync `writable` flag with parent component
+
 **0.2** -- Apr 7, 2018
 
 * Compatible with `dm5-topicmap-panel`'s dynamic renderer switching architecture
@@ -15,4 +19,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Apr 7, 2018
+Apr 10, 2018
