@@ -11,6 +11,7 @@ const MAIN_FONT_SIZE       = style.getPropertyValue('--main-font-size')
 const LABEL_FONT_SIZE      = style.getPropertyValue('--label-font-size')
 const ICON_COLOR           = style.getPropertyValue('--color-topic-icon')
 const HOVER_BORDER_COLOR   = style.getPropertyValue('--color-topic-hover')
+const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
 const BACKGROUND_COLOR     = style.getPropertyValue('--background-color')
 const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
 
@@ -68,7 +69,10 @@ function instantiateCy (container) {
       {
         selector: 'node:selected, node.aux',
         style: {
-          'border-opacity': 0
+          // TODO
+          'border-width': 3,
+          'border-color': HIGHLIGHT_COLOR
+          // 'border-opacity': 0
         }
       },
       {

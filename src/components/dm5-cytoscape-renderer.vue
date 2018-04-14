@@ -12,12 +12,12 @@
 export default {
 
   created () {
-    console.log('dm5-cytoscape-renderer created')
+    // console.log('dm5-cytoscape-renderer created')
   },
 
   // create Cytoscape instance once DOM is ready
   mounted () {
-    console.log('dm5-cytoscape-renderer mounted')
+    // console.log('dm5-cytoscape-renderer mounted')
     this.$store.dispatch('_initCytoscape', {
       container: this.$refs['cytoscape-container'],
       box:       this.$refs['measurement-box']
@@ -73,21 +73,23 @@ export default {
      * Registers Cytoscape event handlers.
      */
     eventHandlers () {
-      this.cy.on('tap', 'node', e => {
-        const clicks = e.originalEvent.detail
-        // console.log('"tap node" event!', id(e.target), clicks)
-        if (clicks === 1) {
-          this.$parent.$emit('topic-select', id(e.target))
-        } else if (clicks === 2) {
-          this.$parent.$emit('topic-double-click', e.target.data('viewTopic'))
-        }
-      }).on('tap', 'edge', e => {
-        // console.log('"tap edge" event!', id(e.target))
+      this.cy.on('select', 'node', e => {
+        console.log('select node', id(e.target), e.originalEvent)
+        this.$parent.$emit('topic-select', id(e.target))
+      }).on('select', 'edge', e => {
+        console.log('select edge', id(e.target), e.originalEvent)
         this.$parent.$emit('assoc-select', id(e.target))
-      }).on('tap', e => {
-        if (e.target === this.cy) {
-          // console.log('"tap background" event!')
-          this.$parent.$emit('topicmap-click')
+      }).on('unselect', 'node', e => {
+        console.log('unselect node', id(e.target), e.originalEvent)
+        this.$parent.$emit('topic-unselect', id(e.target))
+      }).on('unselect', 'edge', e => {
+        console.log('unselect edge', id(e.target), e.originalEvent)
+        this.$parent.$emit('assoc-unselect', id(e.target))
+      }).on('tap', 'node', e => {
+        const clicks = e.originalEvent.detail
+        // console.log('"tap node" event!', id(e.target), e.originalEvent, clicks)
+        if (clicks === 2) {
+          this.$parent.$emit('topic-double-click', e.target.data('viewTopic'))
         }
       }).on('cxttap', e => {
         if (e.target === this.cy) {

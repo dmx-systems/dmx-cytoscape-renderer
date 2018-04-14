@@ -37,7 +37,7 @@ const actions = {
   // === Model ===
 
   fetchTopicmap (_, id) {
-    console.log('fetchTopicmap', id, '(topicmap-model)')
+    // console.log('fetchTopicmap', id, '(topicmap-model)')
     return dm5.restClient.getTopicmap(id)
   },
 
