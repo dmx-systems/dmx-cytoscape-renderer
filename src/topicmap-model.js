@@ -2,7 +2,7 @@ import CytoscapeView from './cytoscape-view'
 import Vue from 'vue'
 import dm5 from 'dm5'
 
-var svgReady              // a promise resolved once the FontAwesome SVG is loaded
+var cyView                // the CytoscapeView instance
 var fisheyeAnimation
 
 const state = {
@@ -16,7 +16,6 @@ const state = {
 
   // Cytoscape View
 
-  cy: undefined,          // the Cytoscape instance
   ele: undefined,         // Selected Cytoscape element (node or edge).
                           // Undefined if there is no selection.
   details: {},            // In-map details. Detail records keyed by object ID:
@@ -238,9 +237,7 @@ const actions = {
 
   _initCytoscape ({dispatch}, {renderer, parent, container, box, contextCommands}) {
     // console.log('_initCytoscape')
-    const cyHelper = new CytoscapeView(renderer, parent, container, box, contextCommands, dispatch)
-    state.cy = cyHelper.cy
-    svgReady = cyHelper.svgReady
+    cyView = new CytoscapeView(renderer, parent, container, box, contextCommands, dispatch)
   },
 
   _syncObject (_, object) {
@@ -277,13 +274,13 @@ const actions = {
     // console.log('renderTopicmap', topicmap.id)
     state.topicmap = topicmap
     state.topicmapWritable = writable
-    return svgReady.then(renderTopicmap).then(showPinnedDetails)
+    return cyView.svgReady.then(renderTopicmap).then(showPinnedDetails)
   },
 
   syncStyles (_, assocTypeColors) {
-    // console.log('syncStyles', state.cy, assocTypeColors)
+    // console.log('syncStyles', assocTypeColors)
     for (const typeUri in assocTypeColors) {
-      state.cy.style().selector(`edge[typeUri='${typeUri}']`).style({'line-color': assocTypeColors[typeUri]})
+      cyView.cy.style().selector(`edge[typeUri='${typeUri}']`).style({'line-color': assocTypeColors[typeUri]})
     }
   },
 
@@ -291,14 +288,14 @@ const actions = {
     // console.log('syncAddTopic', id)
     const viewTopic = state.topicmap.getTopic(id)
     initPos(viewTopic)
-    state.cy.add(cyNode(viewTopic))
+    cyView.cy.add(cyNode(viewTopic))
   },
 
   syncAddAssoc (_, id) {
     // console.log('syncAddAssoc', id)
     const assoc = state.topicmap.getAssoc(id)
     if (!assoc.hasAssocPlayer()) {    // this renderer doesn't support assoc-connected assocs
-      state.cy.add(cyEdge(assoc))
+      cyView.cy.add(cyEdge(assoc))
     }
   },
 
@@ -336,7 +333,7 @@ const actions = {
     // available. The actual order of these 2 occasions doesn't matter.
     Promise.all([p, ...state.ele ? [unselectElement()] : []]).then(() => {
       // console.log('restore animation complete')
-      state.ele = cyElement(id).select()    // select() restores selection after switching topicmap
+      state.ele = cyView.select(cyElement(id))    // select() restores selection after switching topicmap
       if (state.ele.size() != 1) {
         throw Error(`Element ${id} not found (${state.ele.size()})`)
       }
@@ -359,7 +356,7 @@ const actions = {
     console.log('syncTopicVisibility', id)
     const viewTopic = state.topicmap.getTopic(id)
     if (viewTopic.isVisible()) {
-      state.cy.add(cyNode(viewTopic))
+      cyView.cy.add(cyNode(viewTopic))
     } else {
       cyElement(id).remove()
     }
@@ -384,7 +381,7 @@ const actions = {
 
   resizeTopicmapRenderer () {
     // console.log('resizeTopicmapRenderer')
-    state.cy.resize()
+    cyView.cy.resize()
   }
 }
 
@@ -410,7 +407,7 @@ function _revealTopic (topic, pos, select, dispatch) {
   if (op.type === 'add' || op.type === 'show') {
     dispatch('syncAddTopic', topic.id)
   }
-  select && dispatch('selectTopic', topic.id)     // TODO: move to app as it is not renderer-specific
+  select && dispatch('callTopicRoute', topic.id)     // TODO: don't dispatch into host application
   return op
 }
 
@@ -421,7 +418,7 @@ function _revealAssoc (assoc, select, dispatch) {
   if (op.type === 'add') {
     dispatch('syncAddAssoc', assoc.id)
   }
-  select && dispatch('selectAssoc', assoc.id)     // TODO: move to app as it is not renderer-specific
+  select && dispatch('callAssocRoute', assoc.id)     // TODO: don't dispatch into host application
   return op
 }
 
@@ -559,7 +556,7 @@ function measureDetail(detail) {
 
 function playFisheyeAnimation() {
   fisheyeAnimation && fisheyeAnimation.stop()
-  fisheyeAnimation = state.cy.layout({
+  fisheyeAnimation = cyView.cy.layout({
     name: 'cose-bilkent',
     stop () {
       // console.log('fisheye animation complete')
@@ -593,8 +590,8 @@ function renderTopicmap () {
       eles.push(cyEdge(assoc))
     }
   })
-  state.cy.remove("*")  // "*" is the group selector "all"
-  state.cy.add(eles)
+  cyView.cy.remove("*")  // "*" is the group selector "all"
+  cyView.cy.add(eles)
   // console.log('### Topicmap rendering complete!')
 }
 
@@ -618,7 +615,7 @@ function _syncTopicPosition (id) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function unselectElement () {
-  console.log('unselectElement', state.cy.elements(":selected").size(), state.ele)
+  console.log('unselectElement', cyView.cy.elements(":selected").size(), state.ele)
   if (!state.ele) {
     throw Error('unselectElement when no element is selected')
   }
@@ -627,7 +624,7 @@ function unselectElement () {
   // This is why we maintain an explicit "ele" state.
   // Note 2: unselect() removes the element's selection style when manually stripping topic/assoc from
   // browser URL. In this situation cy.elements(":selected") would return a non-empty collection.
-  state.ele.unselect()
+  cyView.unselect(state.ele)
   const detail = selectionDetail()
   return !detail.pinned ? removeDetail(detail) : Promise.resolve()
 }
@@ -651,7 +648,7 @@ function removeDetail (detail) {
   if (detail.ele.isNode()) {
     detail.ele.style({width: '', height: ''})   // reset size
   } else {
-    state.cy.remove(detail.node)                // remove aux node
+    cyView.cy.remove(detail.node)               // remove aux node
   }
   return playRestoreAnimation()
 }
@@ -696,7 +693,7 @@ function detail (id) {
  * Creates an auxiliary node to represent the given edge.
  */
 function createAuxNode (edge) {
-  return state.cy.add({
+  return cyView.cy.add({
     data: {
       assocId: eleId(edge),            // Holds original edge ID. Needed by context menu.
       icon: '\uf10c'                // model.js DEFAULT_TOPIC_ICON
@@ -773,7 +770,7 @@ function cyEdge (viewAssoc) {
  * @return  A collection of 1 or 0 elements.
  */
 function cyElement (id) {
-  return state.cy.getElementById(id.toString())   // Note: a Cytoscape element ID is a string
+  return cyView.cy.getElementById(id.toString())   // Note: a Cytoscape element ID is a string
 }
 
 function isSelected (objectId) {

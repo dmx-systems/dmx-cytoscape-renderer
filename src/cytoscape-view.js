@@ -33,10 +33,10 @@ export default class CytoscapeView {
     this.renderer = renderer,
     this.parent = parent,
     this.cy = this.instantiateCy(container)
-    this.box = box      // the measurement box
+    this.box = box                            // the measurement box
     this.contextMenus(contextCommands)
     this.dispatch = dispatch
-    this.svgReady = svgReady
+    this.svgReady = svgReady                  // a promise resolved once the FontAwesome SVG is loaded
     this.eventHandlers()
   }
 
@@ -169,23 +169,57 @@ export default class CytoscapeView {
 
   // Event Handling
 
+  onSelectNode = e => {
+    // console.log('select node', id(e.target), e.originalEvent, this)
+    this.parent.$emit('topic-select', id(e.target))
+  }
+
+  onSelectEdge = e => {
+    // console.log('select edge', id(e.target), e.originalEvent)
+    this.parent.$emit('assoc-select', id(e.target))
+  }
+
+  onUnselectNode = e => {
+    // console.log('unselect node', id(e.target), e.originalEvent)
+    this.parent.$emit('topic-unselect', id(e.target))
+  }
+
+  onUnselectEdge = e => {
+    // console.log('unselect edge', id(e.target), e.originalEvent)
+    this.parent.$emit('assoc-unselect', id(e.target))
+  }
+
+  onSelectHandlers () {
+    this.cy
+      .on('select', 'node', this.onSelectNode)
+      .on('select', 'edge', this.onSelectEdge)
+  }
+
+  offSelectHandlers () {
+    this.cy
+      .off('select', 'node', this.onSelectNode)
+      .off('select', 'edge', this.onSelectEdge)
+  }
+
+  onUnselectHandlers () {
+    this.cy
+      .on('unselect', 'node', this.onUnselectNode)
+      .on('unselect', 'edge', this.onUnselectEdge)
+  }
+
+  offUnselectHandlers () {
+    this.cy
+      .off('unselect', 'node', this.onUnselectNode)
+      .off('unselect', 'edge', this.onUnselectEdge)
+  }
+
   /**
    * Registers Cytoscape event handlers.
    */
   eventHandlers () {
-    this.cy.on('select', 'node', e => {
-      // console.log('select node', id(e.target), e.originalEvent)
-      this.parent.$emit('topic-select', id(e.target))
-    }).on('select', 'edge', e => {
-      // console.log('select edge', id(e.target), e.originalEvent)
-      this.parent.$emit('assoc-select', id(e.target))
-    }).on('unselect', 'node', e => {
-      // console.log('unselect node', id(e.target), e.originalEvent)
-      this.parent.$emit('topic-unselect', id(e.target))
-    }).on('unselect', 'edge', e => {
-      // console.log('unselect edge', id(e.target), e.originalEvent)
-      this.parent.$emit('assoc-unselect', id(e.target))
-    }).on('tap', 'node', e => {
+    this.onSelectHandlers()
+    this.onUnselectHandlers()
+    this.cy.on('tap', 'node', e => {
       const clicks = e.originalEvent.detail
       // console.log('tap node', id(e.target), e.originalEvent, clicks)
       if (clicks === 2) {
@@ -260,6 +294,22 @@ export default class CytoscapeView {
     var y = pos.y
     var box = node.boundingBox()
     return x > box.x1 && x < box.x2 && y > box.y1 && y < box.y2
+  }
+
+  //
+
+  select (ele) {
+    this.offSelectHandlers()
+    ele.select()
+    this.onSelectHandlers()
+    return ele
+  }
+
+  unselect (ele) {
+    this.offUnselectHandlers()
+    ele.unselect()
+    this.onUnselectHandlers()
+    return ele
   }
 }
 
