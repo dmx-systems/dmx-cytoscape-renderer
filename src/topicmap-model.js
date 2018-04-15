@@ -236,9 +236,9 @@ const actions = {
 
   // Module internal
 
-  _initCytoscape (_, {container, box}) {
+  _initCytoscape ({dispatch}, {renderer, parent, container, box, contextCommands}) {
     // console.log('_initCytoscape')
-    const cyHelper = new CytoscapeView(container, box)
+    const cyHelper = new CytoscapeView(renderer, parent, container, box, contextCommands, dispatch)
     state.cy = cyHelper.cy
     svgReady = cyHelper.svgReady
   },
@@ -328,7 +328,7 @@ const actions = {
    *              Note: the detail overlay's size can only be measured once "object" details are rendered.
    */
   syncSelect (_, {id, p}) {
-    // console.log('syncSelect', id)
+    console.log('syncSelect', id)
     // Note 1: programmatic unselect() is required for browser history navigation. When *interactively* selecting a node
     // Cytoscape removes the current selection before. When *programmatically* selecting a node Cytoscape does *not*
     // remove the current selection.
@@ -345,7 +345,7 @@ const actions = {
   },
 
   syncUnselect () {
-    // console.log('syncUnselect')
+    console.log('syncUnselect')
     unselectElement().then(playFisheyeAnimationIfDetailsOnscreen)
     state.ele = undefined
   },
@@ -618,7 +618,7 @@ function _syncTopicPosition (id) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function unselectElement () {
-  // console.log('unselectElement', state.cy.elements(":selected").size(), state.ele)
+  console.log('unselectElement', state.cy.elements(":selected").size(), state.ele)
   if (!state.ele) {
     throw Error('unselectElement when no element is selected')
   }
@@ -710,8 +710,8 @@ function createAuxNode (edge) {
  * Auto-position topic if no position is set.
  */
 function initPos (viewTopic) {
-  console.log('initPos', viewTopic.id, viewTopic.getViewProp('dm4.topicmaps.x') !== undefined,
-    state.object && state.object.id)
+  // console.log('initPos', viewTopic.id, viewTopic.getViewProp('dm4.topicmaps.x') !== undefined,
+  //   state.object && state.object.id)
   if (viewTopic.getViewProp('dm4.topicmaps.x') === undefined) {
     const pos = {}
     if (state.object) {
