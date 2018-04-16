@@ -127,7 +127,7 @@ export default class CytoscapeView {
     try {
       return faFont.querySelector(`glyph[unicode="${unicode}"]`).getAttribute('d')
     } catch (e) {
-      throw Error(`FA glyph "${unicode}" not available (${e})`)
+      throw Error(`Font Awesome glyph "${unicode}" not available (${e})`)
     }
   }
 

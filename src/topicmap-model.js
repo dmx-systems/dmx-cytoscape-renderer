@@ -334,11 +334,16 @@ const actions = {
     Promise.all([p, ...state.ele ? [unselectElement()] : []]).then(() => {
       // console.log('restore animation complete')
       state.ele = cyView.select(cyElement(id))    // select() restores selection after switching topicmap
-      if (state.ele.size() != 1) {
-        throw Error(`Element ${id} not found (${state.ele.size()})`)
+      if (state.ele.size() !== 1) {
+        throw Error(`can't select element ${id} (not found in topicmap ${state.topicmap.id})`)
       }
       showDetail(createSelectionDetail())
     })
+  },
+
+  _syncSelect (_, id) {
+    console.log('_syncSelect', id, state.ele)
+    cyView.select(cyElement(id))
   },
 
   syncUnselect () {
@@ -543,7 +548,7 @@ function createSelectionDetail () {
 function measureDetail(detail) {
   const detailDOM = document.querySelector(`.dm5-detail-layer .dm5-detail[data-detail-id="${detail.id}"]`)
   if (!detailDOM) {
-    throw Error(`Detail DOM ${detail.id} not found`)
+    throw Error(`detail DOM ${detail.id} not found`)
   }
   detail.size = {   // FIXME: use Vue.set()?
     width:  detailDOM.clientWidth,
@@ -615,10 +620,10 @@ function _syncTopicPosition (id) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function unselectElement () {
-  console.log('unselectElement', cyView.cy.elements(":selected").size(), state.ele)
   if (!state.ele) {
-    throw Error('unselectElement when no element is selected')
+    throw Error('unselectElement() called when no element is selected')
   }
+  console.log('unselectElement', cyView.cy.elements(":selected").size(), eleId(state.ele))
   // Note 1: when the user clicks on the background Cytoscape unselects the selected element on its own.
   // Calling cy.elements(":selected") afterwards would return an empty collection.
   // This is why we maintain an explicit "ele" state.
@@ -676,7 +681,7 @@ function playRestoreAnimation () {
 
 function selectionDetail () {
   if (!state.ele) {
-    throw Error('selectionDetail() when nothing is selected')
+    throw Error('selectionDetail() called when nothing is selected')
   }
   return detail(eleId(state.ele))
 }
@@ -684,7 +689,7 @@ function selectionDetail () {
 function detail (id) {
   const detail = state.details[id]
   if (!detail) {
-    throw Error(`Detail record ${id} not found`)
+    throw Error(`detail record ${id} not found`)
   }
   return detail
 }
