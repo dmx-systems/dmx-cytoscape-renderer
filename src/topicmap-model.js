@@ -341,15 +341,20 @@ const actions = {
     })
   },
 
+  syncUnselect () {
+    console.log('syncUnselect')
+    unselectElement().then(playFisheyeAnimationIfDetailsOnscreen)
+    state.ele = undefined
+  },
+
   _syncSelect (_, id) {
     console.log('_syncSelect', id, state.ele)
     cyView.select(cyElement(id))
   },
 
-  syncUnselect () {
-    console.log('syncUnselect')
-    unselectElement().then(playFisheyeAnimationIfDetailsOnscreen)
-    state.ele = undefined
+  _syncUnselect (_, id) {
+    console.log('_syncUnselect', id)
+    cyView.unselect(cyElement(id))
   },
 
   syncTopicPosition (_, id) {
