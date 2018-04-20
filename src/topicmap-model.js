@@ -274,6 +274,8 @@ const actions = {
     // console.log('renderTopicmap', topicmap.id)
     state.topicmap = topicmap
     state.topicmapWritable = writable
+    state.ele = undefined
+    state.details = {}
     return cyView.svgReady.then(renderTopicmap).then(showPinnedDetails)
   },
 
@@ -348,12 +350,16 @@ const actions = {
   },
 
   _syncSelect (_, id) {
-    console.log('_syncSelect', id, state.ele)
+    console.log('_syncSelect', id)
+    if (state.ele) {
+      throw Error(`_syncSelect(${id}) called when state.ele is set (${eleId(state.ele)})`)
+    }
     cyView.select(cyElement(id))
   },
 
   _syncUnselect (_, id) {
     console.log('_syncUnselect', id)
+    // TODO: assertions? state.ele? cyElement() not empty?
     cyView.unselect(cyElement(id))
   },
 
@@ -628,7 +634,7 @@ function unselectElement () {
   if (!state.ele) {
     throw Error('unselectElement() called when no element is selected')
   }
-  console.log('unselectElement', cyView.cy.elements(":selected").size(), eleId(state.ele))
+  console.log('unselectElement', eleId(state.ele), cyView.cy.elements(":selected").size())
   // Note 1: when the user clicks on the background Cytoscape unselects the selected element on its own.
   // Calling cy.elements(":selected") afterwards would return an empty collection.
   // This is why we maintain an explicit "ele" state.
