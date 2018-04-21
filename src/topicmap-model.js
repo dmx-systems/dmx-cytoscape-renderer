@@ -16,8 +16,13 @@ const state = {
 
   // Cytoscape View
 
-  ele: undefined,         // Selected Cytoscape element (node or edge).
-                          // Undefined if there is no selection.
+  ele: undefined,         // The single selection: a selected Cytoscape element (node or edge). Undefined if there is no
+                          // single selection.
+                          // The selected element's details are displayed in-map. On unselect the details disappear
+                          // (unless pinned).
+                          // Note: the host application can visualize multi selections by the means of '_syncSelect' and
+                          // '_syncUnselect' actions. The details of multi selection elements are *not* displayed in-map
+                          // (unless pinned). ### TODO: introduce multi-selection state in this component?
   details: {},            // In-map details. Detail records keyed by object ID:
                           //  {
                           //    id        ID of "object" (Number). May be set before "object" is available.
@@ -349,6 +354,12 @@ const actions = {
     state.ele = undefined
   },
 
+  /**
+   * Renders an element as selected without displaying the element's details.
+   * Called by host application to visualize a multi selection.
+   *
+   * @throws  if this component is in single selection state.
+   */
   _syncSelect (_, id) {
     console.log('_syncSelect', id)
     if (state.ele) {
@@ -357,10 +368,18 @@ const actions = {
     cyView.select(cyElement(id))
   },
 
+  /**
+   * Renders an element as unselected without removing the element's details (and without playing the restore
+   * animation). Called by host application to visually remove a multi selection (e.g. after a route switch).
+   *
+   * @throws  if this component is not in single selection state.
+   */
   _syncUnselect (_, id) {
     console.log('_syncUnselect', id)
-    // TODO: assertions? state.ele? cyElement() not empty?
-    cyView.unselect(cyElement(id))
+    if (!state.ele) {
+      throw Error(`_syncUnselect(${id}) called when state.ele is not set (${eleId(state.ele)})`)
+    }
+    cyView.unselect(cyElement(id))    // TODO: assert that cyElement() not empty?
   },
 
   syncTopicPosition (_, id) {
@@ -783,7 +802,7 @@ function cyEdge (viewAssoc) {
  *
  * @param   id    a DM object id (number)
  *
- * @return  A collection of 1 or 0 elements.
+ * @return  A collection of 1 or 0 elements. ### TODO: throw if 0?
  */
 function cyElement (id) {
   return cyView.cy.getElementById(id.toString())   // Note: a Cytoscape element ID is a string
