@@ -73,18 +73,22 @@ export default class CytoscapeView {
           }
         },
         {
-          selector: 'node:selected, node.aux',
+          selector: 'node:selected',
           style: {
-            // TODO
-            'border-width': 3,
+            'border-width': 2,
             'border-color': HIGHLIGHT_COLOR
-            // 'border-opacity': 0
           }
         },
         {
           selector: 'edge:selected',
           style: {
             'width': 6
+          }
+        },
+        {
+          selector: 'node.expanded',
+          style: {
+            'border-opacity': 0
           }
         },
         {
@@ -296,7 +300,7 @@ export default class CytoscapeView {
     return x > box.x1 && x < box.x2 && y > box.y1 && y < box.y2
   }
 
-  //
+  // View Synchronization
 
   select (ele) {
     this.offSelectHandlers()

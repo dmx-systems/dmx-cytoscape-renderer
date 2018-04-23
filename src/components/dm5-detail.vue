@@ -174,7 +174,7 @@ function id (ele) {
 }
 
 .dm5-detail.selected {
-  border-color: var(--color-danger);
+  border-color: var(--highlight-color);
 }
 
 .dm5-detail.locked {

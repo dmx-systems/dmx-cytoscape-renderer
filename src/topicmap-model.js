@@ -23,6 +23,7 @@ const state = {
                           // Note: the host application can visualize multi selections by the means of '_syncSelect' and
                           // '_syncUnselect' actions. The details of multi selection elements are *not* displayed in-map
                           // (unless pinned). ### TODO: introduce multi-selection state in this component?
+
   details: {},            // In-map details. Detail records keyed by object ID:
                           //  {
                           //    id        ID of "object" (Number). May be set before "object" is available.
@@ -665,6 +666,7 @@ function unselectElement () {
 }
 
 function showDetail (detail) {
+  detail.node.addClass('expanded')
   Vue.set(state.details, detail.id, detail)     // Vue.set() triggers dm5-detail-layer rendering
   Vue.nextTick(() => {
     measureDetail(detail)
@@ -677,13 +679,14 @@ function showDetail (detail) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function removeDetail (detail) {
-  // remove detail DOM
-  Vue.delete(state.details, detail.id)          // Vue.delete() triggers dm5-detail-layer rendering
-  // adjust Cytoscape view
+  // update state
+  Vue.delete(state.details, detail.id)            // Vue.delete() triggers dm5-detail-layer rendering
+  // sync view
+  detail.node.removeClass('expanded')
   if (detail.ele.isNode()) {
-    detail.ele.style({width: '', height: ''})   // reset size
+    detail.node.style({width: '', height: ''})    // reset size
   } else {
-    cyView.cy.remove(detail.node)               // remove aux node
+    cyView.cy.remove(detail.node)                 // remove aux node
   }
   return playRestoreAnimation()
 }
@@ -730,11 +733,10 @@ function detail (id) {
 function createAuxNode (edge) {
   return cyView.cy.add({
     data: {
-      assocId: eleId(edge),            // Holds original edge ID. Needed by context menu.
+      assocId: eleId(edge),         // Holds original edge ID. Needed by context menu.
       icon: '\uf10c'                // model.js DEFAULT_TOPIC_ICON
     },
-    position: edge.midpoint(),
-    classes: 'aux'
+    position: edge.midpoint()
   })
 }
 
