@@ -2,7 +2,7 @@ import CytoscapeView from './cytoscape-view'
 import Vue from 'vue'
 import dm5 from 'dm5'
 
-var svgReady              // a promise resolved once the FontAwesome SVG is loaded
+var cyView                // the CytoscapeView instance
 var fisheyeAnimation
 
 const state = {
@@ -16,9 +16,14 @@ const state = {
 
   // Cytoscape View
 
-  cy: undefined,          // the Cytoscape instance
-  ele: undefined,         // Selected Cytoscape element (node or edge).
-                          // Undefined if there is no selection.
+  ele: undefined,         // The single selection: a selected Cytoscape element (node or edge). Undefined if there is no
+                          // single selection.
+                          // The selected element's details are displayed in-map. On unselect the details disappear
+                          // (unless pinned).
+                          // Note: the host application can visualize multi selections by the means of '_syncSelect' and
+                          // '_syncUnselect' actions. The details of multi selection elements are *not* displayed in-map
+                          // (unless pinned). ### TODO: introduce multi-selection state in this component?
+
   details: {},            // In-map details. Detail records keyed by object ID:
                           //  {
                           //    id        ID of "object" (Number). May be set before "object" is available.
@@ -37,7 +42,7 @@ const actions = {
   // === Model ===
 
   fetchTopicmap (_, id) {
-    console.log('fetchTopicmap', id, '(topicmap-model)')
+    // console.log('fetchTopicmap', id, '(topicmap-model)')
     return dm5.restClient.getTopicmap(id)
   },
 
@@ -236,11 +241,9 @@ const actions = {
 
   // Module internal
 
-  _initCytoscape (_, {container, box}) {
+  _initCytoscape ({dispatch}, {renderer, parent, container, box, contextCommands}) {
     // console.log('_initCytoscape')
-    const cyHelper = new CytoscapeView(container, box)
-    state.cy = cyHelper.cy
-    svgReady = cyHelper.svgReady
+    cyView = new CytoscapeView(renderer, parent, container, box, contextCommands, dispatch)
   },
 
   _syncObject (_, object) {
@@ -277,13 +280,15 @@ const actions = {
     // console.log('renderTopicmap', topicmap.id)
     state.topicmap = topicmap
     state.topicmapWritable = writable
-    return svgReady.then(renderTopicmap).then(showPinnedDetails)
+    state.ele = undefined
+    state.details = {}
+    return cyView.svgReady.then(renderTopicmap).then(showPinnedDetails)
   },
 
   syncStyles (_, assocTypeColors) {
-    // console.log('syncStyles', state.cy, assocTypeColors)
+    // console.log('syncStyles', assocTypeColors)
     for (const typeUri in assocTypeColors) {
-      state.cy.style().selector(`edge[typeUri='${typeUri}']`).style({'line-color': assocTypeColors[typeUri]})
+      cyView.cy.style().selector(`edge[typeUri='${typeUri}']`).style({'line-color': assocTypeColors[typeUri]})
     }
   },
 
@@ -291,14 +296,14 @@ const actions = {
     // console.log('syncAddTopic', id)
     const viewTopic = state.topicmap.getTopic(id)
     initPos(viewTopic)
-    state.cy.add(cyNode(viewTopic))
+    cyView.cy.add(cyNode(viewTopic))
   },
 
   syncAddAssoc (_, id) {
     // console.log('syncAddAssoc', id)
     const assoc = state.topicmap.getAssoc(id)
     if (!assoc.hasAssocPlayer()) {    // this renderer doesn't support assoc-connected assocs
-      state.cy.add(cyEdge(assoc))
+      cyView.cy.add(cyEdge(assoc))
     }
   },
 
@@ -328,7 +333,7 @@ const actions = {
    *              Note: the detail overlay's size can only be measured once "object" details are rendered.
    */
   syncSelect (_, {id, p}) {
-    // console.log('syncSelect', id)
+    console.log('syncSelect', id)
     // Note 1: programmatic unselect() is required for browser history navigation. When *interactively* selecting a node
     // Cytoscape removes the current selection before. When *programmatically* selecting a node Cytoscape does *not*
     // remove the current selection.
@@ -336,18 +341,46 @@ const actions = {
     // available. The actual order of these 2 occasions doesn't matter.
     Promise.all([p, ...state.ele ? [unselectElement()] : []]).then(() => {
       // console.log('restore animation complete')
-      state.ele = cyElement(id).select()    // select() restores selection after switching topicmap
-      if (state.ele.size() != 1) {
-        throw Error(`Element ${id} not found (${state.ele.size()})`)
+      state.ele = cyView.select(cyElement(id))    // select() restores selection after switching topicmap
+      if (state.ele.size() !== 1) {
+        throw Error(`can't select element ${id} (not found in topicmap ${state.topicmap.id})`)
       }
       showDetail(createSelectionDetail())
     })
   },
 
   syncUnselect () {
-    // console.log('syncUnselect')
+    console.log('syncUnselect')
     unselectElement().then(playFisheyeAnimationIfDetailsOnscreen)
     state.ele = undefined
+  },
+
+  /**
+   * Renders an element as selected without displaying the element's details.
+   * Called by host application to visualize a multi selection.
+   *
+   * @throws  if this component is in single selection state.
+   */
+  _syncSelect (_, id) {
+    console.log('_syncSelect', id)
+    if (state.ele) {
+      throw Error(`_syncSelect(${id}) called when state.ele is set (${eleId(state.ele)})`)
+    }
+    cyView.select(cyElement(id))
+  },
+
+  /**
+   * Renders an element as unselected without removing the element's details (and without playing the restore
+   * animation). Called by host application to visually remove a multi selection (e.g. after a route switch).
+   *
+   * @throws  if this component is not in single selection state.
+   */
+  _syncUnselect (_, id) {
+    console.log('_syncUnselect', id)
+    if (!state.ele) {
+      throw Error(`_syncUnselect(${id}) called when state.ele is not set (${eleId(state.ele)})`)
+    }
+    cyView.unselect(cyElement(id))    // TODO: assert that cyElement() not empty?
   },
 
   syncTopicPosition (_, id) {
@@ -359,7 +392,7 @@ const actions = {
     console.log('syncTopicVisibility', id)
     const viewTopic = state.topicmap.getTopic(id)
     if (viewTopic.isVisible()) {
-      state.cy.add(cyNode(viewTopic))
+      cyView.cy.add(cyNode(viewTopic))
     } else {
       cyElement(id).remove()
     }
@@ -384,7 +417,7 @@ const actions = {
 
   resizeTopicmapRenderer () {
     // console.log('resizeTopicmapRenderer')
-    state.cy.resize()
+    cyView.cy.resize()
   }
 }
 
@@ -410,7 +443,7 @@ function _revealTopic (topic, pos, select, dispatch) {
   if (op.type === 'add' || op.type === 'show') {
     dispatch('syncAddTopic', topic.id)
   }
-  select && dispatch('selectTopic', topic.id)     // TODO: move to app as it is not renderer-specific
+  select && dispatch('callTopicRoute', topic.id)     // TODO: don't dispatch into host application
   return op
 }
 
@@ -421,7 +454,7 @@ function _revealAssoc (assoc, select, dispatch) {
   if (op.type === 'add') {
     dispatch('syncAddAssoc', assoc.id)
   }
-  select && dispatch('selectAssoc', assoc.id)     // TODO: move to app as it is not renderer-specific
+  select && dispatch('callAssocRoute', assoc.id)     // TODO: don't dispatch into host application
   return op
 }
 
@@ -546,7 +579,7 @@ function createSelectionDetail () {
 function measureDetail(detail) {
   const detailDOM = document.querySelector(`.dm5-detail-layer .dm5-detail[data-detail-id="${detail.id}"]`)
   if (!detailDOM) {
-    throw Error(`Detail DOM ${detail.id} not found`)
+    throw Error(`detail DOM ${detail.id} not found`)
   }
   detail.size = {   // FIXME: use Vue.set()?
     width:  detailDOM.clientWidth,
@@ -559,7 +592,7 @@ function measureDetail(detail) {
 
 function playFisheyeAnimation() {
   fisheyeAnimation && fisheyeAnimation.stop()
-  fisheyeAnimation = state.cy.layout({
+  fisheyeAnimation = cyView.cy.layout({
     name: 'cose-bilkent',
     stop () {
       // console.log('fisheye animation complete')
@@ -593,8 +626,8 @@ function renderTopicmap () {
       eles.push(cyEdge(assoc))
     }
   })
-  state.cy.remove("*")  // "*" is the group selector "all"
-  state.cy.add(eles)
+  cyView.cy.remove("*")  // "*" is the group selector "all"
+  cyView.cy.add(eles)
   // console.log('### Topicmap rendering complete!')
 }
 
@@ -618,21 +651,22 @@ function _syncTopicPosition (id) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function unselectElement () {
-  // console.log('unselectElement', state.cy.elements(":selected").size(), state.ele)
   if (!state.ele) {
-    throw Error('unselectElement when no element is selected')
+    throw Error('unselectElement() called when no element is selected')
   }
+  console.log('unselectElement', eleId(state.ele), cyView.cy.elements(":selected").size())
   // Note 1: when the user clicks on the background Cytoscape unselects the selected element on its own.
   // Calling cy.elements(":selected") afterwards would return an empty collection.
   // This is why we maintain an explicit "ele" state.
   // Note 2: unselect() removes the element's selection style when manually stripping topic/assoc from
   // browser URL. In this situation cy.elements(":selected") would return a non-empty collection.
-  state.ele.unselect()
+  cyView.unselect(state.ele)
   const detail = selectionDetail()
   return !detail.pinned ? removeDetail(detail) : Promise.resolve()
 }
 
 function showDetail (detail) {
+  detail.node.addClass('expanded')
   Vue.set(state.details, detail.id, detail)     // Vue.set() triggers dm5-detail-layer rendering
   Vue.nextTick(() => {
     measureDetail(detail)
@@ -645,13 +679,14 @@ function showDetail (detail) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function removeDetail (detail) {
-  // remove detail DOM
-  Vue.delete(state.details, detail.id)          // Vue.delete() triggers dm5-detail-layer rendering
-  // adjust Cytoscape view
+  // update state
+  Vue.delete(state.details, detail.id)            // Vue.delete() triggers dm5-detail-layer rendering
+  // sync view
+  detail.node.removeClass('expanded')
   if (detail.ele.isNode()) {
-    detail.ele.style({width: '', height: ''})   // reset size
+    detail.node.style({width: '', height: ''})    // reset size
   } else {
-    state.cy.remove(detail.node)                // remove aux node
+    cyView.cy.remove(detail.node)                 // remove aux node
   }
   return playRestoreAnimation()
 }
@@ -679,7 +714,7 @@ function playRestoreAnimation () {
 
 function selectionDetail () {
   if (!state.ele) {
-    throw Error('selectionDetail() when nothing is selected')
+    throw Error('selectionDetail() called when nothing is selected')
   }
   return detail(eleId(state.ele))
 }
@@ -687,7 +722,7 @@ function selectionDetail () {
 function detail (id) {
   const detail = state.details[id]
   if (!detail) {
-    throw Error(`Detail record ${id} not found`)
+    throw Error(`detail record ${id} not found`)
   }
   return detail
 }
@@ -696,13 +731,12 @@ function detail (id) {
  * Creates an auxiliary node to represent the given edge.
  */
 function createAuxNode (edge) {
-  return state.cy.add({
+  return cyView.cy.add({
     data: {
-      assocId: eleId(edge),            // Holds original edge ID. Needed by context menu.
+      assocId: eleId(edge),         // Holds original edge ID. Needed by context menu.
       icon: '\uf10c'                // model.js DEFAULT_TOPIC_ICON
     },
-    position: edge.midpoint(),
-    classes: 'aux'
+    position: edge.midpoint()
   })
 }
 
@@ -710,8 +744,8 @@ function createAuxNode (edge) {
  * Auto-position topic if no position is set.
  */
 function initPos (viewTopic) {
-  console.log('initPos', viewTopic.id, viewTopic.getViewProp('dm4.topicmaps.x') !== undefined,
-    state.object && state.object.id)
+  // console.log('initPos', viewTopic.id, viewTopic.getViewProp('dm4.topicmaps.x') !== undefined,
+  //   state.object && state.object.id)
   if (viewTopic.getViewProp('dm4.topicmaps.x') === undefined) {
     const pos = {}
     if (state.object) {
@@ -770,10 +804,10 @@ function cyEdge (viewAssoc) {
  *
  * @param   id    a DM object id (number)
  *
- * @return  A collection of 1 or 0 elements.
+ * @return  A collection of 1 or 0 elements. ### TODO: throw if 0?
  */
 function cyElement (id) {
-  return state.cy.getElementById(id.toString())   // Note: a Cytoscape element ID is a string
+  return cyView.cy.getElementById(id.toString())   // Note: a Cytoscape element ID is a string
 }
 
 function isSelected (objectId) {

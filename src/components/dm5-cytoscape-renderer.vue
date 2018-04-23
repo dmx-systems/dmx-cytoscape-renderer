@@ -12,18 +12,19 @@
 export default {
 
   created () {
-    console.log('dm5-cytoscape-renderer created')
+    // console.log('dm5-cytoscape-renderer created')
   },
 
   // create Cytoscape instance once DOM is ready
   mounted () {
-    console.log('dm5-cytoscape-renderer mounted')
+    // console.log('dm5-cytoscape-renderer mounted')
     this.$store.dispatch('_initCytoscape', {
-      container: this.$refs['cytoscape-container'],
-      box:       this.$refs['measurement-box']
+      renderer:        this,
+      parent:          this.$parent,
+      container:       this.$refs['cytoscape-container'],
+      box:             this.$refs['measurement-box'],
+      contextCommands: this.contextCommands
     })
-    this.eventHandlers()
-    this.contextMenus()
   },
 
   destroyed () {
@@ -48,12 +49,6 @@ export default {
     }
   },
 
-  computed: {
-    cy () {
-      return this.$store.state['dm4.webclient.default_topicmap_renderer'].cy
-    }
-  },
-
   watch: {
 
     object () {
@@ -69,116 +64,6 @@ export default {
 
   methods: {
 
-    /**
-     * Registers Cytoscape event handlers.
-     */
-    eventHandlers () {
-      this.cy.on('tap', 'node', e => {
-        const clicks = e.originalEvent.detail
-        // console.log('"tap node" event!', id(e.target), clicks)
-        if (clicks === 1) {
-          this.$parent.$emit('topic-select', id(e.target))
-        } else if (clicks === 2) {
-          this.$parent.$emit('topic-double-click', e.target.data('viewTopic'))
-        }
-      }).on('tap', 'edge', e => {
-        // console.log('"tap edge" event!', id(e.target))
-        this.$parent.$emit('assoc-select', id(e.target))
-      }).on('tap', e => {
-        if (e.target === this.cy) {
-          // console.log('"tap background" event!')
-          this.$parent.$emit('topicmap-click')
-        }
-      }).on('cxttap', e => {
-        if (e.target === this.cy) {
-          this.$parent.$emit('topicmap-contextmenu', {
-            model:  e.position,
-            render: e.renderedPosition
-          })
-        }
-      }).on('tapstart', 'node', e => {
-        const dragState = new DragState(e.target)
-        const handler = this.dragHandler(dragState)
-        this.cy.on('tapdrag', handler)
-        this.cy.one('tapend', e => {
-          this.cy.off('tapdrag', handler)
-          if (dragState.hoverNode) {
-            dragState.unhover()
-            dragState.resetPosition()
-            this.$parent.$emit('topic-drop-on-topic', {
-              // topic 1 dropped onto topic 2
-              topicId1: id(dragState.node),
-              topicId2: id(dragState.hoverNode)
-            })
-          } else if (dragState.drag) {
-            this.$parent.$emit('topic-drag', {
-              id: id(dragState.node),
-              pos: dragState.node.position()
-            })
-            this.$store.dispatch('_playFisheyeAnimation')  // TODO: play only if detail overlay
-          }
-        })
-      }).on('zoom', () => {
-        this.zoom = this.cy.zoom()
-      })
-    },
-
-    contextMenus () {
-      // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
-      // In this case the original edge ID is contained in the node's "assocId" data.
-      this.cy.cxtmenu({
-        selector: 'node',
-        commands: ele => assocId(ele) ? assocCommands(assocId) : topicCommands(),
-        atMouse: true
-      })
-      this.cy.cxtmenu({
-        selector: 'edge',
-        commands: ele => assocCommands(id)
-      })
-
-      const topicCommands = () => this.contextCommands.topic.map(cmd => ({
-        content: cmd.label,
-        select: ele => cmd.handler(id(ele))
-      }))
-
-      const assocCommands = idMapper => this.contextCommands.assoc.map(cmd => ({
-        content: cmd.label,
-        select: ele => cmd.handler(idMapper(ele))
-      }))
-
-      const assocId = ele => ele.data('assocId')
-    },
-
-    dragHandler (dragState) {
-      return e => {
-        var _node = this.nodeAt(e.position, dragState.node)
-        if (_node) {
-          if (_node !== dragState.hoverNode) {
-            dragState.hoverNode && dragState.unhover()
-            dragState.hoverNode = _node
-            dragState.hover()
-          }
-        } else {
-          if (dragState.hoverNode) {
-            dragState.unhover()
-            dragState.hoverNode = undefined
-          }
-        }
-        dragState.drag = true
-      }
-    },
-
-    nodeAt (pos, excludeNode) {
-      var foundNode
-      this.cy.nodes().forEach(node => {
-        if (node !== excludeNode && isInside(pos, node)) {
-          foundNode = node
-          return false    // abort iteration
-        }
-      })
-      return foundNode
-    },
-
     submitObject (object) {
       this.$parent.$emit('object-submit', object)
     },
@@ -191,51 +76,6 @@ export default {
   components: {
     'dm5-detail-layer': require('./dm5-detail-layer').default
   }
-}
-
-/**
- * Maintains state for dragging a node and hovering other nodes.
- */
-class DragState {
-
-  constructor (node) {
-    this.node = node              // the dragged node
-    this.nodePosition = {         // the dragged node's original position. Note: a new pos object must be created.
-      x: node.position('x'),
-      y: node.position('y')
-    }
-    this.hoverNode = undefined    // the node hovered while dragging
-    this.drag = false             // true once dragging starts
-  }
-
-  hover () {
-    this.hoverNode.addClass('hover')
-  }
-
-  unhover () {
-    this.hoverNode.removeClass('hover')
-  }
-
-  resetPosition () {
-    this.node.animate({
-      position: this.nodePosition,
-      easing: 'ease-in-out-cubic',
-      duration: 200
-    })
-  }
-}
-
-function isInside (pos, node) {
-  var x = pos.x
-  var y = pos.y
-  var box = node.boundingBox()
-  return x > box.x1 && x < box.x2 && y > box.y1 && y < box.y2
-}
-
-// copy in cytoscape-renderer.js and dm5-detail-layer.vue
-function id (ele) {
-  // Note: cytoscape element IDs are strings
-  return Number(ele.id())
 }
 </script>
 
