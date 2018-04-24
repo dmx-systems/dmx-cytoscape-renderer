@@ -37,6 +37,10 @@ export default class CytoscapeView {
     this.contextMenus(contextCommands)
     this.dispatch = dispatch
     this.svgReady = svgReady                  // a promise resolved once the FontAwesome SVG is loaded
+    this.onSelectNode   = e => this.parent.$emit('topic-select',   id(e.target))
+    this.onSelectEdge   = e => this.parent.$emit('assoc-select',   id(e.target))
+    this.onUnselectNode = e => this.parent.$emit('topic-unselect', id(e.target))
+    this.onUnselectEdge = e => this.parent.$emit('assoc-unselect', id(e.target))
     this.eventHandlers()
   }
 
@@ -172,26 +176,6 @@ export default class CytoscapeView {
   }
 
   // Event Handling
-
-  onSelectNode = e => {
-    // console.log('select node', id(e.target), e.originalEvent, this)
-    this.parent.$emit('topic-select', id(e.target))
-  }
-
-  onSelectEdge = e => {
-    // console.log('select edge', id(e.target), e.originalEvent)
-    this.parent.$emit('assoc-select', id(e.target))
-  }
-
-  onUnselectNode = e => {
-    // console.log('unselect node', id(e.target), e.originalEvent)
-    this.parent.$emit('topic-unselect', id(e.target))
-  }
-
-  onUnselectEdge = e => {
-    // console.log('unselect edge', id(e.target), e.originalEvent)
-    this.parent.$emit('assoc-unselect', id(e.target))
-  }
 
   onSelectHandlers () {
     this.cy
