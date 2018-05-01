@@ -4,6 +4,12 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.4** -- May 1, 2018
+
+* Support for multi-selection:
+    * 2 new component events: `topic-unselect`, `assoc-unselect`
+    * 2 new low-level actions: `_syncSelect`, `_syncUnselect`
+
 **0.3** -- Apr 10, 2018
 
 * Fix: sync `writable` flag with parent component
@@ -19,4 +25,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Apr 10, 2018
+May 1, 2018
