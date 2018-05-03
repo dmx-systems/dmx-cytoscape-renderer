@@ -108,6 +108,7 @@ const actions = {
   },
 
   hideTopic ({dispatch}, id) {
+    unpinTopicIfPinned(id, dispatch)
     // update state
     state.topicmap.removeAssocs(id)
     state.topicmap.getTopic(id).setVisibility(false)
@@ -120,6 +121,7 @@ const actions = {
   },
 
   hideAssoc ({dispatch}, id) {
+    unpinAssocIfPinned(id, dispatch)
     // update state
     state.topicmap.removeAssoc(id)
     // sync view
@@ -133,7 +135,7 @@ const actions = {
   setTopicPinned ({dispatch}, {topicId, pinned}) {
     console.log('setTopicPinned', topicId, pinned)
     // update state
-    state.topicmap.setTopicViewProp(topicId, 'dm4.topicmaps.pinned', pinned)
+    state.topicmap.getTopic(topicId).setPinned(pinned)
     // sync view
     dispatch('syncPinned', {objectId: topicId, pinned})
     // update server
@@ -145,7 +147,7 @@ const actions = {
   setAssocPinned ({dispatch}, {assocId, pinned}) {
     console.log('setAssocPinned', assocId, pinned)
     // update state
-    state.topicmap.setAssocViewProp(assocId, 'dm4.topicmaps.pinned', pinned)
+    state.topicmap.getAssoc(assocId).setPinned(pinned)
     // sync view
     dispatch('syncPinned', {objectId: assocId, pinned})
     // update server
@@ -333,7 +335,7 @@ const actions = {
    *              Note: the detail overlay's size can only be measured once "object" details are rendered.
    */
   syncSelect (_, {id, p}) {
-    console.log('syncSelect', id)
+    // console.log('syncSelect', id)
     // Note 1: programmatic unselect() is required for browser history navigation. When *interactively* selecting a node
     // Cytoscape removes the current selection before. When *programmatically* selecting a node Cytoscape does *not*
     // remove the current selection.
@@ -350,7 +352,7 @@ const actions = {
   },
 
   syncUnselect () {
-    console.log('syncUnselect')
+    // console.log('syncUnselect')
     unselectElement().then(playFisheyeAnimationIfDetailsOnscreen)
     state.ele = undefined
   },
@@ -362,7 +364,7 @@ const actions = {
    * @throws  if this component is in single selection state.
    */
   _syncSelect (_, id) {
-    console.log('_syncSelect', id)
+    // console.log('_syncSelect', id)
     if (state.ele) {
       throw Error(`_syncSelect(${id}) called when state.ele is set (${eleId(state.ele)})`)
     }
@@ -376,7 +378,7 @@ const actions = {
    * @throws  if this component is not in single selection state.
    */
   _syncUnselect (_, id) {
-    console.log('_syncUnselect', id)
+    // console.log('_syncUnselect', id)
     if (!state.ele) {
       throw Error(`_syncUnselect(${id}) called when state.ele is not set (${eleId(state.ele)})`)
     }
@@ -389,7 +391,7 @@ const actions = {
   },
 
   syncTopicVisibility (_, id) {
-    console.log('syncTopicVisibility', id)
+    // console.log('syncTopicVisibility', id)
     const viewTopic = state.topicmap.getTopic(id)
     if (viewTopic.isVisible()) {
       cyView.cy.add(cyNode(viewTopic))
@@ -494,25 +496,36 @@ function deleteAssoc (assoc, dispatch) {
   }
 }
 
+//
+
+function unpinTopicIfPinned (id, dispatch) {
+  if (state.topicmap.getTopic(id).isPinned()) {
+    dispatch('setTopicPinned', {topicId: id, pinned: false})
+  }
+}
+
+function unpinAssocIfPinned (id, dispatch) {
+  if (state.topicmap.getAssoc(id).isPinned()) {
+    dispatch('setAssocPinned', {assocId: id, pinned: false})
+  }
+}
+
 // === Cytoscape View ===
 
 function showPinnedDetails () {
   state.topicmap.forEachTopic(viewTopic => {
-    if (viewTopic.isVisible()) {
-      if (viewTopic.getViewProp('dm4.topicmaps.pinned')) {
-        createDetail(viewTopic, cyElement(viewTopic.id)).then(detail => {
-          showDetail(detail)
-        })
-      }
+    if (viewTopic.isVisible() && viewTopic.isPinned()) {
+      createDetail(viewTopic, cyElement(viewTopic.id)).then(detail => {
+        showDetail(detail)
+      })
     }
   })
   state.topicmap.forEachAssoc(viewAssoc => {
-    if (!viewAssoc.hasAssocPlayer()) {    // this renderer doesn't support assoc-connected assocs
-      if (viewAssoc.getViewProp('dm4.topicmaps.pinned')) {
-        createDetail(viewAssoc, cyElement(viewAssoc.id)).then(detail => {
-          showDetail(detail)
-        })
-      }
+    // this renderer doesn't support assoc-connected assocs
+    if (!viewAssoc.hasAssocPlayer() && viewAssoc.isPinned()) {
+      createDetail(viewAssoc, cyElement(viewAssoc.id)).then(detail => {
+        showDetail(detail)
+      })
     }
   })
 }
@@ -531,7 +544,7 @@ function createDetail (viewObject, ele) {
       writable: undefined,
       // Note: a property would not be reactive. With a getter it works.
       get pinned () {
-        return viewObject.getViewProp('dm4.topicmaps.pinned')
+        return viewObject.isPinned()
       }
     }
     viewObject.fetchObject().then(object => {
@@ -563,7 +576,7 @@ function createSelectionDetail () {
       return state.objectWritable
     },
     get pinned () {
-      return viewObject.getViewProp('dm4.topicmaps.pinned')
+      return viewObject.isPinned()
     }
   }
 }
@@ -654,7 +667,7 @@ function unselectElement () {
   if (!state.ele) {
     throw Error('unselectElement() called when no element is selected')
   }
-  console.log('unselectElement', eleId(state.ele), cyView.cy.elements(":selected").size())
+  // console.log('unselectElement', eleId(state.ele), cyView.cy.elements(":selected").size())
   // Note 1: when the user clicks on the background Cytoscape unselects the selected element on its own.
   // Calling cy.elements(":selected") afterwards would return an empty collection.
   // This is why we maintain an explicit "ele" state.

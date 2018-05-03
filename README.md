@@ -16,7 +16,7 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 **0.2** -- Apr 7, 2018
 
-* Compatible with `dm5-topicmap-panel`'s dynamic renderer switching architecture
+* Compatible with `dm5-topicmap-panel`'s renderer switching architecture
 
 **0.1** -- Mar 26, 2018
 
