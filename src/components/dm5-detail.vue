@@ -11,10 +11,10 @@
     </dm5-object-renderer>
     <div class="button-panel">
       <el-button :class="['lock', 'fa', lockIcon]" type="text" @click="toggleLocked"></el-button>
-      <el-button class="collapse fa fa-compress" type="text" @click="collapse"></el-button>
+      <!-- el-button class="collapse fa fa-compress" type="text" @click="collapse"></el-button -->
       <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" @click="togglePinned">
       </el-button>
-      <el-button class="handle fa fa-bars" type="text" @contextmenu.native.prevent="handle"></el-button>
+      <!-- el-button class="handle fa fa-bars" type="text" @contextmenu.native.prevent="handle"></el-button -->
     </div>
   </div>
 </template>
@@ -126,15 +126,17 @@ export default {
       this.pinned = !this.pinned
     },
 
+    /* Not in use
     collapse () {
       // TODO: drop it?
-    },
+    }, */
 
+    /* Not in use
     handle (e) {
       // e.target.style.pointerEvents = 'none'
       console.log('handle', e)
       this.detail.node.emit('taphold', {x: e.x, y: e.y})
-    },
+    }, */
 
     setInlineId (id) {
       if (!id) {
@@ -195,7 +197,7 @@ function id (ele) {
   position: absolute;
   top: 1px;
   font-size: 16px !important;
-  padding: 0;
+  padding: 0 !important;
 }
 
 .dm5-detail .button-panel:hover button {
@@ -203,15 +205,16 @@ function id (ele) {
 }
 
 .dm5-detail .button-panel button.lock {
-  right: 71px;
+  right: 4px;
 }
 
+/* Not in use
 .dm5-detail .button-panel button.collapse {
   right: 47px;
-}
+} */
 
 .dm5-detail .button-panel button.pin {
-  right: 27px;
+  right: 25px;
 }
 
 .dm5-detail .button-panel button.pin.unpinned {
@@ -220,7 +223,8 @@ function id (ele) {
   -webkit-text-stroke: 1px var(--highlight-color);
 }
 
+/* Not in use
 .dm5-detail .button-panel button.handle {
   right: 3px;
-}
+} */
 </style>
