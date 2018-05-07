@@ -98,6 +98,7 @@ const actions = {
    * - the server is *not* yet up-to-date
    */
   setTopicPosition (_, {id, pos}) {
+    console.log('setTopicPosition', id)
     // update state
     state.topicmap.getTopic(id).setPosition(pos)
     // sync view (up-to-date already)
@@ -813,7 +814,7 @@ function cyEdge (viewAssoc) {
 }
 
 /**
- * Gets the Cytoscape element with the given ID.
+ * Gets the Cytoscape element with the given ID. ### TODO: copy in cytoscape-view.js
  *
  * @param   id    a DM object id (number)
  *

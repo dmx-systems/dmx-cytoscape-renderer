@@ -111,6 +111,11 @@ export default class CytoscapeView {
     })
   }
 
+  // ### TODO: copy in topic-model.js
+  cyElement (id) {
+    return this.cy.getElementById(id.toString())
+  }
+
   // Node Rendering
 
   // TODO: memoization
@@ -235,11 +240,7 @@ export default class CytoscapeView {
             topicId2: id(dragState.hoverNode)
           })
         } else if (dragState.drag) {
-          this.parent.$emit('topic-drag', {
-            id: id(dragState.node),
-            pos: dragState.node.position()
-          })
-          this.dispatch('_playFisheyeAnimation')  // TODO: play only if detail overlay
+          this.topicDrag(dragState.node)
         }
       })
     }).on('zoom', () => {
@@ -282,6 +283,24 @@ export default class CytoscapeView {
     var y = pos.y
     var box = node.boundingBox()
     return x > box.x1 && x < box.x2 && y > box.y1 && y < box.y2
+  }
+
+  topicDrag (node) {
+    const topicIds = this.parent.selection.topicIds
+    if (topicIds.includes(id(node))) {
+      console.log('cluster move', topicIds)
+      topicIds.forEach(id => this._topicDrag(this.cyElement(id)))
+    } else {
+      this._topicDrag(node)
+    }
+    this.dispatch('_playFisheyeAnimation')    // TODO: play only if detail overlay
+  }
+
+  _topicDrag (node) {
+    this.parent.$emit('topic-drag', {
+      id: id(node),
+      pos: node.position()
+    })
   }
 
   // View Synchronization
