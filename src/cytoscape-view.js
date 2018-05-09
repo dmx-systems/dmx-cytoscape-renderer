@@ -330,21 +330,23 @@ export default class CytoscapeView {
 
   // Helper
 
-  invokeTopicSelection (topicId, handler, argSingle, fnMulti) {
-    this._invokeSelection(this.parent.selection.topicIds, topicId, handler, argSingle, fnMulti)
+  invokeTopicSelection (topicId, handler, singleArg, multiFn) {
+    this._invokeSelection(this.parent.selection.topicIds, topicId, handler, singleArg, multiFn)
   }
 
-  invokeAssocSelection (assocId, handler, argSingle, fnMulti) {
-    this._invokeSelection(this.parent.selection.assocIds, assocId, handler, argSingle, fnMulti)
+  invokeAssocSelection (assocId, handler, singleArg, multiFn) {
+    this._invokeSelection(this.parent.selection.assocIds, assocId, handler, singleArg, multiFn)
   }
 
-  _invokeSelection (selIds, clickedId, handler, argSingle, fnMulti) {
+  _invokeSelection (selIds, clickedId, handler, singleArg, multiFn) {
     if (selIds.includes(clickedId)) {
       console.log('invoke selection', selIds)
-      selIds.forEach(id => handler.call(this, fnMulti(id)))
+      // Note: the handler might manipulate the selection (e.g. a hide/delete operation),
+      // so we clone it before iterating over it
+      dm5.utils.clone(selIds).forEach(id => handler.call(this, multiFn(id)))
     } else {
       console.log('invoke clicked', clickedId)
-      handler.call(this, argSingle)
+      handler.call(this, singleArg)
     }
   }
 }

@@ -381,7 +381,7 @@ const actions = {
   _syncUnselect (_, id) {
     // console.log('_syncUnselect', id)
     if (!state.ele) {
-      throw Error(`_syncUnselect(${id}) called when state.ele is not set (${eleId(state.ele)})`)
+      throw Error(`_syncUnselect(${id}) called when state.ele is not set`)
     }
     cyView.unselect(cyElement(id))    // TODO: assert that cyElement() not empty?
   },
