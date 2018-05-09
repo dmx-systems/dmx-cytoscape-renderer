@@ -169,15 +169,30 @@ export default class CytoscapeView {
 
     const topicCommands = () => contextCommands.topic.map(cmd => ({
       content: cmd.label,
-      select: ele => cmd.handler(id(ele))
+      select: this.topicHandler(cmd)
     }))
 
     const assocCommands = idMapper => contextCommands.assoc.map(cmd => ({
       content: cmd.label,
-      select: ele => cmd.handler(idMapper(ele))
+      select: this.assocHandler(cmd, idMapper)
     }))
 
+    // ID mapper for aux nodes
     const assocId = ele => ele.data('assocId')
+  }
+
+  topicHandler (cmd) {
+    return ele => {
+      const topicId = id(ele)
+      this.invokeTopicSelection(topicId, cmd.handler, topicId, id => id)
+    }
+  }
+
+  assocHandler (cmd, idMapper) {
+    return ele => {
+      const assocId = idMapper(ele)
+      this.invokeAssocSelection(assocId, cmd.handler, assocId, id => id)
+    }
   }
 
   // Event Handling
@@ -286,17 +301,11 @@ export default class CytoscapeView {
   }
 
   topicDrag (node) {
-    const topicIds = this.parent.selection.topicIds
-    if (topicIds.includes(id(node))) {
-      console.log('cluster move', topicIds)
-      topicIds.forEach(id => this._topicDrag(this.cyElement(id)))
-    } else {
-      this._topicDrag(node)
-    }
+    this.invokeTopicSelection(id(node), this.emitTopicDrag, node, id => this.cyElement(id))
     this.dispatch('_playFisheyeAnimation')    // TODO: play only if detail overlay
   }
 
-  _topicDrag (node) {
+  emitTopicDrag (node) {
     this.parent.$emit('topic-drag', {
       id: id(node),
       pos: node.position()
@@ -317,6 +326,26 @@ export default class CytoscapeView {
     ele.unselect()
     this.onUnselectHandlers()
     return ele
+  }
+
+  // Helper
+
+  invokeTopicSelection (topicId, handler, argSingle, fnMulti) {
+    this._invokeSelection(this.parent.selection.topicIds, topicId, handler, argSingle, fnMulti)
+  }
+
+  invokeAssocSelection (assocId, handler, argSingle, fnMulti) {
+    this._invokeSelection(this.parent.selection.assocIds, assocId, handler, argSingle, fnMulti)
+  }
+
+  _invokeSelection (selIds, clickedId, handler, argSingle, fnMulti) {
+    if (selIds.includes(clickedId)) {
+      console.log('invoke selection', selIds)
+      selIds.forEach(id => handler.call(this, fnMulti(id)))
+    } else {
+      console.log('invoke clicked', clickedId)
+      handler.call(this, argSingle)
+    }
   }
 }
 
