@@ -331,6 +331,9 @@ const actions = {
    * Precondition:
    * - the topicmap rendering is complete.
    *
+   * Postcondition:
+   * - state.ele is up-to-date
+   *
    * @param   id  id of a topic or an assoc
    * @param   p   a promise resolved once topic/assoc data has arrived (global "object" state is up-to-date).
    *              Note: the detail overlay's size can only be measured once "object" details are rendered.
@@ -344,12 +347,12 @@ const actions = {
     // available. The actual order of these 2 occasions doesn't matter.
     Promise.all([p, ...state.ele ? [unselectElement()] : []]).then(() => {
       // console.log('restore animation complete')
-      state.ele = cyView.select(cyElement(id))    // select() restores selection after switching topicmap
-      if (state.ele.size() !== 1) {
-        throw Error(`can't select element ${id} (not found in topicmap ${state.topicmap.id})`)
-      }
       showDetail(createSelectionDetail())
     })
+    state.ele = cyView.select(cyElement(id))    // select() restores selection after switching topicmap
+    if (state.ele.size() !== 1) {
+      throw Error(`can't select element ${id} (not found in topicmap ${state.topicmap.id})`)
+    }
   },
 
   syncUnselect () {
@@ -681,7 +684,7 @@ function unselectElement () {
 
 function showDetail (detail) {
   detail.node.addClass('expanded')
-  Vue.set(state.details, detail.id, detail)     // Vue.set() triggers dm5-detail-layer rendering
+  Vue.set(state.details, detail.id, detail)       // Vue.set() triggers dm5-detail-layer rendering
   Vue.nextTick(() => {
     measureDetail(detail)
   })
