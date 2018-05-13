@@ -4,6 +4,13 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.5** -- May 13, 2018
+
+* Multi-selection:
+    * Move multiple topics
+    * Issue context commands for multiple topics
+    * Fix: unpin topic/assoc on hide
+
 **0.4** -- May 1, 2018
 
 * Support for multi-selection:
@@ -25,4 +32,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-May 1, 2018
+May 13, 2018
