@@ -33,15 +33,39 @@ export default class CytoscapeView {
     this.renderer = renderer,
     this.parent = parent,
     this.cy = this.instantiateCy(container)
-    this.box = box                            // the measurement box
+    this.box = box              // the measurement box
     this.contextMenus(contextCommands)
     this.dispatch = dispatch
-    this.svgReady = svgReady                  // a promise resolved once the FontAwesome SVG is loaded
-    this.onSelectNode   = e => this.parent.$emit('topic-select',   id(e.target))
-    this.onSelectEdge   = e => this.parent.$emit('assoc-select',   id(e.target))
-    this.onUnselectNode = e => this.parent.$emit('topic-unselect', id(e.target))
-    this.onUnselectEdge = e => this.parent.$emit('assoc-unselect', id(e.target))
+    this.svgReady = svgReady    // a promise resolved once the FontAwesome SVG is loaded
+    // Note: by using arrow functions in a select handler 'this' refers to this CytoscapeView instance (instead of the
+    // clicked Cytoscape element). In standard ES6 class methods can't be defined in arrow notation. This would require
+    // the stage-2 "class properties" feature. For some reason the Babel "transform-class-properties" plugin does not
+    // work when the application is build by Jenkins CI.
+    // The solution is to define the select handlers in the constructor.
+    this.onSelectNode   = this.nodeHandler('select')
+    this.onSelectEdge   = this.edgeHandler('select')
+    this.onUnselectNode = this.nodeHandler('unselect')
+    this.onUnselectEdge = this.edgeHandler('unselect')
     this.eventHandlers()
+  }
+
+  nodeHandler (suffix) {
+    // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
+    // In this case the original edge ID is contained in the node's "assocId" data.
+    return e => {
+      const _assocId = assocId(e.target)
+      if (_assocId) {
+        this.parent.$emit('assoc-' + suffix, _assocId)
+      } else {
+        this.parent.$emit('topic-' + suffix, id(e.target))
+      }
+    }
+  }
+
+  edgeHandler (suffix) {
+    return e => {
+      this.parent.$emit('assoc-' + suffix, id(e.target))
+    }
   }
 
   // Cytoscape Instantiation
@@ -176,9 +200,6 @@ export default class CytoscapeView {
       content: cmd.label,
       select: this.assocHandler(cmd, idMapper)
     }))
-
-    // ID mapper for aux nodes
-    const assocId = ele => ele.data('assocId')
   }
 
   topicHandler (cmd) {
@@ -355,4 +376,9 @@ export default class CytoscapeView {
 function id (ele) {
   // Note: cytoscape element IDs are strings
   return Number(ele.id())
+}
+
+// ID mapper for aux nodes
+function assocId (ele) {
+  return ele.data('assocId')
 }

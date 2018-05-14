@@ -699,8 +699,8 @@ function removeDetail (detail) {
   // update state
   Vue.delete(state.details, detail.id)            // Vue.delete() triggers dm5-detail-layer rendering
   // sync view
-  detail.node.removeClass('expanded')
   if (detail.ele.isNode()) {
+    detail.node.removeClass('expanded')
     detail.node.style({width: '', height: ''})    // reset size
   } else {
     cyView.cy.remove(detail.node)                 // remove aux node
