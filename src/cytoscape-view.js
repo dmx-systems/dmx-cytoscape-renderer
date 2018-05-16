@@ -322,8 +322,10 @@ export default class CytoscapeView {
   }
 
   topicDrag (node) {
-    this.invokeTopicSelection(id(node), this.emitTopicDrag, node, id => this.cyElement(id))
-    this.dispatch('_playFisheyeAnimation')    // TODO: play only if detail overlay
+    if (!assocId(node)) {   // aux nodes don't emit topic-drag events
+      this.invokeTopicSelection(id(node), this.emitTopicDrag, node, id => this.cyElement(id))
+    }
+    this.dispatch('_playFisheyeAnimation')    // TODO: play only if details are visible
   }
 
   emitTopicDrag (node) {
