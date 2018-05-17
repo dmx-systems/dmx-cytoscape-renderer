@@ -36,7 +36,7 @@ export default class CytoscapeView {
     this.box = box              // the measurement box
     this.contextMenus(contextCommands)
     this.dispatch = dispatch
-    this.svgReady = svgReady    // a promise resolved once the FontAwesome SVG is loaded
+    this.svgReady = svgReady    // a promise resolved once the Font Awesome SVG is loaded
     // Note: by using arrow functions in a select handler 'this' refers to this CytoscapeView instance (instead of the
     // clicked Cytoscape element). In standard ES6 class methods can't be defined in arrow notation. This would require
     // the stage-2 "class properties" feature. For some reason the Babel "transform-class-properties" plugin does not
@@ -337,6 +337,9 @@ export default class CytoscapeView {
 
   // View Synchronization
 
+  /**
+   * Programmatically selects a Cytoscape element *without* emitting a (Cytoscape) `select` event.
+   */
   select (ele) {
     this.offSelectHandlers()
     ele.select()
@@ -344,6 +347,9 @@ export default class CytoscapeView {
     return ele
   }
 
+  /**
+   * Programmatically unselects a Cytoscape element *without* emitting a (Cytoscape) `unselect` event.
+   */
   unselect (ele) {
     this.offUnselectHandlers()
     ele.unselect()
