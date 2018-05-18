@@ -55,7 +55,9 @@ export default class CytoscapeView {
     return e => {
       const _assocId = assocId(e.target)
       if (_assocId) {
-        this.parent.$emit('assoc-' + suffix, _assocId)
+        if (suffix === 'select') {    // aux nodes don't emit assoc-unselect events
+          this.parent.$emit('assoc-' + suffix, _assocId)
+        }
       } else {
         this.parent.$emit('topic-' + suffix, id(e.target))
       }
