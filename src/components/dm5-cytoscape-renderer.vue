@@ -88,6 +88,10 @@ export default {
   height: 100%;
 }
 
+.dm5-cytoscape-renderer .cytoscape-container .cxtmenu .cxtmenu-item .cxtmenu-disabled {
+  opacity: 0.5;
+}
+
 .dm5-cytoscape-renderer .measurement-box {
   position: absolute;
   visibility: hidden;
