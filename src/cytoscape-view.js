@@ -196,32 +196,17 @@ export default class CytoscapeView {
       commands: ele => assocCommands(id(ele))
     })
 
-    const topicCommands = id => {
-      console.log('topicCommands', id, this.isTopicSelected(id), this.isMultiSelection())
-      return contextCommands.topic.map(cmd => ({
-        content: cmd.label,
-        select: this.topicHandler(id, cmd),
-        disabled: cmd.single && this.isTopicSelected(id) && this.isMultiSelection()
-      }))
-    }
+    const topicCommands = id => contextCommands.topic.map(cmd => ({
+      content: cmd.label,
+      select: ele => this.invokeTopicHandler(id, cmd),
+      disabled: !cmd.multi && this.isTopicSelected(id) && this.isMultiSelection()
+    }))
 
     const assocCommands = id => contextCommands.assoc.map(cmd => ({
       content: cmd.label,
-      select: this.assocHandler(id, cmd),
-      disabled: cmd.single && this.isAssocSelected(id) && this.isMultiSelection()
+      select: ele => this.invokeAssocHandler(id, cmd),
+      disabled: !cmd.multi && this.isAssocSelected(id) && this.isMultiSelection()
     }))
-  }
-
-  topicHandler (id, cmd) {
-    return ele => {
-      this.invokeTopicHandler(id, cmd.handler, id, id => id)
-    }
-  }
-
-  assocHandler (id, cmd) {
-    return ele => {
-      this.invokeAssocHandler(id, cmd.handler, id, id => id)
-    }
   }
 
   // Event Handling
@@ -331,9 +316,19 @@ export default class CytoscapeView {
 
   topicDrag (node) {
     if (!assocId(node)) {   // aux nodes don't emit topic-drag events
-      this.invokeTopicHandler(id(node), this.emitTopicDrag, node, id => this.cyElement(id))
+      this.emitTopicDragEvents(node)
     }
     this.dispatch('_playFisheyeAnimation')    // TODO: play only if details are visible
+  }
+
+  emitTopicDragEvents (node) {
+    if (this.isTopicSelected(id(node))) {
+      console.log('drag selection', this.parent.selection.topicIds)
+      this.parent.selection.topicIds.forEach(id => this.emitTopicDrag(this.cyElement(id)))
+    } else {
+      console.log('drag single', id(node))
+      this.emitTopicDrag(node)
+    }
   }
 
   emitTopicDrag (node) {
@@ -367,24 +362,24 @@ export default class CytoscapeView {
 
   // Helper
 
-  invokeTopicHandler (topicId, handler, singleArg, multiFn) {
-    this._invokeHandler(this.parent.selection.topicIds, topicId, handler, singleArg, multiFn)
-  }
-
-  invokeAssocHandler (assocId, handler, singleArg, multiFn) {
-    this._invokeHandler(this.parent.selection.assocIds, assocId, handler, singleArg, multiFn)
-  }
-
-  _invokeHandler (selIds, clickedId, handler, singleArg, multiFn) {
-    if (selIds.includes(clickedId)) {
-      console.log('invoke handler', selIds)
-      // Note: the handler might manipulate the selection (e.g. a hide/delete operation),
-      // so we clone it before iterating over it
-      dm5.utils.clone(selIds).forEach(id => handler.call(this, multiFn(id)))
+  invokeTopicHandler (id, cmd) {
+    var arg
+    if (cmd.multi) {
+      arg = this.isTopicSelected(id) ? this.parent.selection : {topicIds: [id], assocIds: []}
     } else {
-      console.log('invoke clicked', clickedId)
-      handler.call(this, singleArg)
+      arg = id
     }
+    cmd.handler(arg)
+  }
+
+  invokeAssocHandler (id, cmd) {
+    var arg
+    if (cmd.multi) {
+      arg = this.isAssocSelected(id) ? this.parent.selection : {topicIds: [], assocIds: [id]}
+    } else {
+      arg = id
+    }
+    cmd.handler(arg)
   }
 
   isTopicSelected (id) {
