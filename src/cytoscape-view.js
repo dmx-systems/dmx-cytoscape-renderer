@@ -180,6 +180,9 @@ export default class CytoscapeView {
 
   // Context Menus
 
+  /**
+   * Creates both the topic context menu and the assoc context menu.
+   */
   contextMenus (contextCommands) {
     // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
     // In this case the original edge ID is contained in the node's "assocId" data.

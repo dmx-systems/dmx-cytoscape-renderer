@@ -4,6 +4,11 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.6** -- Jun 6, 2018
+
+* Multi-selection: disable "single-only" context commands
+* Fix: interacting with expanded assocs
+
 **0.5** -- May 13, 2018
 
 * Multi-selection:
@@ -32,4 +37,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-May 13, 2018
+Jun 6, 2018
