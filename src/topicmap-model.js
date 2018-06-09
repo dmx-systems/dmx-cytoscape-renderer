@@ -157,7 +157,8 @@ const actions = {
     })
   },
 
-  deleteTopic ({dispatch}, id) {
+  // TODO: just update view and rely on directives processing for state update?
+  removeTopic ({dispatch}, id) {
     // update state
     state.topicmap.removeAssocs(id)
     state.topicmap.removeTopic(id)
@@ -165,7 +166,8 @@ const actions = {
     dispatch('syncRemoveTopic', id)
   },
 
-  deleteAssoc ({dispatch}, id) {
+  // TODO: just update view and rely on directives processing for state update?
+  removeAssoc ({dispatch}, id) {
     // update state
     state.topicmap.removeAssoc(id)
     // sync view
@@ -466,6 +468,9 @@ function _revealAssoc (assoc, select, dispatch) {
 
 // Process directives
 
+/**
+ * Processes an UPDATE_TOPIC directive.
+ */
 function updateTopic (topic, dispatch) {
   // console.log('updateTopic', topic)
   const _topic = state.topicmap.getTopicIfExists(topic.id)
@@ -475,6 +480,9 @@ function updateTopic (topic, dispatch) {
   }
 }
 
+/**
+ * Processes an UPDATE_ASSOCIATION directive.
+ */
 function updateAssoc (assoc, dispatch) {
   const _assoc = state.topicmap.getAssocIfExists(assoc.id)
   if (_assoc) {
@@ -484,14 +492,23 @@ function updateAssoc (assoc, dispatch) {
   }
 }
 
+/**
+ * Processes a DELETE_TOPIC directive.
+ */
 function deleteTopic (topic, dispatch) {
   const _topic = state.topicmap.getTopicIfExists(topic.id)
   if (_topic) {
+    // Note: state.topicmap.removeAssocs() is not called here (compare to removeTopic() action above).
+    // The assocs will be removed while processing the DELETE_ASSOCIATION directives as received along with the
+    // DELETE_TOPIC directive.
     state.topicmap.removeTopic(topic.id)    // update state
     dispatch('syncRemoveTopic', topic.id)   // sync view
   }
 }
 
+/**
+ * Processes a DELETE_ASSOCIATION directive.
+ */
 function deleteAssoc (assoc, dispatch) {
   const _assoc = state.topicmap.getAssocIfExists(assoc.id)
   if (_assoc) {
