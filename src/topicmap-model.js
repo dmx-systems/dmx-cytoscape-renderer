@@ -108,6 +108,30 @@ const actions = {
     }
   },
 
+  /**
+   * Preconditions:
+   * - the topics belong to the selected topicmap
+   * - the view is up-to-date
+   * - the server is *not* yet up-to-date
+   *
+   * @param   coords    array of 3-prop objects: 'topicId', 'x', 'y'
+   */
+  setTopicPositions (_, coords) {
+    console.log('setTopicPositions', coords)
+    // update state
+    coords.forEach(coord =>
+      state.topicmap.getTopic(coord.topicId).setPosition({
+        x: coord.x,
+        y: coord.y
+      })
+    )
+    // sync view (up-to-date already)
+    // update server
+    if (state.topicmapWritable) {
+      dm5.restClient.setTopicPositions(state.topicmap.id, coords)
+    }
+  },
+
   hideTopic ({dispatch}, id) {
     unpinTopicIfPinned(id, dispatch)
     // update state

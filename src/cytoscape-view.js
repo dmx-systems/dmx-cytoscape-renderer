@@ -322,9 +322,9 @@ export default class CytoscapeView {
   }
 
   emitTopicDragEvents (node) {
-    if (this.isTopicSelected(id(node))) {
-      console.log('drag selection', this.parent.selection.topicIds)
-      this.parent.selection.topicIds.forEach(id => this.emitTopicDrag(this.cyElement(id)))
+    if (this.isTopicSelected(id(node)) && this.isMultiSelection()) {
+      console.log('drag multi', this.parent.selection.topicIds)
+      this.emitTopicsDrag()
     } else {
       console.log('drag single', id(node))
       this.emitTopicDrag(node)
@@ -336,6 +336,17 @@ export default class CytoscapeView {
       id: id(node),
       pos: node.position()
     })
+  }
+
+  emitTopicsDrag (node) {
+    this.parent.$emit('topics-drag', this.parent.selection.topicIds.map(id => {
+      const pos = this.cyElement(id).position()
+      return {
+        topicId: id,
+        x: pos.x,
+        y: pos.y
+      }
+    }))
   }
 
   // View Synchronization
