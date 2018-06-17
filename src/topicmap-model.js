@@ -132,6 +132,13 @@ const actions = {
     }
   },
 
+  /**
+   * Low-level action that updates client state, and syncs the view.
+   * Server state is *not* updated; this is done by the high-level action (see hideMulti() below).
+   *
+   * Note: there is no high-level action to hide a single topic.
+   * Hiding is always performed as a multi-operation, that is in a single request.
+   */
   hideTopic ({dispatch}, id) {
     unpinTopicIfPinned(id, dispatch)
     // update state
@@ -139,21 +146,35 @@ const actions = {
     state.topicmap.getTopic(id).setVisibility(false)
     // sync view
     dispatch('syncRemoveTopic', id)
-    // update server
-    if (state.topicmapWritable) {
-      dm5.restClient.setTopicVisibility(state.topicmap.id, id, false)
-    }
   },
 
+  /**
+   * Low-level action that updates client state, and syncs the view.
+   * Server state is *not* updated; this is done by the high-level action (see hideMulti() below).
+   *
+   * Note: there is no high-level action to hide a single assoc.
+   * Hiding is always performed as a multi-operation, that is in a single request.
+   */
   hideAssoc ({dispatch}, id) {
     unpinAssocIfPinned(id, dispatch)
     // update state
     state.topicmap.removeAssoc(id)
     // sync view
     dispatch('syncRemoveAssoc', id)
+  },
+
+  // TODO: move update-server aspect to main application? Move this action to webclient.js?
+  hideMulti ({dispatch}, idLists) {
+    // update state + sync view (for immediate visual feedback)
+    // FIXME 1: don't modify ID lists while iterating
+    console.log('hideMulti', idLists.topicIds, idLists.assocIds)
+    idLists.topicIds.forEach(id => dispatch('hideTopic', id))
+    idLists.assocIds.forEach(id => dispatch('hideAssoc', id))
     // update server
+    // FIXME 2: don't send modified ID lists to server
+    console.log('hideMulti(2)', idLists.topicIds, idLists.assocIds)
     if (state.topicmapWritable) {
-      dm5.restClient.removeAssocFromTopicmap(state.topicmap.id, id)
+      dm5.restClient.hideMulti(state.topicmap.id, idLists)
     }
   },
 
@@ -181,7 +202,13 @@ const actions = {
     })
   },
 
-  // TODO: just update view and rely on directives processing for state update?
+  /**
+   * Low-level action that updates client state, and syncs the view.
+   * Server state is *not* updated; this is done by the high-level action (see deleteMulti() in webclient.js).
+   *
+   * Note: there is no high-level action to delete a single topic.
+   * Deleting is always performed as a multi-operation, that is in a single request.
+   */
   removeTopic ({dispatch}, id) {
     // update state
     state.topicmap.removeAssocs(id)
@@ -190,7 +217,13 @@ const actions = {
     dispatch('syncRemoveTopic', id)
   },
 
-  // TODO: just update view and rely on directives processing for state update?
+  /**
+   * Low-level action that updates client state, and syncs the view.
+   * Server state is *not* updated; this is done by the high-level action (see deleteMulti() in webclient.js).
+   *
+   * Note: there is no high-level action to delete a single assoc.
+   * Deleting is always performed as a multi-operation, that is in a single request.
+   */
   removeAssoc ({dispatch}, id) {
     // update state
     state.topicmap.removeAssoc(id)
