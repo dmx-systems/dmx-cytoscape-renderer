@@ -376,7 +376,7 @@ export default class CytoscapeView {
   invokeTopicHandler (id, cmd) {
     var arg
     if (cmd.multi) {
-      arg = this.isTopicSelected(id) ? this.parent.selection : {topicIds: [id], assocIds: []}
+      arg = this.isTopicSelected(id) ? idLists(this.parent.selection) : {topicIds: [id], assocIds: []}
     } else {
       arg = id
     }
@@ -386,7 +386,7 @@ export default class CytoscapeView {
   invokeAssocHandler (id, cmd) {
     var arg
     if (cmd.multi) {
-      arg = this.isAssocSelected(id) ? this.parent.selection : {topicIds: [], assocIds: [id]}
+      arg = this.isAssocSelected(id) ? idLists(this.parent.selection) : {topicIds: [], assocIds: [id]}
     } else {
       arg = id
     }
@@ -415,4 +415,16 @@ function id (ele) {
 // ID mapper for aux nodes
 function assocId (ele) {
   return ele.data('assocId')
+}
+
+/**
+ * Creates ID lists from a selection.
+ * Note: the caller will pass the ID lists to a command handler. The ID lists are created by cloning in order to
+ * allow the command handler to modify the lists without creating a side effect in the original selection object.
+ */
+function idLists (selection) {
+  return {
+    topicIds: dm5.utils.clone(selection.topicIds),
+    assocIds: dm5.utils.clone(selection.assocIds)
+  }
 }
