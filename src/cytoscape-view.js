@@ -268,7 +268,7 @@ export default class CytoscapeView {
             topicId1: id(dragState.node),
             topicId2: id(dragState.hoverNode)
           })
-        } else if (dragState.drag) {
+        } else if (dragState.dragged()) {
           this.topicDrag(dragState.node)
         }
       })
@@ -292,7 +292,6 @@ export default class CytoscapeView {
           dragState.hoverNode = undefined
         }
       }
-      dragState.drag = true
     }
   }
 
@@ -316,19 +315,15 @@ export default class CytoscapeView {
 
   topicDrag (node) {
     if (!assocId(node)) {   // aux nodes don't emit topic-drag events
-      this.emitTopicDragEvents(node)
+      if (this.isTopicSelected(id(node)) && this.isMultiSelection()) {
+        console.log('drag multi', this.parent.selection.topicIds)
+        this.emitTopicsDrag()
+      } else {
+        console.log('drag single', id(node))
+        this.emitTopicDrag(node)
+      }
     }
     this.dispatch('_playFisheyeAnimation')    // TODO: play only if details are visible
-  }
-
-  emitTopicDragEvents (node) {
-    if (this.isTopicSelected(id(node)) && this.isMultiSelection()) {
-      console.log('drag multi', this.parent.selection.topicIds)
-      this.emitTopicsDrag()
-    } else {
-      console.log('drag single', id(node))
-      this.emitTopicDrag(node)
-    }
   }
 
   emitTopicDrag (node) {

@@ -10,7 +10,6 @@ export default class DragState {
       y: node.position('y')
     }
     this.hoverNode = undefined    // the node hovered while dragging
-    this.drag = false             // true once dragging starts
   }
 
   hover () {
@@ -27,5 +26,10 @@ export default class DragState {
       easing: 'ease-in-out-cubic',
       duration: 200
     })
+  }
+
+  dragged () {
+    return this.nodePosition.x !== this.node.position('x') ||
+           this.nodePosition.y !== this.node.position('y')
   }
 }
