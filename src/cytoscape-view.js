@@ -419,8 +419,8 @@ function assocId (ele) {
 
 /**
  * Creates ID lists from a selection.
- * Note: the caller will pass the ID lists to a command handler. The ID lists are created by cloning in order to
- * allow the command handler to modify the lists without creating a side effect in the original selection object.
+ * Note: the caller will pass the ID lists to a command handler. The ID lists are created by cloning in order
+ * to allow the command handler to modify the selection without creating a side effect in the ID lists.
  */
 function idLists (selection) {
   return {

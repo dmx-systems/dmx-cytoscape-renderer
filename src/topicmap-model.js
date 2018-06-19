@@ -156,23 +156,23 @@ const actions = {
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
   hideAssoc ({dispatch}, id) {
-    unpinAssocIfPinned(id, dispatch)
-    // update state
-    state.topicmap.removeAssoc(id)
-    // sync view
-    dispatch('syncRemoveAssoc', id)
+    // If the assoc is not in the topicmap nothing is performed. This can happen while hide-multi.
+    if (state.topicmap.hasAssoc(id)) {
+      unpinAssocIfPinned(id, dispatch)
+      // update state
+      state.topicmap.removeAssoc(id)
+      // sync view
+      dispatch('syncRemoveAssoc', id)
+    }
   },
 
   // TODO: move update-server aspect to main application? Move this action to webclient.js?
   hideMulti ({dispatch}, idLists) {
-    // update state + sync view (for immediate visual feedback)
-    // FIXME 1: don't modify ID lists while iterating
     console.log('hideMulti', idLists.topicIds, idLists.assocIds)
+    // update state + sync view (for immediate visual feedback)
     idLists.topicIds.forEach(id => dispatch('hideTopic', id))
     idLists.assocIds.forEach(id => dispatch('hideAssoc', id))
     // update server
-    // FIXME 2: don't send modified ID lists to server
-    console.log('hideMulti(2)', idLists.topicIds, idLists.assocIds)
     if (state.topicmapWritable) {
       dm5.restClient.hideMulti(state.topicmap.id, idLists)
     }
@@ -210,6 +210,7 @@ const actions = {
    * Deleting is always performed as a multi-operation, that is in a single request.
    */
   removeTopic ({dispatch}, id) {
+    // FIXME: unpin if pinned
     // update state
     state.topicmap.removeAssocs(id)
     state.topicmap.removeTopic(id)
@@ -225,6 +226,7 @@ const actions = {
    * Deleting is always performed as a multi-operation, that is in a single request.
    */
   removeAssoc ({dispatch}, id) {
+    // FIXME: unpin if pinned
     // update state
     state.topicmap.removeAssoc(id)
     // sync view
