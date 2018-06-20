@@ -4,10 +4,20 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.7** -- Jun 20, 2018
+
+* Multi-selection:
+    * Hide/Delete multiple topics/assocs
+    * For multi-operations a single request is sent
+* Fixes:
+    * Executing "Delete" command when context menu is opened via tap-hold
+    * Unpin topic/assoc on delete
+* Composability: component emits `topics-drag` event to signalize a multi-move
+
 **0.6** -- Jun 6, 2018
 
 * Multi-selection: disable "single-only" context commands
-* Fix: interacting with expanded assocs
+* Fix: interacting with assocs when they are expanded
 
 **0.5** -- May 13, 2018
 
@@ -37,4 +47,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Jun 6, 2018
+Jun 20, 2018
