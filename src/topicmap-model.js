@@ -132,14 +132,46 @@ const actions = {
     }
   },
 
+  // TODO: move update-server aspect to main application? Move this action to webclient.js?
+  hideMulti ({dispatch}, idLists) {
+    console.log('hideMulti', idLists.topicIds, idLists.assocIds)
+    // update state + sync view (for immediate visual feedback)
+    idLists.topicIds.forEach(id => dispatch('_hideTopic', id))
+    idLists.assocIds.forEach(id => dispatch('_hideAssoc', id))
+    // update server
+    if (state.topicmapWritable) {
+      dm5.restClient.hideMulti(state.topicmap.id, idLists)
+    }
+  },
+
+  setTopicPinned ({dispatch}, {topicId, pinned}) {
+    console.log('setTopicPinned', topicId, pinned)
+    // update state + sync view
+    _setTopicPinned(topicId, pinned, dispatch)
+    // update server
+    dm5.restClient.setTopicViewProps(state.topicmap.id, topicId, {    // FIXME: check topicmapWritable?
+      'dm4.topicmaps.pinned': pinned
+    })
+  },
+
+  setAssocPinned ({dispatch}, {assocId, pinned}) {
+    console.log('setAssocPinned', assocId, pinned)
+    // update state + sync view
+    _setAssocPinned(assocId, pinned, dispatch)
+    // update server
+    dm5.restClient.setAssocViewProps(state.topicmap.id, assocId, {    // FIXME: check topicmapWritable?
+      'dm4.topicmaps.pinned': pinned
+    })
+  },
+
   /**
-   * Low-level action that updates client state, and syncs the view.
-   * Server state is *not* updated; this is done by the high-level action (see hideMulti() below).
+   * Low-level action that updates client state and syncs the view.
+   * Server state is *not* updated as done by hideMulti() high-level action (see above).
    *
    * Note: there is no high-level action to hide a single topic.
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
-  hideTopic ({dispatch}, id) {
+  _hideTopic ({dispatch}, id) {
     unpinTopicIfPinned(id, dispatch)
     // update state
     state.topicmap.removeAssocs(id)
@@ -149,13 +181,13 @@ const actions = {
   },
 
   /**
-   * Low-level action that updates client state, and syncs the view.
-   * Server state is *not* updated; this is done by the high-level action (see hideMulti() below).
+   * Low-level action that updates client state and syncs the view.
+   * Server state is *not* updated as done by hideMulti() high-level action (see above).
    *
    * Note: there is no high-level action to hide a single assoc.
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
-  hideAssoc ({dispatch}, id) {
+  _hideAssoc ({dispatch}, id) {
     // If the assoc is not in the topicmap nothing is performed. This can happen while hide-multi.
     if (state.topicmap.hasAssoc(id)) {
       unpinAssocIfPinned(id, dispatch)
@@ -166,51 +198,15 @@ const actions = {
     }
   },
 
-  // TODO: move update-server aspect to main application? Move this action to webclient.js?
-  hideMulti ({dispatch}, idLists) {
-    console.log('hideMulti', idLists.topicIds, idLists.assocIds)
-    // update state + sync view (for immediate visual feedback)
-    idLists.topicIds.forEach(id => dispatch('hideTopic', id))
-    idLists.assocIds.forEach(id => dispatch('hideAssoc', id))
-    // update server
-    if (state.topicmapWritable) {
-      dm5.restClient.hideMulti(state.topicmap.id, idLists)
-    }
-  },
-
-  setTopicPinned ({dispatch}, {topicId, pinned}) {
-    console.log('setTopicPinned', topicId, pinned)
-    // update state
-    state.topicmap.getTopic(topicId).setPinned(pinned)
-    // sync view
-    dispatch('syncPinned', {objectId: topicId, pinned})
-    // update server
-    dm5.restClient.setTopicViewProps(state.topicmap.id, topicId, {    // FIXME: check topicmapWritable?
-      'dm4.topicmaps.pinned': pinned
-    })
-  },
-
-  setAssocPinned ({dispatch}, {assocId, pinned}) {
-    console.log('setAssocPinned', assocId, pinned)
-    // update state
-    state.topicmap.getAssoc(assocId).setPinned(pinned)
-    // sync view
-    dispatch('syncPinned', {objectId: assocId, pinned})
-    // update server
-    dm5.restClient.setAssocViewProps(state.topicmap.id, assocId, {    // FIXME: check topicmapWritable?
-      'dm4.topicmaps.pinned': pinned
-    })
-  },
-
   /**
-   * Low-level action that updates client state, and syncs the view.
-   * Server state is *not* updated; this is done by the high-level action (see deleteMulti() in webclient.js).
+   * Low-level action that updates client state and syncs the view.
+   * Server state is *not* updated as done by deleteMulti() high-level action (see dm4-webclient/webclient.js).
    *
    * Note: there is no high-level action to delete a single topic.
    * Deleting is always performed as a multi-operation, that is in a single request.
    */
-  removeTopic ({dispatch}, id) {
-    // FIXME: unpin if pinned
+  _deleteTopic ({dispatch}, id) {
+    _unpinTopicIfPinned(id, dispatch)
     // update state
     state.topicmap.removeAssocs(id)
     state.topicmap.removeTopic(id)
@@ -219,14 +215,14 @@ const actions = {
   },
 
   /**
-   * Low-level action that updates client state, and syncs the view.
-   * Server state is *not* updated; this is done by the high-level action (see deleteMulti() in webclient.js).
+   * Low-level action that updates client state and syncs the view.
+   * Server state is *not* updated as done by deleteMulti() high-level action (see dm4-webclient/webclient.js).
    *
    * Note: there is no high-level action to delete a single assoc.
    * Deleting is always performed as a multi-operation, that is in a single request.
    */
-  removeAssoc ({dispatch}, id) {
-    // FIXME: unpin if pinned
+  _deleteAssoc ({dispatch}, id) {
+    _unpinAssocIfPinned(id, dispatch)
     // update state
     state.topicmap.removeAssoc(id)
     // sync view
@@ -525,6 +521,20 @@ function _revealAssoc (assoc, select, dispatch) {
   return op
 }
 
+function _setTopicPinned (topicId, pinned, dispatch) {
+  // update state
+  state.topicmap.getTopic(topicId).setPinned(pinned)
+  // sync view
+  dispatch('syncPinned', {objectId: topicId, pinned})
+}
+
+function _setAssocPinned (assocId, pinned, dispatch) {
+  // update state
+  state.topicmap.getAssoc(assocId).setPinned(pinned)
+  // sync view
+  dispatch('syncPinned', {objectId: assocId, pinned})
+}
+
 // Process directives
 
 /**
@@ -557,7 +567,7 @@ function updateAssoc (assoc, dispatch) {
 function deleteTopic (topic, dispatch) {
   const _topic = state.topicmap.getTopicIfExists(topic.id)
   if (_topic) {
-    // Note: state.topicmap.removeAssocs() is not called here (compare to removeTopic() action above).
+    // Note: state.topicmap.removeAssocs() is not called here (compare to _deleteTopic() action above).
     // The assocs will be removed while processing the DELETE_ASSOCIATION directives as received along with the
     // DELETE_TOPIC directive.
     state.topicmap.removeTopic(topic.id)    // update state
@@ -580,13 +590,27 @@ function deleteAssoc (assoc, dispatch) {
 
 function unpinTopicIfPinned (id, dispatch) {
   if (state.topicmap.getTopic(id).isPinned()) {
-    dispatch('setTopicPinned', {topicId: id, pinned: false})
+    // TODO: don't send request. Make unpin implicit to hide at server-side.
+    dispatch('setTopicPinned', {topicId: id, pinned: false})      // update state + sync view + update server
   }
 }
 
 function unpinAssocIfPinned (id, dispatch) {
   if (state.topicmap.getAssoc(id).isPinned()) {
-    dispatch('setAssocPinned', {assocId: id, pinned: false})
+    // TODO: don't send request. Make unpin implicit to hide at server-side.
+    dispatch('setAssocPinned', {assocId: id, pinned: false})      // update state + sync view + update server
+  }
+}
+
+function _unpinTopicIfPinned (id, dispatch) {
+  if (state.topicmap.getTopic(id).isPinned()) {
+    _setTopicPinned(id, false, dispatch)                          // update state + sync view
+  }
+}
+
+function _unpinAssocIfPinned (id, dispatch) {
+  if (state.topicmap.getAssoc(id).isPinned()) {
+    _setAssocPinned(id, false, dispatch)                          // update state + sync view
   }
 }
 

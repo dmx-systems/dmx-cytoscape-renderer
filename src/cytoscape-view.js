@@ -300,7 +300,7 @@ export default class CytoscapeView {
     this.cy.nodes().forEach(node => {
       if (node !== excludeNode && this.isInside(pos, node)) {
         foundNode = node
-        return false    // abort iteration
+        return false    // abort iteration (as supported by Cytoscape collection)
       }
     })
     return foundNode
