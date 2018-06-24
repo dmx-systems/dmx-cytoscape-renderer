@@ -12,7 +12,7 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 * Fixes:
     * Executing "Delete" command when context menu is opened via tap-hold
     * Unpin topic/assoc on delete
-* Composability: component emits `topics-drag` event to signalize a multi-move
+* Improved composability: component emits `topics-drag` event to signalize a multi-move
 
 **0.6** -- Jun 6, 2018
 

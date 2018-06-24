@@ -29,12 +29,13 @@ cytoscape.use(cxtmenu)
 
 export default class CytoscapeView {
 
-  constructor (renderer, parent, container, box, contextCommands, dispatch) {
+  constructor (renderer, parent, container, box, contextCommands, state, dispatch) {
     this.renderer = renderer,
     this.parent = parent,
     this.cy = this.instantiateCy(container)
     this.box = box              // the measurement box
     this.contextMenus(contextCommands)
+    this.state = state
     this.dispatch = dispatch
     this.svgReady = svgReady    // a promise resolved once the Font Awesome SVG is loaded
     // Note: by using arrow functions in a select handler 'this' refers to this CytoscapeView instance (instead of the
@@ -316,7 +317,7 @@ export default class CytoscapeView {
   topicDrag (node) {
     if (!assocId(node)) {   // aux nodes don't emit topic-drag events
       if (this.isTopicSelected(id(node)) && this.isMultiSelection()) {
-        console.log('drag multi', this.parent.selection.topicIds)
+        console.log('drag multi', this.state.selection.topicIds)
         this.emitTopicsDrag()
       } else {
         console.log('drag single', id(node))
@@ -334,7 +335,7 @@ export default class CytoscapeView {
   }
 
   emitTopicsDrag (node) {
-    this.parent.$emit('topics-drag', this.parent.selection.topicIds.map(id => {
+    this.parent.$emit('topics-drag', this.state.selection.topicIds.map(id => {
       const pos = this.cyElement(id).position()
       return {
         topicId: id,
@@ -371,7 +372,7 @@ export default class CytoscapeView {
   invokeTopicHandler (id, cmd) {
     var arg
     if (cmd.multi) {
-      arg = this.isTopicSelected(id) ? idLists(this.parent.selection) : {topicIds: [id], assocIds: []}
+      arg = this.isTopicSelected(id) ? idLists(this.state.selection) : {topicIds: [id], assocIds: []}
     } else {
       arg = id
     }
@@ -381,7 +382,7 @@ export default class CytoscapeView {
   invokeAssocHandler (id, cmd) {
     var arg
     if (cmd.multi) {
-      arg = this.isAssocSelected(id) ? idLists(this.parent.selection) : {topicIds: [], assocIds: [id]}
+      arg = this.isAssocSelected(id) ? idLists(this.state.selection) : {topicIds: [], assocIds: [id]}
     } else {
       arg = id
     }
@@ -389,15 +390,15 @@ export default class CytoscapeView {
   }
 
   isTopicSelected (id) {
-    return this.parent.selection.topicIds.includes(id)
+    return this.state.selection.topicIds.includes(id)
   }
 
   isAssocSelected (id) {
-    return this.parent.selection.assocIds.includes(id)
+    return this.state.selection.assocIds.includes(id)
   }
 
   isMultiSelection () {
-    return this.parent.selection.isMulti()
+    return this.state.selection.isMulti()
   }
 }
 

@@ -11,6 +11,8 @@ const state = {
 
   topicmap: undefined,            // the rendered topicmap (dm5.Topicmap)
   topicmapWritable: undefined,    // True if the current user has WRITE permission for the rendered topicmap
+  selection: undefined,           // the selection model of the rendered topicmap (a Selection object)
+
   object: undefined,              // the selected object (dm5.DeepaMehtaObject)
   objectWritable: undefined,      // True if the current user has WRITE permission for the selected object
 
@@ -301,9 +303,15 @@ const actions = {
 
   // Module internal
 
+  /**
+   * @param   renderer    the dm5-cytoscape-renderer (a Vue instance)
+   * @param   parent      the dm5-topicmap-panel (a Vue instance)
+   * @param   container   the container DOM element for the Cytoscape instance
+   * @param   box         the DOM element used for measurement
+   */
   _initCytoscape ({dispatch}, {renderer, parent, container, box, contextCommands}) {
     // console.log('_initCytoscape')
-    cyView = new CytoscapeView(renderer, parent, container, box, contextCommands, dispatch)
+    cyView = new CytoscapeView(renderer, parent, container, box, contextCommands, state, dispatch)
   },
 
   _syncObject (_, object) {
@@ -336,10 +344,11 @@ const actions = {
   /**
    * @returns   a promise resolved once topicmap rendering is complete.
    */
-  renderTopicmap (_, {topicmap, writable}) {
+  renderTopicmap (_, {topicmap, writable, selection}) {
     // console.log('renderTopicmap', topicmap.id)
     state.topicmap = topicmap
     state.topicmapWritable = writable
+    state.selection = selection
     state.ele = undefined
     state.details = {}
     return cyView.svgReady.then(renderTopicmap).then(showPinnedDetails)
