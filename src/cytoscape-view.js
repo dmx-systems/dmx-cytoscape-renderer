@@ -390,11 +390,11 @@ export default class CytoscapeView {
   }
 
   isTopicSelected (id) {
-    return this.state.selection.topicIds.includes(id)
+    return this.state.selection.includesTopic(id)
   }
 
   isAssocSelected (id) {
-    return this.state.selection.assocIds.includes(id)
+    return this.state.selection.includesAssoc(id)
   }
 
   isMultiSelection () {

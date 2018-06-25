@@ -52,8 +52,7 @@ export default {
   computed: {
 
     ...mapState({
-      topicmap: state => state['dm4.webclient.default_topicmap_renderer'].topicmap,
-      ele:      state => state['dm4.webclient.default_topicmap_renderer'].ele
+      selection: state => state['dm4.webclient.default_topicmap_renderer'].selection
     }),
 
     object () {
@@ -65,7 +64,7 @@ export default {
     },
 
     selected () {
-      return this.ele && id(this.ele) === this.detail.id
+      return this.selection.includesId(this.detail.id)
     },
 
     style () {
@@ -156,12 +155,6 @@ export default {
   components: {
     'dm5-object-renderer': require('dm5-object-renderer').default
   }
-}
-
-// copy in cytoscape-renderer.js and dm5.cytoscape-renderer.vue
-function id (ele) {
-  // Note: cytoscape element IDs are strings
-  return Number(ele.id())
 }
 </script>
 
