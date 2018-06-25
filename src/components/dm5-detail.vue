@@ -11,10 +11,8 @@
     </dm5-object-renderer>
     <div class="button-panel">
       <el-button :class="['lock', 'fa', lockIcon]" type="text" @click="toggleLocked"></el-button>
-      <!-- el-button class="collapse fa fa-compress" type="text" @click="collapse"></el-button -->
       <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" @click="togglePinned">
       </el-button>
-      <!-- el-button class="handle fa fa-bars" type="text" @contextmenu.native.prevent="handle"></el-button -->
     </div>
   </div>
 </template>
@@ -125,18 +123,6 @@ export default {
       this.pinned = !this.pinned
     },
 
-    /* Not in use
-    collapse () {
-      // TODO: drop it?
-    }, */
-
-    /* Not in use
-    handle (e) {
-      // e.target.style.pointerEvents = 'none'
-      console.log('handle', e)
-      this.detail.node.emit('taphold', {x: e.x, y: e.y})
-    }, */
-
     setInlineId (id) {
       if (!id) {
         this.$emit('object-submit', this.object)
@@ -201,11 +187,6 @@ export default {
   right: 4px;
 }
 
-/* Not in use
-.dm5-detail .button-panel button.collapse {
-  right: 47px;
-} */
-
 .dm5-detail .button-panel button.pin {
   right: 25px;
 }
@@ -215,9 +196,4 @@ export default {
   font-size: 15px !important;
   -webkit-text-stroke: 1px var(--highlight-color);
 }
-
-/* Not in use
-.dm5-detail .button-panel button.handle {
-  right: 3px;
-} */
 </style>
