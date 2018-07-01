@@ -48,6 +48,8 @@ const actions = {
     return dm5.restClient.getTopicmap(id)
   },
 
+  // TODO: rename "reveal" functions to "show"
+
   /**
    * Reveals a topic on the topicmap panel.
    *
@@ -892,10 +894,9 @@ function initPos (viewTopic) {
   if (viewTopic.getViewProp('dm4.topicmaps.x') === undefined) {
     const pos = {}
     if (state.object) {
-      // If there is a topic selection: place lower/right to the selected topic
+      // If there is a single selection: place lower/right to the selected topic/assoc
       // TODO: more elaborated placement, e.g. at near free position?
-      // FIXME: check for *topic* selection
-      const p = state.topicmap.getTopic(state.object.id).getPosition()
+      const p = state.topicmap.getPosition(state.object.id)
       pos.x = p.x + 50
       pos.y = p.y + 50
     } else {
