@@ -282,8 +282,9 @@ const actions = {
     directives.forEach(dir => {
       switch (dir.type) {
       case "UPDATE_TOPIC":
-        updateTopic(dir.arg, dispatch)    // FIXME: construct dm5.Topic?
-        updateDetail(new dm5.Topic(dir.arg))
+        const topic = new dm5.Topic(dir.arg)
+        updateTopic(topic, dispatch)
+        updateDetail(topic.isType() ? topic.asType() : topic)
         break
       case "DELETE_TOPIC":
         deleteTopic(dir.arg, dispatch)
