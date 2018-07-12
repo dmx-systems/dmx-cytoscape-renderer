@@ -284,7 +284,7 @@ const actions = {
       case "UPDATE_TOPIC":
         const topic = new dm5.Topic(dir.arg)
         updateTopic(topic, dispatch)
-        updateDetail(topic.isType() ? topic.asType() : topic)
+        updateDetail(topic)
         break
       case "DELETE_TOPIC":
         deleteTopic(dir.arg, dispatch)
@@ -551,6 +551,7 @@ function _setAssocPinned (assocId, pinned, dispatch) {
 
 /**
  * Processes an UPDATE_TOPIC directive.
+ * Updates the topicmap model when a topic value has changed.
  */
 function updateTopic (topic, dispatch) {
   // console.log('updateTopic', topic)
@@ -664,7 +665,7 @@ function createDetail (viewObject, ele) {
       }
     }
     viewObject.fetchObject().then(object => {
-      detail.object = object.isType() ? object.asType() : object    // logical copy in displayObject() (webclient.js)
+      detail.object = object.isType() ? object.asType() : object    // logical copy in updateDetail()
       resolve(detail)
     })
     viewObject.isWritable().then(writable => {
@@ -836,7 +837,7 @@ function removeDetail (detail) {
 function updateDetail (object) {
   const detail = Object.values(state.details).find(detail => detail.id === object.id)
   if (detail) {
-    detail.object = object
+    detail.object = object.isType() ? object.asType() : object    // logical copy in createDetail()
   }
 }
 
