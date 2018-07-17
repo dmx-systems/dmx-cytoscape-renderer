@@ -4,6 +4,13 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.8** -- Jul 17, 2018
+
+* Fixes:
+    * Visualization of selected pinned details
+    * Revealing assoc-related topics
+    * Renaming types
+
 **0.7** -- Jun 20, 2018
 
 * Multi-selection:
@@ -47,4 +54,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Jun 20, 2018
+Jul 17, 2018
