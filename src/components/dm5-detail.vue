@@ -50,7 +50,7 @@ export default {
   computed: {
 
     ...mapState({
-      selection: state => state['dm4.webclient.default_topicmap_renderer'].selection
+      selection: state => state['dmx.webclient.default_topicmap_renderer'].selection
     }),
 
     object () {

@@ -154,7 +154,7 @@ const actions = {
     _setTopicPinned(topicId, pinned, dispatch)
     // update server
     dm5.restClient.setTopicViewProps(state.topicmap.id, topicId, {    // FIXME: check topicmapWritable?
-      'dm4.topicmaps.pinned': pinned
+      'dmx.topicmaps.pinned': pinned
     })
   },
 
@@ -164,7 +164,7 @@ const actions = {
     _setAssocPinned(assocId, pinned, dispatch)
     // update server
     dm5.restClient.setAssocViewProps(state.topicmap.id, assocId, {    // FIXME: check topicmapWritable?
-      'dm4.topicmaps.pinned': pinned
+      'dmx.topicmaps.pinned': pinned
     })
   },
 
@@ -891,9 +891,9 @@ function createAuxNode (edge) {
  * Auto-position topic if no position is set.
  */
 function initPos (viewTopic) {
-  // console.log('initPos', viewTopic.id, viewTopic.getViewProp('dm4.topicmaps.x') !== undefined,
+  // console.log('initPos', viewTopic.id, viewTopic.getViewProp('dmx.topicmaps.x') !== undefined,
   //   state.object && state.object.id)
-  if (viewTopic.getViewProp('dm4.topicmaps.x') === undefined) {
+  if (viewTopic.getViewProp('dmx.topicmaps.x') === undefined) {
     const pos = {}
     if (state.object) {
       // If there is a single selection: place lower/right to the selected topic/assoc
