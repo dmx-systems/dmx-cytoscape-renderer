@@ -4,6 +4,11 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.9** -- Jul 31, 2018
+
+* Change type URI prefixes `dm4` -> `dmx`
+* Add GitLab CI/CD
+
 **0.8** -- Jul 17, 2018
 
 * Fixes:
@@ -54,4 +59,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Jul 17, 2018
+Jul 31, 2018
