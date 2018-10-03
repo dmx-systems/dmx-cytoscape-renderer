@@ -320,7 +320,7 @@ export default class CytoscapeView {
         console.log('drag multi', this.state.selection.topicIds)
         this.emitTopicsDrag()
       } else {
-        console.log('drag single', id(node))
+        // console.log('drag single', id(node))
         this.emitTopicDrag(node)
       }
     }

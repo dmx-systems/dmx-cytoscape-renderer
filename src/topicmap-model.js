@@ -102,7 +102,7 @@ const actions = {
    * - the server is *not* yet up-to-date
    */
   setTopicPosition (_, {id, pos}) {
-    console.log('setTopicPosition', id)
+    // console.log('setTopicPosition', id)
     // update state
     state.topicmap.getTopic(id).setPosition(pos)
     // sync view (up-to-date already)
@@ -496,9 +496,17 @@ const actions = {
   }
 }
 
+const getters = {
+  visibleTopicIds (state) {
+    // Note: at startup state.topicmap is undefined
+    return state.topicmap && state.topicmap.visibleTopicIds()
+  }
+}
+
 export default {
   state,
-  actions
+  actions,
+  getters
 }
 
 // === Model ===
