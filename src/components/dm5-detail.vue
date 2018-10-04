@@ -1,6 +1,5 @@
 <template>
   <div :class="['dm5-detail', {selected}, {locked}]" :data-detail-id="detail.id" :style="style">
-    <h3>{{object.value}}</h3>
     <!--
       Note: apparently "object" (a required "object" prop in child comp) can go away in an earlier update cycle
       than "detailNode" (the visibility predicate in parent comp). So we have to put v-if="object" here.
