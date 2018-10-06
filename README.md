@@ -4,6 +4,11 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.10** -- Oct 6, 2018
+
+* In-map detail component does not render title. The underlying object renderer has full rendering control.
+* Store module provides a `visibleTopicIds` getter
+
 **0.9** -- Jul 31, 2018
 
 * Change type URI prefixes `dm4` -> `dmx`
@@ -59,4 +64,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Jul 31, 2018
+Oct 6, 2018

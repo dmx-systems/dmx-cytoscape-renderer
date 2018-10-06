@@ -1,6 +1,6 @@
 {
   "name": "dm5-cytoscape-renderer",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "A DeepaMehta 5 topicmap renderer as a composable GUI component",
   "author": "Jörg Richter",
   "license": "MIT",
