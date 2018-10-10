@@ -278,7 +278,7 @@ const actions = {
   },
 
   _processDirectives ({dispatch}, directives) {
-    // console.log(`Topicmap Panel: processing ${directives.length} directives`)
+    console.log(`Topicmap Panel: processing ${directives.length} directives`)
     directives.forEach(dir => {
       switch (dir.type) {
       case "UPDATE_TOPIC":
@@ -290,11 +290,16 @@ const actions = {
         deleteTopic(dir.arg, dispatch)
         break
       case "UPDATE_ASSOCIATION":
-        updateAssoc(dir.arg, dispatch)
-        updateDetail(new dm5.Assoc(dir.arg))
+        const assoc = new dm5.Assoc(dir.arg)
+        updateAssoc(assoc, dispatch)
+        updateDetail(assoc)
         break
       case "DELETE_ASSOCIATION":
         deleteAssoc(dir.arg, dispatch)
+        break
+      case "UPDATE_TOPIC_TYPE":
+        const type = new dm5.TopicType(dir.arg)
+        updateTopicIcons(type.uri, dispatch)
         break
       }
     })
@@ -382,6 +387,11 @@ const actions = {
   syncTopic (_, id) {
     // console.log('syncTopic', id)
     cyElement(id).data('label', state.topicmap.getTopic(id).value)
+  },
+
+  syncTopicIcon (_, id) {
+    // console.log('syncTopicIcon', id)
+    cyElement(id).data('icon', state.topicmap.getTopic(id).getIcon())
   },
 
   syncAssoc (_, id) {
@@ -608,7 +618,18 @@ function deleteAssoc (assoc, dispatch) {
   }
 }
 
-//
+/**
+ * Processes an UPDATE_TOPIC_TYPE directive.
+ */
+function updateTopicIcons (typeUri, dispatch) {
+  state.topicmap.filterTopics(topic => topic.typeUri === typeUri).forEach(topic => {
+    // Note: no state update here. Topic icon is not part of ViewTopic but computed based on type definition. Type cache
+    // is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model processes directives.
+    dispatch('syncTopicIcon', topic.id)         // sync view
+  })
+}
+
+// Pinning
 
 function unpinTopicIfPinned (id, dispatch) {
   if (state.topicmap.getTopic(id).isPinned()) {
