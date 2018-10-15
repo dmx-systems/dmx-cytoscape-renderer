@@ -161,6 +161,10 @@ export default {
   pointer-events: none;
 }
 
+.dm5-detail .dm5-object-renderer {
+  margin-top: 12px;
+}
+
 .dm5-detail .button-panel {
   position: absolute;
   top: 0;
