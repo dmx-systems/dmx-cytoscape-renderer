@@ -2,7 +2,7 @@
   <div class="dm5-cytoscape-renderer">
     <div class="cytoscape-container" ref="cytoscape-container"></div>
     <div class="measurement-box" ref="measurement-box"></div>
-    <dm5-detail-layer :object-renderers="objectRenderers" :quill-config="quillConfig" :zoom="zoom"
+    <dm5-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig" :zoom="zoom"
       @object-submit="submitObject" @child-topic-reveal="revealChildTopic">
     </dm5-detail-layer>
   </div>
@@ -33,7 +33,7 @@ export default {
   },
 
   mixins: [
-    require('./mixins/object-renderers').default
+    require('./mixins/detail-renderers').default
   ],
 
   props: {

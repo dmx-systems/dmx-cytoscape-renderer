@@ -5,7 +5,7 @@
       than "detailNode" (the visibility predicate in parent comp). So we have to put v-if="object" here.
       TODO: approve this hypothesis. ### FIXDOC
     -->
-    <dm5-object-renderer v-if="object" :object="object" :writable="writable" mode="info" :renderers="objectRenderers"
+    <dm5-object-renderer v-if="object" :object="object" :writable="writable" mode="info" :renderers="detailRenderers"
       :quill-config="_quillConfig" @inline="setInlineId" @child-topic-reveal="revealChildTopic" @updated="updated">
     </dm5-object-renderer>
     <div class="button-panel">
@@ -31,7 +31,7 @@ export default {
   },
 
   mixins: [
-    require('./mixins/object-renderers').default
+    require('./mixins/detail-renderers').default
   ],
 
   props: {
