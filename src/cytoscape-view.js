@@ -94,7 +94,7 @@ export default class CytoscapeView {
           selector: 'edge',
           style: {
             'width': 3,
-            'line-color': 'rgb(178, 178, 178)',
+            'line-color': ele => ele.data('color'),
             'curve-style': 'bezier',
             'label': 'data(label)',
             'font-family': FONT_FAMILY,

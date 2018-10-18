@@ -278,7 +278,7 @@ const actions = {
   },
 
   _processDirectives ({dispatch}, directives) {
-    console.log(`Topicmap Panel: processing ${directives.length} directives`)
+    console.log(`Cytoscape Renderer: processing ${directives.length} directives`)
     directives.forEach(dir => {
       switch (dir.type) {
       case "UPDATE_TOPIC":
@@ -298,8 +298,10 @@ const actions = {
         deleteAssoc(dir.arg, dispatch)
         break
       case "UPDATE_TOPIC_TYPE":
-        const type = new dm5.TopicType(dir.arg)
-        updateTopicIcons(type.uri, dispatch)
+        updateTopicIcons(dir.arg.uri, dispatch)
+        break
+      case "UPDATE_ASSOCIATION_TYPE":
+        updateAssocColors(dir.arg.uri, dispatch)
         break
       }
     })
@@ -362,13 +364,6 @@ const actions = {
     return cyView.svgReady.then(renderTopicmap).then(showPinnedDetails)
   },
 
-  syncStyles (_, assocTypeColors) {
-    // console.log('syncStyles', assocTypeColors)
-    for (const typeUri in assocTypeColors) {
-      cyView.cy.style().selector(`edge[typeUri='${typeUri}']`).style({'line-color': assocTypeColors[typeUri]})
-    }
-  },
-
   syncAddTopic (_, id) {
     // console.log('syncAddTopic', id)
     const viewTopic = state.topicmap.getTopic(id)
@@ -401,6 +396,11 @@ const actions = {
       typeUri: assoc.typeUri,
       label:   assoc.value
     })
+  },
+
+  syncAssocColor (_, id) {
+    // console.log('syncAssocColor', id)
+    cyElement(id).data('color', state.topicmap.getAssoc(id).getColor())
   },
 
   /**
@@ -623,9 +623,22 @@ function deleteAssoc (assoc, dispatch) {
  */
 function updateTopicIcons (typeUri, dispatch) {
   state.topicmap.filterTopics(topic => topic.typeUri === typeUri).forEach(topic => {
-    // Note: no state update here. Topic icon is not part of ViewTopic but computed based on type definition. Type cache
-    // is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model processes directives.
+    // Note: no state update here. Topic icon is not part of ViewTopic but computed based on type definition.
+    // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
+    // processes directives.
     dispatch('syncTopicIcon', topic.id)         // sync view
+  })
+}
+
+/**
+ * Processes an UPDATE_ASSOCIATION_TYPE directive.
+ */
+function updateAssocColors (typeUri, dispatch) {
+  state.topicmap.filterAssocs(assoc => assoc.typeUri === typeUri).forEach(assoc => {
+    // Note: no state update here. Assoc color is not part of ViewAssoc but computed based on type definition.
+    // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
+    // processes directives.
+    dispatch('syncAssocColor', assoc.id)        // sync view
   })
 }
 
@@ -968,6 +981,7 @@ function cyEdge (viewAssoc) {
       id:      viewAssoc.id,
       typeUri: viewAssoc.typeUri,
       label:   viewAssoc.value,
+      color:   viewAssoc.getColor(),
       source:  viewAssoc.role1.topicId,
       target:  viewAssoc.role2.topicId,
       viewAssoc
