@@ -4,6 +4,11 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.11** -- Oct 21, 2018
+
+* Rename component prop `object-renderers` to `detail-renderers`. It contains both, `object` and `value` renderers.
+* Fix: refresh topic icons and assoc colors on view config change
+
 **0.10** -- Oct 6, 2018
 
 * In-map detail component does not render title. The underlying object renderer has full rendering control.
@@ -64,4 +69,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Oct 6, 2018
+Oct 21, 2018
