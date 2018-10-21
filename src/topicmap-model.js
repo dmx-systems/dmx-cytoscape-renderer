@@ -509,8 +509,8 @@ const actions = {
 const getters = {
   visibleTopicIds (state) {
     // Note: at startup state.topicmap is undefined
-    // console.log('visibleTopicIds getter', state.topicmap && state.topicmap.visibleTopicIds())
-    return state.topicmap && state.topicmap.visibleTopicIds()
+    // console.log('visibleTopicIds getter', state.topicmap)
+    return state.topicmap && state.topicmap.filterTopics(topic => topic.isVisible()).map(topic => topic.id)
   }
 }
 
