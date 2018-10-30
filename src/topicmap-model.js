@@ -333,10 +333,10 @@ const actions = {
     state.objectWritable = writable
   },
 
-  _syncDetailSize (_, id) {
+  _syncDetailSize: dm5.utils.debounce((_, id) => {
     // console.log('_syncDetailSize', id)
     measureDetail(detail(id))
-  },
+  }, 250),
 
   _playFisheyeAnimation () {
     playFisheyeAnimation()
