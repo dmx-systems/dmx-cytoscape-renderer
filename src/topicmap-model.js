@@ -121,7 +121,7 @@ const actions = {
    * @param   coords    array of 3-prop objects: 'topicId', 'x', 'y'
    */
   setTopicPositions (_, coords) {
-    console.log('setTopicPositions', coords)
+    // console.log('setTopicPositions', coords)
     // update state
     coords.forEach(coord =>
       state.topicmap.getTopic(coord.topicId).setPosition({
@@ -138,7 +138,7 @@ const actions = {
 
   // TODO: move update-server aspect to main application? Move this action to webclient.js?
   hideMulti ({dispatch}, idLists) {
-    console.log('hideMulti', idLists.topicIds, idLists.assocIds)
+    // console.log('hideMulti', idLists.topicIds, idLists.assocIds)
     // update state + sync view (for immediate visual feedback)
     idLists.topicIds.forEach(id => dispatch('_hideTopic', id))
     idLists.assocIds.forEach(id => dispatch('_hideAssoc', id))
@@ -336,7 +336,7 @@ const actions = {
   _syncDetailSize: dm5.utils.debounce((_, id) => {
     // console.log('_syncDetailSize', id)
     measureDetail(detail(id))
-  }, 250),
+  }, 300),
 
   _playFisheyeAnimation () {
     playFisheyeAnimation()
@@ -394,7 +394,8 @@ const actions = {
     const assoc = state.topicmap.getAssoc(id)
     cyElement(id).data({
       typeUri: assoc.typeUri,
-      label:   assoc.value
+      label:   assoc.value,
+      color:   assoc.getColor()
     })
   },
 
@@ -963,7 +964,7 @@ function cyNode (viewTopic) {
       id:      viewTopic.id,
       typeUri: viewTopic.typeUri,
       label:   viewTopic.value,
-      icon:    viewTopic.getIcon(),
+      icon:    viewTopic.getIcon(),       // TODO: drop it? Is computed from typeUri
       viewTopic
     },
     position: viewTopic.getPosition()
@@ -981,7 +982,7 @@ function cyEdge (viewAssoc) {
       id:      viewAssoc.id,
       typeUri: viewAssoc.typeUri,
       label:   viewAssoc.value,
-      color:   viewAssoc.getColor(),
+      color:   viewAssoc.getColor(),      // TODO: drop it? Is computed from typeUri
       source:  viewAssoc.role1.topicId,
       target:  viewAssoc.role2.topicId,
       viewAssoc

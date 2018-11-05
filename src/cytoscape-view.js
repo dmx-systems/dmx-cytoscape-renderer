@@ -317,7 +317,7 @@ export default class CytoscapeView {
   topicDrag (node) {
     if (!assocId(node)) {   // aux nodes don't emit topic-drag events
       if (this.isTopicSelected(id(node)) && this.isMultiSelection()) {
-        console.log('drag multi', this.state.selection.topicIds)
+        // console.log('drag multi', this.state.selection.topicIds)
         this.emitTopicsDrag()
       } else {
         // console.log('drag single', id(node))
