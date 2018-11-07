@@ -4,6 +4,11 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.12** -- Nov 7, 2018
+
+* Debounce node resizing
+* Fix: update assoc color on retype
+
 **0.11** -- Oct 21, 2018
 
 * Rename component prop `object-renderers` to `detail-renderers`. It contains both, `object` and `value` renderers.
@@ -69,4 +74,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Oct 21, 2018
+Nov 7, 2018

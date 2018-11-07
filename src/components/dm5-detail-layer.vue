@@ -23,7 +23,7 @@ export default {
     details () {
       const topicmapModel = this.$store.state['dmx.webclient.default_topicmap_renderer']
       if (!topicmapModel) {
-        console.log('Cytoscape renderer not available')
+        // console.log('Cytoscape renderer not available')
       }
       return topicmapModel && topicmapModel.details
     }
