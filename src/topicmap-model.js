@@ -925,7 +925,7 @@ function createAuxNode (edge) {
     // The renderer recognizes an aux node by having "assocId" data.
     data: {
       assocId: eleId(edge),         // holds original edge ID. Needed by context menu.
-      icon: '\uf10c'                // see model.js DEFAULT_TOPIC_ICON
+      icon: '\uf111'                // see model.js DEFAULT_TOPIC_ICON
     },
     position: edge.midpoint()
   })
