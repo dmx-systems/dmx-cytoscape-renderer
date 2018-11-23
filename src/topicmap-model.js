@@ -372,8 +372,8 @@ const actions = {
   },
 
   syncAddAssoc (_, id) {
-    // console.log('syncAddAssoc', id)
     const assoc = state.topicmap.getAssoc(id)
+    // console.log('syncAddAssoc', assoc)
     if (!assoc.hasAssocPlayer()) {    // this renderer doesn't support assoc-connected assocs
       cyView.cy.add(cyEdge(assoc))
     }
@@ -925,7 +925,7 @@ function createAuxNode (edge) {
     // The renderer recognizes an aux node by having "assocId" data.
     data: {
       assocId: eleId(edge),         // holds original edge ID. Needed by context menu.
-      icon: '\uf111'                // see model.js DEFAULT_TOPIC_ICON
+      icon: '\uf111'                // matches model.js DEFAULT_TOPIC_ICON
     },
     position: edge.midpoint()
   })
@@ -974,17 +974,25 @@ function cyNode (viewTopic) {
 /**
  * Builds a Cytoscape edge from a dm5.ViewAssoc
  *
+ * Prerequisite: viewAssoc has 2 topic players specified by-ID.
+ *
  * @param   viewAssoc   A dm5.ViewAssoc
  */
 function cyEdge (viewAssoc) {
+  const id1 = viewAssoc.role1.topicId
+  const id2 = viewAssoc.role2.topicId
+  if (id1 === undefined || id2 === undefined) {
+    throw Error('tried to build a Cytoscape edge based on an assoc whose players are not specified by-ID ' +
+      JSON.stringify(viewAssoc))
+  }
   return {
     data: {
       id:      viewAssoc.id,
       typeUri: viewAssoc.typeUri,
       label:   viewAssoc.value,
       color:   viewAssoc.getColor(),      // TODO: drop it? Is computed from typeUri
-      source:  viewAssoc.role1.topicId,
-      target:  viewAssoc.role2.topicId,
+      source:  id1,
+      target:  id2,
       viewAssoc
     }
   }
