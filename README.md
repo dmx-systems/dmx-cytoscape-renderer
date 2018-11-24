@@ -4,6 +4,11 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.13** -- Nov 24, 2018
+
+* Add `visibleAssocIds` getter
+* Add `cyEdge()` argument check
+
 **0.12** -- Nov 7, 2018
 
 * Debounce node resizing
@@ -74,4 +79,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Nov 7, 2018
+Nov 24, 2018
