@@ -169,8 +169,8 @@ export default {
   position: absolute;
   top: 0;
   right: 0;
-  width: 98px;
-  height: 30px;
+  width: 46px;
+  height: 24px;
   pointer-events: initial;
 }
 
