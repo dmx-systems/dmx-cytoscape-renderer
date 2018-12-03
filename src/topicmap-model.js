@@ -949,8 +949,8 @@ function initPos (viewTopic) {
       // If there is a single selection: place lower/right to the selected topic/assoc
       // TODO: more elaborated placement, e.g. at near free position?
       const p = state.topicmap.getPosition(state.object.id)
-      pos.x = p.x + 50
-      pos.y = p.y + 50
+      pos.x = p.x + 60
+      pos.y = p.y + 120
     } else {
       pos.x = 100
       pos.y = 100
