@@ -36,7 +36,6 @@ export default {
 
   props: {
     detail: {type: Object, required: true},
-    zoom:   {type: Number, required: true},
     quillConfig: Object
   },
 
@@ -49,7 +48,8 @@ export default {
   computed: {
 
     ...mapState({
-      selection: state => state['dmx.webclient.default_topicmap_renderer'].selection
+      selection: state => state['dmx.webclient.default_topicmap_renderer'].selection,
+      zoom:      state => state['dmx.webclient.default_topicmap_renderer'].zoom
     }),
 
     object () {

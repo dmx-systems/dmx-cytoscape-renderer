@@ -2,7 +2,7 @@
   <div class="dm5-cytoscape-renderer">
     <div class="cytoscape-container" ref="cytoscape-container"></div>
     <div class="measurement-box" ref="measurement-box"></div>
-    <dm5-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig" :zoom="zoom"
+    <dm5-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig"
       @object-submit="submitObject" @child-topic-reveal="revealChildTopic">
     </dm5-detail-layer>
   </div>
@@ -19,7 +19,6 @@ export default {
   mounted () {
     // console.log('dm5-cytoscape-renderer mounted')
     this.$store.dispatch('_initCytoscape', {
-      renderer:        this,
       parent:          this.$parent,
       container:       this.$refs['cytoscape-container'],
       box:             this.$refs['measurement-box'],
@@ -44,8 +43,7 @@ export default {
   data () {
     return {
       object: undefined,      // updated by parent component
-      writable: undefined,    // updated by parent component
-      zoom: 1                 // TODO: real init value
+      writable: undefined     // updated by parent component
     }
   },
 

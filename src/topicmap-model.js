@@ -16,7 +16,7 @@ let fisheyeAnimation
 
 const state = {
 
-  // Model
+  // DMX Model
 
   topicmap: undefined,            // the rendered topicmap (dm5.Topicmap)
   topicmapWritable: undefined,    // True if the current user has WRITE permission for the rendered topicmap
@@ -31,19 +31,21 @@ const state = {
                   //  {
                   //    id        ID of "object" (Number). May be set before "object" is actually available.
                   //    object    The object to render (dm5.Topic, dm5.Assoc)
-                  //    node      Getter. The "detail node" (a Cytoscape node). Either "ele" (if "ele" is a node), or the
-                  //              "aux node" (if "ele" is an edge). The detail node is visually styled (border, size).
+                  //    node      Getter. The "detail node" (a Cytoscape node). Either "ele" (if "ele" is a node),
+                  //              or the "aux node" (if "ele" is an edge). This node is visually styled (border, size).
                   //    pos       The position of the detail DOM.
                   //    size      The size (in pixel) of the detail DOM (object with "width" and "height" props).
                   //              Needed to calculate "pos".
                   //    writable  Getter. True if the current user has WRITE permission for "object" (Boolean)
                   //    pinned    Getter. Whether the detail is pinned or not (Boolean)
                   //  }
+
+  zoom: 1         // TODO: real init value
 }
 
 const actions = {
 
-  // === Model ===
+  // === DMX Model ===
 
   fetchTopicmap (_, id) {
     // console.log('fetchTopicmap', id, '(topicmap-model)')
@@ -316,14 +318,13 @@ const actions = {
   // Module internal
 
   /**
-   * @param   renderer    the dm5-cytoscape-renderer (a Vue instance)
    * @param   parent      the dm5-topicmap-panel (a Vue instance)
    * @param   container   the container DOM element for the Cytoscape instance
    * @param   box         the DOM element used for measurement
    */
-  _initCytoscape ({dispatch}, {renderer, parent, container, box, contextCommands}) {
+  _initCytoscape ({dispatch}, {parent, container, box, contextCommands}) {
     // console.log('_initCytoscape')
-    cyView = new CytoscapeView(renderer, parent, container, box, contextCommands, state, dispatch)
+    cyView = new CytoscapeView(parent, container, box, contextCommands, state, dispatch)
   },
 
   _syncObject (_, object) {
@@ -339,6 +340,10 @@ const actions = {
     // console.log('_syncDetailSize', id)
     measureDetail(detail(id))
   }, 300),
+
+  _syncZoom (_, zoom) {
+    state.zoom = zoom
+  },
 
   _playFisheyeAnimation () {
     playFisheyeAnimation()
@@ -529,7 +534,7 @@ export default {
   getters
 }
 
-// === Model ===
+// === DMX Model ===
 
 // Update state + sync view
 

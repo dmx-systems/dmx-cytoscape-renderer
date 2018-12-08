@@ -1,6 +1,6 @@
 <template>
   <div class="dm5-detail-layer">
-    <dm5-detail v-for="detail in details" :detail="detail" :zoom="zoom" :detail-renderers="detailRenderers"
+    <dm5-detail v-for="detail in details" :detail="detail" :detail-renderers="detailRenderers"
       :quill-config="quillConfig" :key="detail.node.id()" @object-submit="submitObject"
       @child-topic-reveal="revealChildTopic">
     </dm5-detail>
@@ -15,8 +15,7 @@ export default {
   ],
 
   props: {
-    quillConfig: Object,
-    zoom: Number
+    quillConfig: Object
   },
 
   computed: {
