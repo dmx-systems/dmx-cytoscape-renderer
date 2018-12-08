@@ -29,8 +29,7 @@ cytoscape.use(cxtmenu)
 
 export default class CytoscapeView {
 
-  constructor (renderer, parent, container, box, contextCommands, state, dispatch) {
-    this.renderer = renderer,
+  constructor (parent, container, box, contextCommands, state, dispatch) {
     this.parent = parent,
     this.cy = this.instantiateCy(container)
     this.box = box              // the measurement box
@@ -273,8 +272,10 @@ export default class CytoscapeView {
           this.topicDrag(dragState.node)
         }
       })
+    }).on('pan', () => {
+      this.dispatch('_syncPan', this.cy.pan())
     }).on('zoom', () => {
-      this.renderer.zoom = this.cy.zoom()
+      this.dispatch('_syncZoom', this.cy.zoom())
     })
   }
 

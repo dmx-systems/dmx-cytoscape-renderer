@@ -2,12 +2,21 @@ import CytoscapeView from './cytoscape-view'
 import Vue from 'vue'
 import dm5 from 'dm5'
 
-var cyView                // the CytoscapeView instance
-var fisheyeAnimation
+let cyView        // the CytoscapeView instance, instantiated by "_initCytoscape" action
+
+let ele           // The single selection: a selected Cytoscape element (node or edge). Undefined if there is no
+                  // single selection.
+                  // The selected element's details are displayed in-map. On unselect the details disappear
+                  // (unless pinned).
+                  // Note: the host application can visualize multi selections by the means of '_syncSelect' and
+                  // '_syncUnselect' actions. The details of multi selection elements are *not* displayed in-map
+                  // (unless pinned). ### TODO: introduce multi-selection state in this component?
+
+let fisheyeAnimation
 
 const state = {
 
-  // Model
+  // DMX Model
 
   topicmap: undefined,            // the rendered topicmap (dm5.Topicmap)
   topicmapWritable: undefined,    // True if the current user has WRITE permission for the rendered topicmap
@@ -18,30 +27,25 @@ const state = {
 
   // Cytoscape View
 
-  ele: undefined,         // The single selection: a selected Cytoscape element (node or edge). Undefined if there is no
-                          // single selection.
-                          // The selected element's details are displayed in-map. On unselect the details disappear
-                          // (unless pinned).
-                          // Note: the host application can visualize multi selections by the means of '_syncSelect' and
-                          // '_syncUnselect' actions. The details of multi selection elements are *not* displayed in-map
-                          // (unless pinned). ### TODO: introduce multi-selection state in this component?
+  details: {},    // In-map details. Detail records keyed by object ID:
+                  //  {
+                  //    id        ID of "object" (Number). May be set before "object" is actually available.
+                  //    object    The object to render (dm5.Topic, dm5.Assoc)
+                  //    node      Getter. The "detail node" (a Cytoscape node). Either "ele" (if "ele" is a node),
+                  //              or the "aux node" (if "ele" is an edge). This node is visually styled (border, size).
+                  //    pos       The position of the detail DOM.
+                  //    size      The size (in pixel) of the detail DOM (object with "width" and "height" props).
+                  //              Needed to calculate "pos".
+                  //    writable  Getter. True if the current user has WRITE permission for "object" (Boolean)
+                  //    pinned    Getter. Whether the detail is pinned or not (Boolean)
+                  //  }
 
-  details: {},            // In-map details. Detail records keyed by object ID:
-                          //  {
-                          //    id        ID of "object" (Number). May be set before "object" is actually available.
-                          //    object    The object whose details to be shown (dm5.Topic, dm5.Assoc)
-                          //    ele       The original Cytoscape element (node or edge) representing the object
-                          //    node      The "detail node": either "ele" (if "ele" is a node),
-                          //              or the "aux node" (if "ele" is an edge)
-                          //    size      The size (in pixel) of the detail DOM (object with "width" and "height" props)
-                          //    writable  True if the current user has WRITE permission for "object" (boolean)
-                          //    pinned    Whether the detail is pinned or not (boolean)
-                          //  }
+  zoom: 1         // TODO: real init value
 }
 
 const actions = {
 
-  // === Model ===
+  // === DMX Model ===
 
   fetchTopicmap (_, id) {
     // console.log('fetchTopicmap', id, '(topicmap-model)')
@@ -314,14 +318,13 @@ const actions = {
   // Module internal
 
   /**
-   * @param   renderer    the dm5-cytoscape-renderer (a Vue instance)
    * @param   parent      the dm5-topicmap-panel (a Vue instance)
    * @param   container   the container DOM element for the Cytoscape instance
    * @param   box         the DOM element used for measurement
    */
-  _initCytoscape ({dispatch}, {renderer, parent, container, box, contextCommands}) {
+  _initCytoscape ({dispatch}, {parent, container, box, contextCommands}) {
     // console.log('_initCytoscape')
-    cyView = new CytoscapeView(renderer, parent, container, box, contextCommands, state, dispatch)
+    cyView = new CytoscapeView(parent, container, box, contextCommands, state, dispatch)
   },
 
   _syncObject (_, object) {
@@ -337,6 +340,14 @@ const actions = {
     // console.log('_syncDetailSize', id)
     measureDetail(detail(id))
   }, 300),
+
+  _syncPan () {
+    updateAllDetailPos()
+  },
+
+  _syncZoom (_, zoom) {
+    state.zoom = zoom
+  },
 
   _playFisheyeAnimation () {
     playFisheyeAnimation()
@@ -356,10 +367,10 @@ const actions = {
    */
   renderTopicmap (_, {topicmap, writable, selection}) {
     // console.log('renderTopicmap', topicmap.id)
+    ele = undefined
     state.topicmap = topicmap
     state.topicmapWritable = writable
     state.selection = selection
-    state.ele = undefined
     state.details = {}
     return cyView.svgReady.then(renderTopicmap).then(showPinnedDetails)
   },
@@ -412,7 +423,7 @@ const actions = {
    * - the topicmap rendering is complete
    *
    * Postcondition:
-   * - state.ele is up-to-date
+   * - "ele" is up-to-date
    *
    * @param   id  id of a topic or an assoc
    * @param   p   a promise resolved once topic/assoc data has arrived (global "object" state is up-to-date).
@@ -425,12 +436,12 @@ const actions = {
     // remove the current selection.
     // Note 2: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
     // available. The actual order of these 2 occasions doesn't matter.
-    Promise.all([p, ...state.ele ? [unselectElement()] : []]).then(() => {
+    Promise.all([p, ...ele ? [unselectElement()] : []]).then(() => {
       // console.log('restore animation complete')
       showDetail(createSelectionDetail())
     })
-    state.ele = cyView.select(cyElement(id))    // select() restores selection after switching topicmap
-    if (state.ele.size() !== 1) {
+    ele = cyView.select(cyElement(id))    // select() restores selection after switching topicmap
+    if (ele.size() !== 1) {
       throw Error(`can't select element ${id} (not found in topicmap ${state.topicmap.id})`)
     }
   },
@@ -438,7 +449,7 @@ const actions = {
   syncUnselect () {
     // console.log('syncUnselect')
     unselectElement().then(playFisheyeAnimationIfDetailsOnscreen)
-    state.ele = undefined
+    ele = undefined
   },
 
   /**
@@ -449,8 +460,8 @@ const actions = {
    */
   _syncSelect (_, id) {
     // console.log('_syncSelect', id)
-    if (state.ele) {
-      throw Error(`_syncSelect(${id}) called when state.ele is set (${eleId(state.ele)})`)
+    if (ele) {
+      throw Error(`_syncSelect(${id}) called when "ele" is set (${eleId(ele)})`)
     }
     cyView.select(cyElement(id))
   },
@@ -463,8 +474,8 @@ const actions = {
    */
   _syncUnselect (_, id) {
     // console.log('_syncUnselect', id)
-    if (!state.ele) {
-      throw Error(`_syncUnselect(${id}) called when state.ele is not set`)
+    if (!ele) {
+      throw Error(`_syncUnselect(${id}) called when "ele" is not set`)
     }
     cyView.unselect(cyElement(id))    // TODO: assert that cyElement() not empty?
   },
@@ -527,7 +538,7 @@ export default {
   getters
 }
 
-// === Model ===
+// === DMX Model ===
 
 // Update state + sync view
 
@@ -682,7 +693,7 @@ function _unpinAssocIfPinned (id, dispatch) {
 function showPinnedDetails () {
   state.topicmap.forEachTopic(viewTopic => {
     if (viewTopic.isVisible() && viewTopic.isPinned()) {
-      createDetail(viewTopic, cyElement(viewTopic.id)).then(detail => {
+      createDetail(viewTopic).then(detail => {
         showDetail(detail)
       })
     }
@@ -690,7 +701,7 @@ function showPinnedDetails () {
   state.topicmap.forEachAssoc(viewAssoc => {
     // this renderer doesn't support assoc-connected assocs
     if (!viewAssoc.hasAssocPlayer() && viewAssoc.isPinned()) {
-      createDetail(viewAssoc, cyElement(viewAssoc.id)).then(detail => {
+      createDetail(viewAssoc).then(detail => {
         showDetail(detail)
       })
     }
@@ -699,21 +710,28 @@ function showPinnedDetails () {
 
 /**
  * Creates a detail record for the given element.
+ *
+ * @param   viewObject    a dm5.ViewTopic or a dm5.ViewAssoc
  */
-function createDetail (viewObject, ele) {
-  return new Promise(resolve => {
-    const detail = {
-      id: eleId(ele),
-      object: undefined,
-      ele,
-      node: ele.isNode() ? ele : createAuxNode(ele),
-      size: undefined,
-      writable: undefined,
-      // Note: a property would not be reactive. With a getter it works.
-      get pinned () {
-        return viewObject.isPinned()
-      }
+function createDetail (viewObject) {
+  const ele = cyElement(viewObject.id)
+  const node = ele.isNode() ? ele : createAuxNode(ele)
+  const detail = {
+    id: viewObject.id,
+    object: undefined,
+    pos: node.renderedPosition(),
+    size: undefined,
+    writable: undefined,
+    get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
+      return node           // By using a getter (instead a prop) the object is not made reactive.
+    },
+    // Note: a property would not be reactive. With a getter it works.
+    get pinned () {
+      return viewObject.isPinned()
     }
+  }
+  listenPosition(detail)
+  return new Promise(resolve => {
     viewObject.fetchObject().then(object => {
       detail.object = object.isType() ? object.asType() : object    // logical copy in updateDetail()
       resolve(detail)
@@ -728,29 +746,31 @@ function createDetail (viewObject, ele) {
  * Creates a detail record for the current selection.
  *
  * Precondition:
- * - state.ele state is up-to-date
+ * - "ele" is up-to-date
  * - "object" state is up-to-date
  *
  * @return  the created detail record
  */
 function createSelectionDetail () {
   // console.log('createSelectionDetail', state.object)
-  const id = eleId(state.ele)
-  var node, viewObject
-  if (state.ele.isNode()) {
-    node = state.ele
+  const id = eleId(ele)
+  let node, viewObject
+  if (ele.isNode()) {
+    node = ele
     viewObject = state.topicmap.getTopic(id)
   } else {
-    node = createAuxNode(state.ele)
-    cyView.select(node)     // select aux node along with assoc
+    node = createAuxNode(ele)
     viewObject = state.topicmap.getAssoc(id)
+    cyView.select(node)     // select aux node along with assoc
   }
-  return {
+  const detail = {
     id,
     object: state.object,
-    ele: state.ele,
-    node,
+    pos: node.renderedPosition(),
     size: undefined,
+    get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
+      return node           // By using a getter (instead a prop) the object is not made reactive.
+    },
     // Note: properties would not be reactive. With getters it works.
     get writable () {
       return state.objectWritable
@@ -759,6 +779,8 @@ function createSelectionDetail () {
       return viewObject.isPinned()
     }
   }
+  listenPosition(detail)
+  return detail
 }
 
 /**
@@ -844,16 +866,16 @@ function _syncTopicPosition (id) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function unselectElement () {
-  if (!state.ele) {
+  if (!ele) {
     throw Error('unselectElement() called when no element is selected')
   }
-  // console.log('unselectElement', eleId(state.ele), cyView.cy.elements(":selected").size())
+  // console.log('unselectElement', eleId(ele), cyView.cy.elements(":selected").size())
   // Note 1: when the user clicks on the background Cytoscape unselects the selected element on its own.
   // Calling cy.elements(":selected") afterwards would return an empty collection.
   // This is why we maintain an explicit "ele" state.
   // Note 2: unselect() removes the element's selection style when manually stripping topic/assoc from
   // browser URL. In this situation cy.elements(":selected") would return a non-empty collection.
-  cyView.unselect(state.ele)
+  cyView.unselect(ele)
   const detail = selectionDetail()
   return !detail.pinned ? removeDetail(detail) : Promise.resolve()
 }
@@ -872,10 +894,11 @@ function showDetail (detail) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function removeDetail (detail) {
+  detail.node.off('position')                     // FIXME: do not unregister *all* position handlers?
   // update state
   Vue.delete(state.details, detail.id)            // Vue.delete() triggers dm5-detail-layer rendering
   // sync view
-  if (detail.ele.isNode()) {
+  if (detail.object.isTopic()) {
     detail.node.removeClass('expanded')
     detail.node.style({width: '', height: ''})    // reset size
   } else {
@@ -889,6 +912,20 @@ function updateDetail (object) {
   if (detail) {
     detail.object = object.isType() ? object.asType() : object    // logical copy in createDetail()
   }
+}
+
+function updateAllDetailPos () {
+  Object.values(state.details).forEach(updateDetailPos)
+}
+
+function listenPosition (detail) {
+  detail.node.on('position', () => {
+    updateDetailPos(detail)
+  })
+}
+
+function updateDetailPos (detail) {
+  detail.pos = detail.node.renderedPosition()
 }
 
 /**
@@ -906,10 +943,10 @@ function playRestoreAnimation () {
 }
 
 function selectionDetail () {
-  if (!state.ele) {
+  if (!ele) {
     throw Error('selectionDetail() called when nothing is selected')
   }
-  return detail(eleId(state.ele))
+  return detail(eleId(ele))
 }
 
 function detail (id) {
@@ -1016,7 +1053,7 @@ function cyElement (id) {
 }
 
 function isSelected (objectId) {
-  return state.ele && eleId(state.ele) === objectId
+  return ele && eleId(ele) === objectId
 }
 
 // copy in dm5-cytoscape-renderer.vue and dm5-detail-layer.vue
