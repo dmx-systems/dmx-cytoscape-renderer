@@ -73,7 +73,7 @@ export default {
     },
 
     pos () {
-      const p = this.detail.node.renderedPosition()
+      const p = this.detail.pos
       const pos = {x: p.x, y: p.y}
       const size = this.detail.size
       if (size) {
@@ -94,7 +94,7 @@ export default {
         return this.detail.pinned
       },
       set (pinned) {
-        if (this.detail.ele.isNode()) {
+        if (this.detail.object.isTopic()) {
           // TODO: decoupling. Emit events instead of dispatching actions.
           this.$store.dispatch('setTopicPinned', {topicId: this.object.id, pinned})
         } else {

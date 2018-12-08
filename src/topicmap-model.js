@@ -30,13 +30,14 @@ const state = {
   details: {},    // In-map details. Detail records keyed by object ID:
                   //  {
                   //    id        ID of "object" (Number). May be set before "object" is actually available.
-                  //    object    The object whose details to be shown (dm5.Topic, dm5.Assoc)
-                  //    ele       The original Cytoscape element (node or edge) representing the object
-                  //    nodeId    The ID of the "detail node" (String). Either "ele" (if "ele" is a node), or the
+                  //    object    The object to render (dm5.Topic, dm5.Assoc)
+                  //    node      Getter. The "detail node" (a Cytoscape node). Either "ele" (if "ele" is a node), or the
                   //              "aux node" (if "ele" is an edge). The detail node is visually styled (border, size).
-                  //    size      The size (in pixel) of the detail DOM (object with "width" and "height" props)
-                  //    writable  True if the current user has WRITE permission for "object" (Boolean)
-                  //    pinned    Whether the detail is pinned or not (Boolean)
+                  //    pos       The position of the detail DOM.
+                  //    size      The size (in pixel) of the detail DOM (object with "width" and "height" props).
+                  //              Needed to calculate "pos".
+                  //    writable  Getter. True if the current user has WRITE permission for "object" (Boolean)
+                  //    pinned    Getter. Whether the detail is pinned or not (Boolean)
                   //  }
 }
 
@@ -705,24 +706,26 @@ function showPinnedDetails () {
  */
 function createDetail (viewObject) {
   const ele = cyElement(viewObject.id)
-  return new Promise(resolve => {
-    const detail = {
-      id: viewObject.id,
-      object: undefined,
-      nodeId: ele.isNode() ? ele.id() : createAuxNode(ele).id(),
-      size: undefined,
-      writable: undefined,
-      get ele () {
-        return ele
-      },
-      get node () {
-        return cyElement(this.nodeId)
-      },
-      // Note: a property would not be reactive. With a getter it works.
-      get pinned () {
-        return viewObject.isPinned()
-      }
+  const node = ele.isNode() ? ele : createAuxNode(ele)
+  const detail = {
+    id: viewObject.id,
+    object: undefined,
+    pos: node.renderedPosition(),
+    size: undefined,
+    writable: undefined,
+    get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
+      return node           // By using a getter (instead a prop) the object is not made reactive.
+    },
+    // Note: a property would not be reactive. With a getter it works.
+    get pinned () {
+      return viewObject.isPinned()
     }
+  }
+  // sync pos
+  node.on('position', () => {
+    detail.pos = node.renderedPosition()
+  })
+  return new Promise(resolve => {
     viewObject.fetchObject().then(object => {
       detail.object = object.isType() ? object.asType() : object    // logical copy in updateDetail()
       resolve(detail)
@@ -745,26 +748,22 @@ function createDetail (viewObject) {
 function createSelectionDetail () {
   // console.log('createSelectionDetail', state.object)
   const id = eleId(ele)
-  let nodeId, viewObject
+  let node, viewObject
   if (ele.isNode()) {
-    nodeId = ele.id()
+    node = ele
     viewObject = state.topicmap.getTopic(id)
   } else {
-    const auxNode = createAuxNode(ele)
-    cyView.select(auxNode)     // select aux node along with assoc
-    nodeId = auxNode.id()
+    node = createAuxNode(ele)
     viewObject = state.topicmap.getAssoc(id)
+    cyView.select(node)     // select aux node along with assoc
   }
-  return {
+  const detail = {
     id,
     object: state.object,
-    nodeId,
+    pos: node.renderedPosition(),
     size: undefined,
-    get ele () {
-      return ele
-    },
-    get node () {
-      return cyElement(this.nodeId)
+    get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
+      return node           // By using a getter (instead a prop) the object is not made reactive.
     },
     // Note: properties would not be reactive. With getters it works.
     get writable () {
@@ -774,6 +773,11 @@ function createSelectionDetail () {
       return viewObject.isPinned()
     }
   }
+  // sync pos
+  node.on('position', () => {
+    detail.pos = node.renderedPosition()
+  })
+  return detail
 }
 
 /**
@@ -887,10 +891,11 @@ function showDetail (detail) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function removeDetail (detail) {
+  detail.node.off('position')                     // FIXME: do not unregister *all* position handlers?
   // update state
   Vue.delete(state.details, detail.id)            // Vue.delete() triggers dm5-detail-layer rendering
   // sync view
-  if (detail.ele.isNode()) {
+  if (detail.object.isTopic()) {
     detail.node.removeClass('expanded')
     detail.node.style({width: '', height: ''})    // reset size
   } else {
