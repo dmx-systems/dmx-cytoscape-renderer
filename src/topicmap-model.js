@@ -341,6 +341,10 @@ const actions = {
     measureDetail(detail(id))
   }, 300),
 
+  _syncPan () {
+    updateAllDetailPos()
+  },
+
   _syncZoom (_, zoom) {
     state.zoom = zoom
   },
@@ -726,10 +730,7 @@ function createDetail (viewObject) {
       return viewObject.isPinned()
     }
   }
-  // sync pos
-  node.on('position', () => {
-    detail.pos = node.renderedPosition()
-  })
+  listenPosition(detail)
   return new Promise(resolve => {
     viewObject.fetchObject().then(object => {
       detail.object = object.isType() ? object.asType() : object    // logical copy in updateDetail()
@@ -778,10 +779,7 @@ function createSelectionDetail () {
       return viewObject.isPinned()
     }
   }
-  // sync pos
-  node.on('position', () => {
-    detail.pos = node.renderedPosition()
-  })
+  listenPosition(detail)
   return detail
 }
 
@@ -914,6 +912,20 @@ function updateDetail (object) {
   if (detail) {
     detail.object = object.isType() ? object.asType() : object    // logical copy in createDetail()
   }
+}
+
+function updateAllDetailPos () {
+  Object.values(state.details).forEach(updateDetailPos)
+}
+
+function listenPosition (detail) {
+  detail.node.on('position', () => {
+    updateDetailPos(detail)
+  })
+}
+
+function updateDetailPos (detail) {
+  detail.pos = detail.node.renderedPosition()
 }
 
 /**

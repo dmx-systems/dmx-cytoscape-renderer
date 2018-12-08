@@ -272,6 +272,8 @@ export default class CytoscapeView {
           this.topicDrag(dragState.node)
         }
       })
+    }).on('pan', () => {
+      this.dispatch('_syncPan', this.cy.pan())
     }).on('zoom', () => {
       this.dispatch('_syncZoom', this.cy.zoom())
     })
