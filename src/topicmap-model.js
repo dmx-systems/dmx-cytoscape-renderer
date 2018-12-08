@@ -691,21 +691,21 @@ function _unpinAssocIfPinned (id, dispatch) {
 // === Cytoscape View ===
 
 function showPinnedDetails () {
-  state.topicmap.forEachTopic(viewTopic => {
-    if (viewTopic.isVisible() && viewTopic.isPinned()) {
+  state.topicmap
+    .filterTopics(viewTopic => viewTopic.isVisible() && viewTopic.isPinned())
+    .forEach(viewTopic =>
       createDetail(viewTopic).then(detail => {
         showDetail(detail)
       })
-    }
-  })
-  state.topicmap.forEachAssoc(viewAssoc => {
+    )
+  state.topicmap
     // this renderer doesn't support assoc-connected assocs
-    if (!viewAssoc.hasAssocPlayer() && viewAssoc.isPinned()) {
+    .filterAssocs(viewAssoc => !viewAssoc.hasAssocPlayer() && viewAssoc.isPinned())
+    .forEach(viewAssoc =>
       createDetail(viewAssoc).then(detail => {
         showDetail(detail)
       })
-    }
-  })
+    )
 }
 
 /**
@@ -830,19 +830,15 @@ function playFisheyeAnimationIfDetailsOnscreen () {
 }
 
 function renderTopicmap () {
-  const eles = []
-  state.topicmap.forEachTopic(viewTopic => {
-    if (viewTopic.isVisible()) {
-      eles.push(cyNode(viewTopic))
-    }
-  })
-  state.topicmap.forEachAssoc(assoc => {
-    if (!assoc.hasAssocPlayer()) {    // this renderer doesn't support assoc-connected assocs
-      eles.push(cyEdge(assoc))
-    }
-  })
-  cyView.cy.remove("*")  // "*" is the group selector "all"
-  cyView.cy.add(eles)
+  cyView.cy.remove("*")   // "*" is the group selector "all"
+  cyView.cy.add(state.topicmap
+    .filterTopics(viewTopic => viewTopic.isVisible())
+    .map(cyNode)
+  )
+  cyView.cy.add(state.topicmap
+    .filterAssocs(viewAssoc => !viewAssoc.hasAssocPlayer())   // this renderer doesn't support assoc-connected assocs
+    .map(cyEdge)
+  )
   // console.log('### Topicmap rendering complete!')
 }
 
@@ -932,14 +928,11 @@ function updateDetailPos (detail) {
  * @return  a promise resolved once the animation is complete.
  */
 function playRestoreAnimation () {
-  const promises = []
   // console.log('starting restore animation')
-  state.topicmap.forEachTopic(viewTopic => {
-    if (viewTopic.isVisible()) {
-      promises.push(_syncTopicPosition(viewTopic.id))
-    }
-  })
-  return Promise.all(promises)
+  return Promise.all(state.topicmap
+    .filterTopics(viewTopic => viewTopic.isVisible())
+    .map(viewTopic => _syncTopicPosition(viewTopic.id))
+  )
 }
 
 function selectionDetail () {
