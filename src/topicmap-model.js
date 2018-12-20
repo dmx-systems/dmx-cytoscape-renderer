@@ -282,7 +282,7 @@ const actions = {
   },
 
   _processDirectives ({dispatch}, directives) {
-    console.log(`Cytoscape Renderer: processing ${directives.length} directives`)
+    // console.log(`Cytoscape Renderer: processing ${directives.length} directives`)
     directives.forEach(dir => {
       switch (dir.type) {
       case "UPDATE_TOPIC":
@@ -397,7 +397,7 @@ const actions = {
 
   syncTopicIcon (_, id) {
     // console.log('syncTopicIcon', id)
-    cyElement(id).data('icon', state.topicmap.getTopic(id).getIcon())
+    cyElement(id).data('icon', state.topicmap.getTopic(id).icon)
   },
 
   syncAssoc (_, id) {
@@ -1000,7 +1000,7 @@ function cyNode (viewTopic) {
       id:      viewTopic.id,
       typeUri: viewTopic.typeUri,
       label:   viewTopic.value,
-      icon:    viewTopic.getIcon(),       // TODO: drop it? Is computed from typeUri
+      icon:    viewTopic.icon,      // TODO: drop it? Is computed from typeUri
       viewTopic
     },
     position: viewTopic.getPosition()
