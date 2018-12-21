@@ -4,6 +4,10 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.14** -- Dec 21, 2018
+
+* Cytoscape 3.3 compatibility: don't put Cytoscape objects in Vue state
+
 **0.13** -- Nov 24, 2018
 
 * Add `visibleAssocIds` getter
@@ -79,4 +83,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Nov 24, 2018
+Dec 21, 2018
