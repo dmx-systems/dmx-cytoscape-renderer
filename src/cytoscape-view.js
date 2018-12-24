@@ -26,6 +26,7 @@ const svgReady = dm5.restClient.getXML(fa).then(svg => {
 // register extensions
 cytoscape.use(coseBilkent)
 cytoscape.use(cxtmenu)
+cytoscape.use(require('./cytoscape-amd').default)
 
 export default class CytoscapeView {
 
@@ -93,7 +94,7 @@ export default class CytoscapeView {
           selector: 'edge',
           style: {
             'width': 3,
-            'line-color': ele => ele.data('color'),
+            'line-color': 'data(color)',
             'curve-style': 'bezier',
             'label': 'data(label)',
             'font-family': FONT_FAMILY,

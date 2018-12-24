@@ -835,7 +835,7 @@ function renderTopicmap () {
     .filterTopics(viewTopic => viewTopic.isVisible())
     .map(cyNode)
   )
-  cyView.cy.add(state.topicmap
+  cyView.cy.addEdge(state.topicmap
     .filterAssocs(viewAssoc => !viewAssoc.hasAssocPlayer())   // this renderer doesn't support assoc-connected assocs
     .map(cyEdge)
   )
