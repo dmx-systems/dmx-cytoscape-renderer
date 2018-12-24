@@ -78,7 +78,7 @@ export default class CytoscapeView {
       container,
       style: [
         {
-          selector: 'node',
+          selector: 'node[^assocId]',
           style: {
             'shape': 'rectangle',
             'background-image': ele => this.renderNode(ele).url,
@@ -88,6 +88,15 @@ export default class CytoscapeView {
             'border-width': 1,
             'border-color': BORDER_COLOR_LIGHTER,
             'border-opacity': 1
+          }
+        },
+        {
+          selector: 'node[assocId]',
+          style: {
+            'shape': 'ellipse',
+            'background-color': 'data(color)',
+            'width': 10,
+            'height': 10,
           }
         },
         {
