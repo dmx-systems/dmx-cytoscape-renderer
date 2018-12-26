@@ -386,7 +386,7 @@ const actions = {
     const assoc = state.topicmap.getAssoc(id)
     // console.log('syncAddAssoc', assoc)
     if (!assoc.hasAssocPlayer()) {    // this renderer doesn't support assoc-connected assocs
-      cyView.cy.addEdge(cyEdge(assoc))
+      cyView.cy.addEdge(assoc)
     }
   },
 
@@ -835,9 +835,10 @@ function renderTopicmap () {
     .filterTopics(viewTopic => viewTopic.isVisible())
     .map(cyNode)
   )
-  cyView.cy.addEdge(state.topicmap
-    .filterAssocs(viewAssoc => !viewAssoc.hasAssocPlayer())   // this renderer doesn't support assoc-connected assocs
-    .map(cyEdge)
+  cyView.cy.addEdge(state.topicmap.getAssocs()
+    // ### TODO: drop filter
+    //.filterAssocs(viewAssoc => !viewAssoc.hasAssocPlayer())   // this renderer doesn't support assoc-connected assocs
+    //.mapAssocs(cyEdge)
   )
   // console.log('### Topicmap rendering complete!')
 }
@@ -988,39 +989,12 @@ function cyNode (viewTopic) {
   return {
     data: {
       id:      viewTopic.id,
-      typeUri: viewTopic.typeUri,
+      typeUri: viewTopic.typeUri,     // TODO: needed?
       label:   viewTopic.value,
-      icon:    viewTopic.icon,      // TODO: drop it? Is computed from typeUri
+      icon:    viewTopic.icon,
       viewTopic
     },
     position: viewTopic.getPosition()
-  }
-}
-
-/**
- * Builds a Cytoscape edge from a dm5.ViewAssoc
- *
- * Prerequisite: viewAssoc has 2 topic players specified by-ID.
- *
- * @param   viewAssoc   A dm5.ViewAssoc
- */
-function cyEdge (viewAssoc) {
-  const id1 = viewAssoc.role1.topicId
-  const id2 = viewAssoc.role2.topicId
-  if (id1 === undefined || id2 === undefined) {
-    throw Error('tried to build a Cytoscape edge based on an assoc whose players are not specified by-ID ' +
-      JSON.stringify(viewAssoc))
-  }
-  return {
-    data: {
-      id:      viewAssoc.id,
-      typeUri: viewAssoc.typeUri,
-      label:   viewAssoc.value,
-      color:   viewAssoc.getColor(),      // TODO: drop it? Is computed from typeUri
-      source:  id1,
-      target:  id2,
-      viewAssoc
-    }
   }
 }
 
