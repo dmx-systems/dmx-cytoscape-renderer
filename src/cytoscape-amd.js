@@ -7,7 +7,7 @@ export default function register (cytoscape) {
   cytoscape('core', 'addEdge', addEdge)
 
   function addEdge (edge) {
-    console.log('addEdge', edge)
+    // console.log('addEdge', edge)
     eventHandlers(this)
     if (Array.isArray(edge)) {
       edge.forEach(edge => _addEdge(this, edge))
@@ -45,7 +45,7 @@ export default function register (cytoscape) {
   }
 
   function eventHandlers (cy) {
-    console.log('eventHandlers')
+    // console.log('eventHandlers')
     if (!events) {
       cy.on('position', position)
       events = true

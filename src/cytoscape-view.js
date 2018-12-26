@@ -1,8 +1,5 @@
 import cytoscape from 'cytoscape'
-import coseBilkent from 'cytoscape-cose-bilkent'
-import cxtmenu from 'cytoscape-cxtmenu'
 import fa from 'font-awesome/fonts/fontawesome-webfont.svg'
-import DragState from './drag-state'
 import dm5 from 'dm5'
 
 // get style from CSS variables
@@ -24,9 +21,10 @@ const svgReady = dm5.restClient.getXML(fa).then(svg => {
 })
 
 // register extensions
-cytoscape.use(coseBilkent)
-cytoscape.use(cxtmenu)
-cytoscape.use(require('./cytoscape-amd').default)
+cytoscape.use(require('cytoscape-cose-bilkent'))
+cytoscape.use(require('cytoscape-cxtmenu'))
+cytoscape.use(require('cytoscape-edgehandles'))
+cytoscape.use(require('./cytoscape-amd').default)   // ES6 default export
 
 export default class CytoscapeView {
 
@@ -35,6 +33,7 @@ export default class CytoscapeView {
     this.cy = this.instantiateCy(container)
     this.box = box              // the measurement box
     this.contextMenus(contextCommands)
+    this.edgeHandles()
     this.state = state
     this.dispatch = dispatch
     this.svgReady = svgReady    // a promise resolved once the Font Awesome SVG is loaded
@@ -78,7 +77,7 @@ export default class CytoscapeView {
       container,
       style: [
         {
-          selector: 'node[^assocId]',
+          selector: 'node[icon]',
           style: {
             'shape': 'rectangle',
             'background-image': ele => this.renderNode(ele).url,
@@ -91,7 +90,7 @@ export default class CytoscapeView {
           }
         },
         {
-          selector: 'node[assocId]',
+          selector: 'node[color]',
           style: {
             'shape': 'ellipse',
             'background-color': 'data(color)',
@@ -100,7 +99,14 @@ export default class CytoscapeView {
           }
         },
         {
-          selector: 'edge',
+          selector: 'node.eh-handle',
+          style: {
+            'width': 10,
+            'height': 10
+          }
+        },
+        {
+          selector: 'edge[color]',
           style: {
             'width': 3,
             'line-color': 'data(color)',
@@ -132,7 +138,7 @@ export default class CytoscapeView {
           }
         },
         {
-          selector: 'node.hover',
+          selector: 'node.eh-source, node.eh-target',
           style: {
             'border-width': 3,
             'border-color': HOVER_BORDER_COLOR,
@@ -219,6 +225,22 @@ export default class CytoscapeView {
     }))
   }
 
+  // Edge Handles
+
+  edgeHandles () {
+    this.cy.edgehandles({
+      preview: false,
+      complete: (sourceNode, targetNode, addedEles) => {
+        // console.log('complete', sourceNode, targetNode, addedEles)
+        addedEles.remove()
+        this.parent.$emit('topic-drop-on-topic', {    // TODO: rename event to 'assoc-create'
+          topicId1: id(sourceNode),
+          topicId2: id(targetNode)
+        })
+      }
+    })
+  }
+
   // Event Handling
 
   onSelectHandlers () {
@@ -264,65 +286,13 @@ export default class CytoscapeView {
           render: e.renderedPosition
         })
       }
-    }).on('tapstart', 'node', e => {
-      const dragState = new DragState(e.target)
-      const handler = this.dragHandler(dragState)
-      this.cy.on('tapdrag', handler)
-      this.cy.one('tapend', e => {
-        this.cy.off('tapdrag', handler)
-        if (dragState.hoverNode) {
-          dragState.unhover()
-          dragState.resetPosition()
-          this.parent.$emit('topic-drop-on-topic', {
-            // topic 1 dropped onto topic 2
-            topicId1: id(dragState.node),
-            topicId2: id(dragState.hoverNode)
-          })
-        } else if (dragState.dragged()) {
-          this.topicDrag(dragState.node)
-        }
-      })
+    }).on('dragfreeon', e => {
+      this.topicDrag(e.target)
     }).on('pan', () => {
       this.dispatch('_syncPan', this.cy.pan())
     }).on('zoom', () => {
       this.dispatch('_syncZoom', this.cy.zoom())
     })
-  }
-
-  dragHandler (dragState) {
-    return e => {
-      var _node = this.nodeAt(e.position, dragState.node)
-      if (_node) {
-        if (_node !== dragState.hoverNode) {
-          dragState.hoverNode && dragState.unhover()
-          dragState.hoverNode = _node
-          dragState.hover()
-        }
-      } else {
-        if (dragState.hoverNode) {
-          dragState.unhover()
-          dragState.hoverNode = undefined
-        }
-      }
-    }
-  }
-
-  nodeAt (pos, excludeNode) {
-    var foundNode
-    this.cy.nodes().forEach(node => {
-      if (node !== excludeNode && this.isInside(pos, node)) {
-        foundNode = node
-        return false    // abort iteration (as supported by Cytoscape collection)
-      }
-    })
-    return foundNode
-  }
-
-  isInside (pos, node) {
-    var x = pos.x
-    var y = pos.y
-    var box = node.boundingBox()
-    return x > box.x1 && x < box.x2 && y > box.y1 && y < box.y2
   }
 
   topicDrag (node) {
