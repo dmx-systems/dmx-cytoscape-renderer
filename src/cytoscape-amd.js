@@ -98,16 +98,16 @@ function cyEdge (viewAssoc, id1, id2) {
  *            For a topic player that is the topic ID (number), for an assoc player
  *            that is the ID of the assoc's aux node (string)
  */
-function nodeId (cy, role) {
-  const playerId = role.getPlayerId()
-  if (role.isTopicPlayer()) {
+function nodeId (cy, player) {
+  const playerId = player.id
+  if (player.isTopicPlayer()) {
     return playerId
   }
-  const edgePlayer = cy.getElementById(playerId.toString())
-  if (edgePlayer.size() !== 1) {
+  const edge = cy.getElementById(playerId.toString())
+  if (edge.size() !== 1) {
     throw Error(`Edge ${playerId} not yet in graph`)
   }
-  const auxNodeId = edgePlayer.data('nodeId')
+  const auxNodeId = edge.data('nodeId')
   if (!auxNodeId) {
     throw Error(`Edge ${playerId} has no "nodeId" data`)
   }

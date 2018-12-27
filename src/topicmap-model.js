@@ -325,6 +325,8 @@ const actions = {
   _initCytoscape ({dispatch}, {parent, container, box, contextCommands}) {
     // console.log('_initCytoscape')
     cyView = new CytoscapeView(parent, container, box, contextCommands, state, dispatch)
+    // when an edge is removed remove its aux node as well
+    cyView.cy.on('remove', 'edge[color]', e => auxNode(e.target).remove())
   },
 
   _syncObject (_, object) {
@@ -505,6 +507,7 @@ const actions = {
   syncRemoveTopic (_, id) {
     // console.log('syncRemoveTopic', id)
     cyElement(id).remove()
+    // Note: the connected edges are removed automatically by Cytoscape
   },
 
   syncRemoveAssoc (_, id) {
@@ -835,11 +838,7 @@ function renderTopicmap () {
     .filterTopics(viewTopic => viewTopic.isVisible())
     .map(cyNode)
   )
-  cyView.cy.addEdge(state.topicmap.getAssocs()
-    // ### TODO: drop filter
-    //.filterAssocs(viewAssoc => !viewAssoc.hasAssocPlayer())   // this renderer doesn't support assoc-connected assocs
-    //.mapAssocs(cyEdge)
-  )
+  cyView.cy.addEdge(state.topicmap.getAssocs())
   // console.log('### Topicmap rendering complete!')
 }
 
