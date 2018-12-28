@@ -325,8 +325,6 @@ const actions = {
   _initCytoscape ({dispatch}, {parent, container, box, contextCommands}) {
     // console.log('_initCytoscape')
     cyView = new CytoscapeView(parent, container, box, contextCommands, state, dispatch)
-    // when an edge is removed remove its aux node as well
-    cyView.cy.on('remove', 'edge[color]', e => auxNode(e.target).remove())
   },
 
   _syncObject (_, object) {
@@ -718,7 +716,7 @@ function showPinnedDetails () {
  */
 function createDetail (viewObject) {
   const ele = cyElement(viewObject.id)
-  const node = ele.isNode() ? ele : auxNode(ele)
+  const node = ele.isNode() ? ele : ele.auxNode()
   const detail = {
     id: viewObject.id,
     object: undefined,
@@ -762,7 +760,7 @@ function createSelectionDetail () {
     node = ele
     viewObject = state.topicmap.getTopic(id)
   } else {
-    node = auxNode(ele)
+    node = ele.auxNode()
     viewObject = state.topicmap.getAssoc(id)
     cyView.select(node)     // select aux node along with assoc
   }
@@ -947,17 +945,6 @@ function detail (id) {
 }
 
 /**
- * @return  the aux node (a one-element Cytoscape collection) that represents the given edge
- */
-function auxNode (edge) {
-  const auxNode = cyView.cy.getElementById(edge.data('nodeId'))
-  if (auxNode.size() !== 1) {
-    throw Error(`No aux node for edge ${edge.id()}`)
-  }
-  return auxNode
-}
-
-/**
  * Auto-position topic if no position is set.
  */
 function initPos (viewTopic) {
@@ -1000,7 +987,7 @@ function cyNode (viewTopic) {
 /**
  * Gets the Cytoscape element with the given ID. ### TODO: copy in cytoscape-view.js
  *
- * @param   id    a DM object id (number)
+ * @param   id    a DMX object id (number)
  *
  * @return  A collection of 1 or 0 elements. ### TODO: throw if 0?
  */
