@@ -49,24 +49,21 @@ function _addEdge (cy, assoc) {
     },
     position: midpoint
   })
-  edge.data('auxNodeId', auxNode.id())    // linking back
+  edge.data('auxNodeId', auxNode.id())    // set back link; auxNodeId is of type string
   // })
 }
 
 function eventHandlers (cy) {
   if (!events) {
     // console.log('eventHandlers')
-    cy.on('position', e => repositionAuxNodes(e.target))
+    cy.on('position', 'node[icon]', e => repositionAuxNodes(e.target))
     cy.on('remove', 'edge[color]', e => removeAuxNode(e.target))    // remove aux node when removing edge
     events = true
   }
 }
 
 function repositionAuxNodes (node) {
-  if (!(node && node.isNode())) {
-    throw Error(`repositionAuxNodes() expects a node, got ${JSON.stringify(node)}`)
-  }
-  node.connectedEdges().forEach(edge => {
+  node.connectedEdges('edge[color]').forEach(edge => {
     edge.auxNode().position(edge.midpoint())
   })
 }
@@ -99,7 +96,7 @@ function cyEdge (viewAssoc, id1, id2) {
 /**
  * @return    the ID of the node that represents the given player.
  *            For a topic player that is the topic ID (number), for an assoc player
- *            that is the ID of the assoc's aux node (string)
+ *            that is the ID of the assoc's aux node (string).
  */
 function nodeId (cy, player) {
   const playerId = player.id
@@ -130,6 +127,9 @@ function auxNode () {
   return auxNode
 }
 
+/**
+ * @return  the ID (string) of the aux node of the given edge.
+ */
 function auxNodeId (edge) {
   const auxNodeId = edge.data('auxNodeId')
   if (!auxNodeId) {
