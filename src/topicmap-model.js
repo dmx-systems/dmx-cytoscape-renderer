@@ -999,7 +999,9 @@ function isSelected (objectId) {
   return ele && eleId(ele) === objectId
 }
 
-// copy in dm5-cytoscape-renderer.vue and dm5-detail-layer.vue
+// copy in dm5-cytoscape-renderer.vue
+// copy in dm5-detail-layer.vue
+// copy in cytoscape-amd.js
 function eleId (ele) {
   // Note: cytoscape element IDs are strings
   return Number(ele.id())
