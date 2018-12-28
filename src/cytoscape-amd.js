@@ -56,7 +56,9 @@ function _addEdge (cy, assoc) {
 function eventHandlers (cy) {
   if (!events) {
     // console.log('eventHandlers')
-    cy.on('position', 'node[icon]', e => repositionAuxNodes(e.target))
+    // Note: for edge connecting edges aux node position changes do cascade.
+    // So the position event selector must capture both aux nodes and regular nodes.
+    cy.on('position', 'node', e => repositionAuxNodes(e.target))
     cy.on('remove', 'edge[color]', e => removeAuxNode(e.target))    // remove aux node when removing edge
     events = true
   }
