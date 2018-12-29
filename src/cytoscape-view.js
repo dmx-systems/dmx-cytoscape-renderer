@@ -230,6 +230,9 @@ export default class CytoscapeView {
   edgeHandles () {
     this.cy.edgehandles({
       preview: false,
+      handlePosition (node) {
+        return !node.isAuxNode() ? 'middle top' : 'middle middle'
+      },
       complete: (sourceNode, targetNode, addedEles) => {
         // console.log('complete', sourceNode, targetNode, addedEles)
         this.emitAssocCreate(sourceNode, targetNode)
