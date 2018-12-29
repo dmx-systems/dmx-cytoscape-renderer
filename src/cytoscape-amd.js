@@ -5,6 +5,7 @@ let events = false    // tracks event handler registration
 export default cytoscape => {
   cytoscape('core', 'addEdge', addEdge)
   cytoscape('collection', 'auxNode', auxNode)
+  cytoscape('collection', 'isAuxNode', isAuxNode)
   cytoscape('collection', 'edgeId', edgeId)
 }
 
@@ -141,6 +142,21 @@ function auxNodeId (edge) {
   return auxNodeId
 }
 
+/**
+ * Prerequisite: "this" refers to a node.
+ *
+ * @return  true if the node is an aux node, false otherwise.
+ */
+function isAuxNode () {
+  return this.edgeId() !== undefined
+}
+
+/**
+ * Prerequisite: "this" refers to a node.
+ *
+ * @return  the ID of the edge represented by this aux node.
+ *          Returns `undefined` if this is not an aux node (TODO: throw instead?).
+ */
 function edgeId () {
   const node = this
   if (!node || !node.isNode()) {
