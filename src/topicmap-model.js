@@ -383,11 +383,9 @@ const actions = {
   },
 
   syncAddAssoc (_, id) {
+    // console.log('syncAddAssoc', id)
     const assoc = state.topicmap.getAssoc(id)
-    // console.log('syncAddAssoc', assoc)
-    if (!assoc.hasAssocPlayer()) {    // this renderer doesn't support assoc-connected assocs
-      cyView.cy.addEdge(assoc)
-    }
+    cyView.cy.addEdge(assoc)
   },
 
   syncTopic (_, id) {
@@ -700,7 +698,7 @@ function showPinnedDetails () {
       })
     )
   state.topicmap
-    // this renderer doesn't support assoc-connected assocs
+    // this renderer doesn't support assoc-connected assocs ### TODO
     .filterAssocs(viewAssoc => !viewAssoc.hasAssocPlayer() && viewAssoc.isPinned())
     .forEach(viewAssoc =>
       createDetail(viewAssoc).then(detail => {
