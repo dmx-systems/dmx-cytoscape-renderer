@@ -94,15 +94,15 @@ export default class CytoscapeView {
           style: {
             'shape': 'ellipse',
             'background-color': 'data(color)',
-            'width': 10,
-            'height': 10,
+            'width': 6,
+            'height': 6,
           }
         },
         {
           selector: 'node.eh-handle',
           style: {
-            'width': 10,
-            'height': 10
+            'width': 12,
+            'height': 12
           }
         },
         {
