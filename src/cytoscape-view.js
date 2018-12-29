@@ -233,9 +233,9 @@ export default class CytoscapeView {
       complete: (sourceNode, targetNode, addedEles) => {
         // console.log('complete', sourceNode, targetNode, addedEles)
         addedEles.remove()
-        this.parent.$emit('topic-drop-on-topic', {    // TODO: rename event to 'assoc-create'
-          topicId1: id(sourceNode),
-          topicId2: id(targetNode)
+        this.parent.$emit('assoc-create', {
+          playerId1: {topicId: id(sourceNode)},
+          playerId2: {topicId: id(targetNode)}
         })
       }
     })
