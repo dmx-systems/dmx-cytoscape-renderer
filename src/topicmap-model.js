@@ -813,6 +813,9 @@ function playFisheyeAnimation() {
     },
     // animate: 'end',
     // animationDuration: 3000,
+    animateFilter (node, i) {
+      return !node.isAuxNode()
+    },
     fit: false,
     randomize: false,
     nodeRepulsion: 0,
