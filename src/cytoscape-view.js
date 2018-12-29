@@ -232,12 +232,16 @@ export default class CytoscapeView {
       preview: false,
       complete: (sourceNode, targetNode, addedEles) => {
         // console.log('complete', sourceNode, targetNode, addedEles)
+        this.emitAssocCreate(sourceNode, targetNode)
         addedEles.remove()
-        this.parent.$emit('assoc-create', {
-          playerId1: {topicId: id(sourceNode)},
-          playerId2: {topicId: id(targetNode)}
-        })
       }
+    })
+  }
+
+  emitAssocCreate (sourceNode, targetNode) {
+    this.parent.$emit('assoc-create', {
+      playerId1: playerId(sourceNode),
+      playerId2: playerId(targetNode)
     })
   }
 
@@ -383,13 +387,18 @@ export default class CytoscapeView {
   }
 }
 
+function playerId (node) {
+  const edgeId = node.edgeId()
+  return !edgeId ? {topicId: id(node)} : {assocId: edgeId}
+}
+
 // copy in dm5-detail-layer.vue
 function id (ele) {
   // Note: cytoscape element IDs are strings
   return Number(ele.id())
 }
 
-// ID mapper for aux nodes
+// ID mapper for aux nodes ### TODO: drop it; use ele.edgeId() instead
 function assocId (ele) {
   return ele.data('assocId')
 }
