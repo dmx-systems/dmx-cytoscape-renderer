@@ -57,9 +57,9 @@ function _addEdge (cy, assoc) {
 
 function eventHandlers (cy) {
   if (!events) {
-    // console.log('eventHandlers')
-    // Note: for edge connecting edges aux node position changes do cascade.
+    // Note: for edge connecting edges aux node position changes must cascade.
     // So the position event selector must capture both aux nodes and regular nodes.
+    // FIXME: also the edge handler node is captured, but should not be a problem.
     cy.on('position', 'node', e => repositionAuxNodes(e.target))
     cy.on('remove', 'edge[color]', e => removeAuxNode(e.target))    // remove aux node when removing edge
     events = true
@@ -68,7 +68,13 @@ function eventHandlers (cy) {
 
 function repositionAuxNodes (node) {
   node.connectedEdges('edge[color]').forEach(edge => {
-    edge.auxNode().position(edge.midpoint())
+    const midpoint = edge.midpoint()
+    // Note: if Cytoscape can't draw the edge (a warning appears in the browser console) its midpoint is undefined
+    // (x and y are NaN). If a node is positioned to such an invalid position its canvas representation becomes corrupt
+    // (drawImage() throws "InvalidStateError: The object is in an invalid state" then).
+    if (validPos(midpoint)) {
+      edge.auxNode().position(midpoint)
+    }
   })
 }
 
@@ -168,4 +174,9 @@ function edgeId () {
 function eleId (ele) {
   // Note: cytoscape element IDs are strings
   return Number(ele.id())
+}
+
+function validPos(pos) {
+  // Global isNan() coerces to number and then checks; Number.isNaN() checks immediately.
+  return !(Number.isNaN(pos.x) || Number.isNaN(pos.y))
 }
