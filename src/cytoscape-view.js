@@ -263,10 +263,10 @@ export default class CytoscapeView {
         if (dragState.hoverNode) {
           dragState.unhover()
           dragState.resetPosition()
-          this.parent.$emit('topic-drop-on-topic', {
+          this.parent.$emit('assoc-create', {
             // topic 1 dropped onto topic 2
-            topicId1: id(dragState.node),
-            topicId2: id(dragState.hoverNode)
+            playerId1: {topicId: id(dragState.node)},
+            playerId2: {topicId: id(dragState.hoverNode)}
           })
         } else if (dragState.dragged()) {
           this.topicDrag(dragState.node)
