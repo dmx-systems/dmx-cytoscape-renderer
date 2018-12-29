@@ -808,9 +808,9 @@ function playFisheyeAnimation() {
   fisheyeAnimation && fisheyeAnimation.stop()
   fisheyeAnimation = cyView.cy.layout({
     name: 'cose-bilkent',
-    stop () {
-      // console.log('fisheye animation complete')
-    },
+    /* stop () {
+      console.log('fisheye animation complete')
+    }, */
     // animate: 'end',
     // animationDuration: 3000,
     animateFilter (node, i) {
@@ -832,7 +832,10 @@ function playFisheyeAnimationIfDetailsOnscreen () {
 }
 
 function renderTopicmap () {
-  cyView.cy.remove("*")   // "*" is the group selector "all"
+  // Note: the cytoscape-amd extension expects an aux node still to exist at the time its edge is removed.
+  // So we must remove the edges first.
+  cyView.cy.remove('edge')
+  cyView.cy.remove('node')
   cyView.cy.add(state.topicmap
     .filterTopics(viewTopic => viewTopic.isVisible())
     .map(cyNode)

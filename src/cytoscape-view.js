@@ -41,7 +41,8 @@ export default class CytoscapeView {
     // clicked Cytoscape element). In standard ES6 class methods can't be defined in arrow notation. This would require
     // the stage-2 "class properties" feature. For some reason the Babel "transform-class-properties" plugin does not
     // work when the application is build by Jenkins CI.
-    // The solution is to define the select handlers in the constructor.
+    // The workaround is to define the select handlers in the constructor.
+    // ### TODO: retry. Meanwhile we use GitLab CI/CD.
     this.onSelectNode   = this.nodeHandler('select')
     this.onSelectEdge   = this.edgeHandler('select')
     this.onUnselectNode = this.nodeHandler('unselect')
