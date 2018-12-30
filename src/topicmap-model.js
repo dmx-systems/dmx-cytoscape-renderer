@@ -840,7 +840,7 @@ function renderTopicmap () {
     .filterTopics(viewTopic => viewTopic.isVisible())
     .map(cyNode)
   )
-  cyView.cy.addEdge(state.topicmap.getAssocs())
+  cyView.cy.addEdges(state.topicmap.getAssocs())
   // console.log('### Topicmap rendering complete!')
 }
 
@@ -1007,6 +1007,6 @@ function isSelected (objectId) {
 // copy in dm5-detail-layer.vue
 // copy in cytoscape-amd.js
 function eleId (ele) {
-  // Note: cytoscape element IDs are strings
+  // Note: Cytoscape element IDs are strings
   return Number(ele.id())
 }
