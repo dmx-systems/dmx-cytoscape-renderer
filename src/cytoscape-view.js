@@ -24,7 +24,7 @@ const svgReady = dm5.restClient.getXML(fa).then(svg => {
 cytoscape.use(require('cytoscape-cose-bilkent'))
 cytoscape.use(require('cytoscape-cxtmenu'))
 cytoscape.use(require('cytoscape-edgehandles'))
-cytoscape.use(require('./cytoscape-amd').default)   // ES6 default export
+cytoscape.use(require('cytoscape-edge-connections'))
 
 export default class CytoscapeView {
 
