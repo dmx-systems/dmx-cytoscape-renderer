@@ -385,7 +385,7 @@ const actions = {
   syncAddAssoc (_, id) {
     // console.log('syncAddAssoc', id)
     const assoc = state.topicmap.getAssoc(id)
-    cyView.cy.addEdge(assoc)
+    cyView.cy.addEdge(cyEdge(assoc))
   },
 
   syncTopic (_, id) {
@@ -840,7 +840,7 @@ function renderTopicmap () {
     .filterTopics(viewTopic => viewTopic.isVisible())
     .map(cyNode)
   )
-  cyView.cy.addEdges(state.topicmap.getAssocs())
+  cyView.cy.addEdges(state.topicmap.mapAssocs(cyEdge))
   // console.log('### Topicmap rendering complete!')
 }
 
@@ -985,6 +985,27 @@ function cyNode (viewTopic) {
       viewTopic
     },
     position: viewTopic.getPosition()
+  }
+}
+
+/**
+ * Builds a Cytoscape edge from a dm5.ViewAssoc
+ *
+ * Prerequisite: viewAssoc has 2 topic players specified by-ID. ### FIXDOC (assoc players are supported as well)
+ *
+ * @param   viewAssoc   A dm5.ViewAssoc
+ */
+function cyEdge (viewAssoc) {
+  return {
+    data: {
+      id:      viewAssoc.id,
+      typeUri: viewAssoc.typeUri,   // TODO: needed?
+      label:   viewAssoc.value,
+      color:   viewAssoc.getColor(),
+      source:  viewAssoc.role1.id,
+      target:  viewAssoc.role2.id,
+      viewAssoc
+    }
   }
 }
 
