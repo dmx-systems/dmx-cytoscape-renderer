@@ -52,12 +52,12 @@ export default class CytoscapeView {
 
   nodeHandler (suffix) {
     // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
-    // In this case the original edge ID is contained in the node's "assocId" data.
+    // In this case the original edge ID is contained in the node's "edgeId" data.
     return e => {
-      const _assocId = assocId(e.target)
-      if (_assocId) {
+      const assocId = e.target.edgeId()
+      if (assocId) {
         if (suffix === 'select') {    // aux nodes don't emit assoc-unselect events
-          this.parent.$emit('assoc-' + suffix, _assocId)
+          this.parent.$emit('assoc-' + suffix, assocId)
         }
       } else {
         this.parent.$emit('topic-' + suffix, id(e.target))
@@ -202,10 +202,10 @@ export default class CytoscapeView {
    */
   contextMenus (contextCommands) {
     // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
-    // In this case the original edge ID is contained in the node's "assocId" data.
+    // In this case the original edge ID is contained in the node's "edgeId" data.
     this.cy.cxtmenu({
       selector: 'node',
-      commands: ele => assocId(ele) ? assocCommands(assocId(ele)) : topicCommands(id(ele)),
+      commands: ele => ele.isAuxNode() ? assocCommands(ele.edgeId()) : topicCommands(id(ele)),
       atMouse: true
     })
     this.cy.cxtmenu({
@@ -304,7 +304,7 @@ export default class CytoscapeView {
   }
 
   topicDrag (node) {
-    if (!assocId(node)) {   // aux nodes don't emit topic-drag events
+    if (!node.isAuxNode()) {    // aux nodes don't emit topic-drag events
       if (this.isTopicSelected(id(node)) && this.isMultiSelection()) {
         // console.log('drag multi', this.state.selection.topicIds)
         this.emitTopicsDrag()
@@ -400,11 +400,6 @@ function playerId (node) {
 function id (ele) {
   // Note: cytoscape element IDs are strings
   return Number(ele.id())
-}
-
-// ID mapper for aux nodes ### TODO: drop it; use ele.edgeId() instead
-function assocId (ele) {
-  return ele.data('assocId')
 }
 
 /**
