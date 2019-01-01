@@ -31,6 +31,9 @@ export default class CytoscapeView {
   constructor (parent, container, box, contextCommands, state, dispatch) {
     this.parent = parent,
     this.cy = this.instantiateCy(container)
+    this.cy.edgeConnections({
+      edgeSelector: 'edge[color]'
+    })
     this.box = box              // the measurement box
     this.contextMenus(contextCommands)
     this.edgeHandles()
