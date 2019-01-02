@@ -31,12 +31,10 @@ export default class CytoscapeView {
   constructor (parent, container, box, contextCommands, state, dispatch) {
     this.parent = parent,
     this.cy = this.instantiateCy(container)
-    this.cy.edgeConnections({
-      edgeSelector: 'edge[color]'
-    })
     this.box = box              // the measurement box
     this.contextMenus(contextCommands)
     this.edgeHandles()
+    this.edgeConnections()
     this.state = state
     this.dispatch = dispatch
     this.svgReady = svgReady    // a promise resolved once the Font Awesome SVG is loaded
@@ -249,6 +247,17 @@ export default class CytoscapeView {
     this.parent.$emit('assoc-create', {
       playerId1: playerId(sourceNode),
       playerId2: playerId(targetNode)
+    })
+  }
+
+  // Edge Connections
+
+  edgeConnections () {
+    this.cy.edgeConnections({
+      edgeSelector: 'edge[color]',
+      auxNodeData: edge => ({
+        color: edge.data('color')
+      })
     })
   }
 
