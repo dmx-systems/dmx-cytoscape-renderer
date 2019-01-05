@@ -22,7 +22,7 @@ const state = {
   topicmapWritable: undefined,    // True if the current user has WRITE permission for the rendered topicmap
   selection: undefined,           // the selection model of the rendered topicmap (a Selection object)
 
-  object: undefined,              // the selected object (dm5.DeepaMehtaObject)
+  object: undefined,              // the selected object (dm5.DMXObject)
   objectWritable: undefined,      // True if the current user has WRITE permission for the selected object
 
   // Cytoscape View
@@ -808,14 +808,6 @@ function playFisheyeAnimation() {
   fisheyeAnimation && fisheyeAnimation.stop()
   fisheyeAnimation = cyView.cy.layout({
     name: 'cose-bilkent',
-    /* stop () {
-      console.log('fisheye animation complete')
-    }, */
-    // animate: 'end',
-    // animationDuration: 3000,
-    /* animateFilter (node, i) {
-      return !node.isAuxNode()
-    }, */
     fit: false,
     randomize: false,
     nodeRepulsion: 0,

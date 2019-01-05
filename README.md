@@ -4,6 +4,12 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.15** -- Jan 5, 2019
+
+* Edges can connect edges (utilizing `cytoscpae-edge-connections`)
+* New create-association gesture: drawing instead of drag'n'drop (utilizing `cytoscape-edgehandles`)
+* Rename event `topic-drop-on-topic` -> `assoc-create`
+
 **0.14** -- Dec 21, 2018
 
 * Cytoscape 3.3 compatibility: don't put Cytoscape objects in Vue state
@@ -83,4 +89,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Dec 21, 2018
+Jan 5, 2019
