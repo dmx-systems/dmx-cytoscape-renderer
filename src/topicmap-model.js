@@ -12,8 +12,6 @@ let ele           // The single selection: a selected Cytoscape element (node or
                   // '_syncUnselect' actions. The details of multi selection elements are *not* displayed in-map
                   // (unless pinned). ### TODO: introduce multi-selection state in this component?
 
-let fisheyeAnimation
-
 const state = {
 
   // DMX Model
@@ -350,7 +348,7 @@ const actions = {
   },
 
   _playFisheyeAnimation () {
-    playFisheyeAnimation()
+    cyView.playFisheyeAnimation()
   },
 
   _shutdownCytoscape () {
@@ -372,20 +370,20 @@ const actions = {
     state.topicmapWritable = writable
     state.selection = selection
     state.details = {}
-    return cyView.svgReady.then(renderTopicmap).then(showPinnedDetails)
+    return cyView.svgReady.then(cyView.renderTopicmap).then(showPinnedDetails)
   },
 
   syncAddTopic (_, id) {
     // console.log('syncAddTopic', id)
     const viewTopic = state.topicmap.getTopic(id)
     initPos(viewTopic)
-    cyView.cy.add(cyNode(viewTopic))
+    cyView.addTopic(viewTopic)
   },
 
   syncAddAssoc (_, id) {
     // console.log('syncAddAssoc', id)
-    const assoc = state.topicmap.getAssoc(id)
-    cyView.cy.addEdge(cyEdge(assoc))
+    const viewAssoc = state.topicmap.getAssoc(id)
+    cyView.addAssoc(viewAssoc)
   },
 
   syncTopic (_, id) {
@@ -487,7 +485,7 @@ const actions = {
     // console.log('syncTopicVisibility', id)
     const viewTopic = state.topicmap.getTopic(id)
     if (viewTopic.isVisible()) {
-      cyView.cy.add(cyNode(viewTopic))
+      cyView.addTopic(viewTopic)
     } else {
       cyElement(id).remove()
     }
@@ -513,7 +511,7 @@ const actions = {
 
   resizeTopicmapRenderer () {
     // console.log('resizeTopicmapRenderer')
-    cyView.cy.resize()
+    cyView.resize()
   }
 }
 
@@ -714,7 +712,7 @@ function showPinnedDetails () {
  */
 function createDetail (viewObject) {
   const ele = cyElement(viewObject.id)
-  const node = ele.isNode() ? ele : ele.auxNode()
+  const node = ele.isNode() ? ele : cyView.auxNode(ele)
   const detail = {
     id: viewObject.id,
     object: undefined,
@@ -758,7 +756,7 @@ function createSelectionDetail () {
     node = ele
     viewObject = state.topicmap.getTopic(id)
   } else {
-    node = ele.auxNode()
+    node = cyView.auxNode(ele)
     viewObject = state.topicmap.getAssoc(id)
     cyView.select(node)     // select aux node along with assoc
   }
@@ -801,39 +799,13 @@ function measureDetail(detail) {
   }
   // console.log('measureDetail', node.id(), state.size.width, state.size.height)
   detail.node.style(detail.size)
-  playFisheyeAnimation()
-}
-
-function playFisheyeAnimation() {
-  fisheyeAnimation && fisheyeAnimation.stop()
-  fisheyeAnimation = cyView.cy.layout({
-    name: 'cose-bilkent',
-    fit: false,
-    randomize: false,
-    nodeRepulsion: 0,
-    idealEdgeLength: 0,
-    edgeElasticity: 0,
-    tile: false
-  }).run()
+  cyView.playFisheyeAnimation()
 }
 
 function playFisheyeAnimationIfDetailsOnscreen () {
   if (!dm5.utils.isEmpty(state.details)) {
-    playFisheyeAnimation()
+    cyView.playFisheyeAnimation()
   }
-}
-
-function renderTopicmap () {
-  // Note: the cytoscape-amd extension expects an aux node still to exist at the time its edge is removed.
-  // So we must remove the edges first.
-  cyView.cy.remove('edge')
-  cyView.cy.remove('node')
-  cyView.cy.add(state.topicmap
-    .filterTopics(viewTopic => viewTopic.isVisible())
-    .map(cyNode)
-  )
-  cyView.cy.addEdges(state.topicmap.mapAssocs(cyEdge))
-  // console.log('### Topicmap rendering complete!')
 }
 
 /**
@@ -963,45 +935,6 @@ function initPos (viewTopic) {
 }
 
 /**
- * Builds a Cytoscape node from a dm5.ViewTopic
- *
- * @param   viewTopic   A dm5.ViewTopic
- */
-function cyNode (viewTopic) {
-  return {
-    data: {
-      id:      viewTopic.id,
-      typeUri: viewTopic.typeUri,     // TODO: needed?
-      label:   viewTopic.value,
-      icon:    viewTopic.icon,
-      viewTopic
-    },
-    position: viewTopic.getPosition()
-  }
-}
-
-/**
- * Builds a Cytoscape edge from a dm5.ViewAssoc
- *
- * Prerequisite: viewAssoc has 2 topic players specified by-ID. ### FIXDOC (assoc players are supported as well)
- *
- * @param   viewAssoc   A dm5.ViewAssoc
- */
-function cyEdge (viewAssoc) {
-  return {
-    data: {
-      id:      viewAssoc.id,
-      typeUri: viewAssoc.typeUri,   // TODO: needed?
-      label:   viewAssoc.value,
-      color:   viewAssoc.getColor(),
-      source:  viewAssoc.role1.id,
-      target:  viewAssoc.role2.id,
-      viewAssoc
-    }
-  }
-}
-
-/**
  * Gets the Cytoscape element with the given ID. ### TODO: copy in cytoscape-view.js
  *
  * @param   id    a DMX object id (number)
@@ -1009,7 +942,7 @@ function cyEdge (viewAssoc) {
  * @return  A collection of 1 or 0 elements. ### TODO: throw if 0?
  */
 function cyElement (id) {
-  return cyView.cy.getElementById(id.toString())   // Note: a Cytoscape element ID is a string
+  return cyView.cyElement(id)
 }
 
 function isSelected (objectId) {

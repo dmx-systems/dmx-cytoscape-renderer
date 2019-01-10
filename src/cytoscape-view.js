@@ -13,7 +13,12 @@ const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
 const BACKGROUND_COLOR     = style.getPropertyValue('--background-color')
 const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
 
-var faFont      // Font Awesome SVG <font> element
+let cy          // Cytoscape instance
+let ec          // cytoscape-edge-connections API object
+let faFont      // Font Awesome SVG <font> element
+let fisheyeAnimation
+
+let _state      // TODO: needed?
 
 const svgReady = dm5.restClient.getXML(fa).then(svg => {
   // console.log('### SVG ready!')
@@ -30,14 +35,14 @@ export default class CytoscapeView {
 
   constructor (parent, container, box, contextCommands, state, dispatch) {
     this.parent = parent,
-    this.cy = this.instantiateCy(container)
+    cy = this.instantiateCy(container)
     this.box = box              // the measurement box
     this.contextMenus(contextCommands)
     this.edgeHandles()
-    this.edgeConnections()
-    this.state = state
+    ec = this.edgeConnections()
+    _state = state
     this.dispatch = dispatch
-    this.svgReady = svgReady    // a promise resolved once the Font Awesome SVG is loaded
+    this.svgReady = svgReady    // a promise resolved once the Font Awesome SVG is loaded ### TODO: make private?
     // Note: by using arrow functions in a select handler 'this' refers to this CytoscapeView instance (instead of the
     // clicked Cytoscape element). In standard ES6 class methods can't be defined in arrow notation. This would require
     // the stage-2 "class properties" feature. For some reason the Babel "transform-class-properties" plugin does not
@@ -51,11 +56,62 @@ export default class CytoscapeView {
     this.eventHandlers()
   }
 
+  // -------------------------------------------------------------------------------------------------------- Public API
+
+  renderTopicmap () {
+    // Note: the cytoscape-amd extension expects an aux node still to exist at the time its edge is removed.
+    // So we must remove the edges first.
+    cy.remove('edge')
+    cy.remove('node')
+    cy.add(_state.topicmap
+      .filterTopics(viewTopic => viewTopic.isVisible())
+      .map(cyNode)
+    )
+    ec.addEdges(_state.topicmap.mapAssocs(cyEdge))
+    // console.log('### Topicmap rendering complete!')
+  }
+
+  addTopic (viewTopic) {
+    cy.add(cyNode(viewTopic))
+  }
+
+  addAssoc (viewAssoc) {
+    ec.addEdge(cyEdge(viewAssoc))
+  }
+
+  playFisheyeAnimation() {
+    fisheyeAnimation && fisheyeAnimation.stop()
+    fisheyeAnimation = cy.layout({
+      name: 'cose-bilkent',
+      fit: false,
+      randomize: false,
+      nodeRepulsion: 0,
+      idealEdgeLength: 0,
+      edgeElasticity: 0,
+      tile: false
+    }).run()
+  }
+
+  auxNode (edge) {
+    return ec.auxNode(edge)
+  }
+
+  // TODO: make it private?
+  cyElement (id) {
+    return cy.getElementById(id.toString())   // Note: a Cytoscape element ID is a string
+  }
+
+  resize () {
+    cy.resize()
+  }
+
+  // TODO: make the following private if due ---------------------------------------------------------------------------
+
   nodeHandler (suffix) {
     // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
     // In this case the original edge ID is contained in the node's "edgeId" data.
     return e => {
-      const assocId = e.target.edgeId()
+      const assocId = ec.edgeId(e.target)
       if (assocId) {
         if (suffix === 'select') {    // aux nodes don't emit assoc-unselect events
           this.parent.$emit('assoc-' + suffix, assocId)
@@ -157,7 +213,7 @@ export default class CytoscapeView {
 
   // ### TODO: copy in topic-model.js
   cyElement (id) {
-    return this.cy.getElementById(id.toString())
+    return cy.getElementById(id.toString())
   }
 
   // Node Rendering
@@ -204,12 +260,12 @@ export default class CytoscapeView {
   contextMenus (contextCommands) {
     // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
     // In this case the original edge ID is contained in the node's "edgeId" data.
-    this.cy.cxtmenu({
+    cy.cxtmenu({
       selector: 'node',
-      commands: ele => ele.isAuxNode() ? assocCommands(ele.edgeId()) : topicCommands(id(ele)),
+      commands: ele => ec.isAuxNode(ele) ? assocCommands(ec.edgeId(ele)) : topicCommands(id(ele)),
       atMouse: true
     })
-    this.cy.cxtmenu({
+    cy.cxtmenu({
       selector: 'edge',
       commands: ele => assocCommands(id(ele))
     })
@@ -230,10 +286,10 @@ export default class CytoscapeView {
   // Edge Handles
 
   edgeHandles () {
-    this.cy.edgehandles({
+    cy.edgehandles({
       preview: false,
       handlePosition (node) {
-        return !node.isAuxNode() ? 'middle top' : 'middle middle'
+        return !ec.isAuxNode(node) ? 'middle top' : 'middle middle'
       },
       complete: (sourceNode, targetNode, addedEles) => {
         // console.log('complete', sourceNode, targetNode, addedEles)
@@ -253,7 +309,7 @@ export default class CytoscapeView {
   // Edge Connections
 
   edgeConnections () {
-    this.cy.edgeConnections({
+    return cy.edgeConnections({
       edgeSelector: 'edge[color]',
       auxNodeData: edge => ({
         color: edge.data('color')
@@ -264,26 +320,22 @@ export default class CytoscapeView {
   // Event Handling
 
   onSelectHandlers () {
-    this.cy
-      .on('select', 'node', this.onSelectNode)
+    cy.on('select', 'node', this.onSelectNode)
       .on('select', 'edge', this.onSelectEdge)
   }
 
   offSelectHandlers () {
-    this.cy
-      .off('select', 'node', this.onSelectNode)
+    cy.off('select', 'node', this.onSelectNode)
       .off('select', 'edge', this.onSelectEdge)
   }
 
   onUnselectHandlers () {
-    this.cy
-      .on('unselect', 'node', this.onUnselectNode)
+    cy.on('unselect', 'node', this.onUnselectNode)
       .on('unselect', 'edge', this.onUnselectEdge)
   }
 
   offUnselectHandlers () {
-    this.cy
-      .off('unselect', 'node', this.onUnselectNode)
+    cy.off('unselect', 'node', this.onUnselectNode)
       .off('unselect', 'edge', this.onUnselectEdge)
   }
 
@@ -293,14 +345,14 @@ export default class CytoscapeView {
   eventHandlers () {
     this.onSelectHandlers()
     this.onUnselectHandlers()
-    this.cy.on('tap', 'node', e => {
+    cy.on('tap', 'node', e => {
       const clicks = e.originalEvent.detail
       // console.log('tap node', id(e.target), e.originalEvent, clicks)
       if (clicks === 2) {
         this.parent.$emit('topic-double-click', e.target.data('viewTopic'))
       }
     }).on('cxttap', e => {
-      if (e.target === this.cy) {
+      if (e.target === cy) {
         this.parent.$emit('topicmap-contextmenu', {
           model:  e.position,
           render: e.renderedPosition
@@ -309,16 +361,16 @@ export default class CytoscapeView {
     }).on('dragfreeon', e => {
       this.topicDrag(e.target)
     }).on('pan', () => {
-      this.dispatch('_syncPan', this.cy.pan())
+      this.dispatch('_syncPan', cy.pan())
     }).on('zoom', () => {
-      this.dispatch('_syncZoom', this.cy.zoom())
+      this.dispatch('_syncZoom', cy.zoom())
     })
   }
 
   topicDrag (node) {
-    if (!node.isAuxNode()) {    // aux nodes don't emit topic-drag events
+    if (!ec.isAuxNode(node)) {    // aux nodes don't emit topic-drag events
       if (this.isTopicSelected(id(node)) && this.isMultiSelection()) {
-        // console.log('drag multi', this.state.selection.topicIds)
+        // console.log('drag multi', _state.selection.topicIds)
         this.emitTopicsDrag()
       } else {
         // console.log('drag single', id(node))
@@ -336,7 +388,7 @@ export default class CytoscapeView {
   }
 
   emitTopicsDrag (node) {
-    this.parent.$emit('topics-drag', this.state.selection.topicIds.map(id => {
+    this.parent.$emit('topics-drag', _state.selection.topicIds.map(id => {
       const pos = this.cyElement(id).position()
       return {
         topicId: id,
@@ -371,9 +423,9 @@ export default class CytoscapeView {
   // Helper
 
   invokeTopicHandler (id, cmd) {
-    var arg
+    let arg
     if (cmd.multi) {
-      arg = this.isTopicSelected(id) ? idLists(this.state.selection) : {topicIds: [id], assocIds: []}
+      arg = this.isTopicSelected(id) ? idLists(_state.selection) : {topicIds: [id], assocIds: []}
     } else {
       arg = id
     }
@@ -381,9 +433,9 @@ export default class CytoscapeView {
   }
 
   invokeAssocHandler (id, cmd) {
-    var arg
+    let arg
     if (cmd.multi) {
-      arg = this.isAssocSelected(id) ? idLists(this.state.selection) : {topicIds: [], assocIds: [id]}
+      arg = this.isAssocSelected(id) ? idLists(_state.selection) : {topicIds: [], assocIds: [id]}
     } else {
       arg = id
     }
@@ -391,20 +443,59 @@ export default class CytoscapeView {
   }
 
   isTopicSelected (id) {
-    return this.state.selection.includesTopic(id)
+    return _state.selection.includesTopic(id)
   }
 
   isAssocSelected (id) {
-    return this.state.selection.includesAssoc(id)
+    return _state.selection.includesAssoc(id)
   }
 
   isMultiSelection () {
-    return this.state.selection.isMulti()
+    return _state.selection.isMulti()
+  }
+}
+
+/**
+ * Builds a Cytoscape node from a dm5.ViewTopic
+ *
+ * @param   viewTopic   A dm5.ViewTopic
+ */
+function cyNode (viewTopic) {
+  return {
+    data: {
+      id:      viewTopic.id,
+      typeUri: viewTopic.typeUri,     // TODO: needed?
+      label:   viewTopic.value,
+      icon:    viewTopic.icon,
+      viewTopic
+    },
+    position: viewTopic.getPosition()
+  }
+}
+
+/**
+ * Builds a Cytoscape edge from a dm5.ViewAssoc
+ *
+ * Prerequisite: viewAssoc has 2 topic players specified by-ID. ### FIXDOC (assoc players are supported as well)
+ *
+ * @param   viewAssoc   A dm5.ViewAssoc
+ */
+function cyEdge (viewAssoc) {
+  return {
+    data: {
+      id:      viewAssoc.id,
+      typeUri: viewAssoc.typeUri,   // TODO: needed?
+      label:   viewAssoc.value,
+      color:   viewAssoc.getColor(),
+      source:  viewAssoc.role1.id,
+      target:  viewAssoc.role2.id,
+      viewAssoc
+    }
   }
 }
 
 function playerId (node) {
-  const edgeId = node.edgeId()
+  const edgeId = ec.edgeId(node)
   return !edgeId ? {topicId: id(node)} : {assocId: edgeId}
 }
 
