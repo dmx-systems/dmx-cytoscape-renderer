@@ -18,8 +18,10 @@ let ec          // cytoscape-edge-connections API object
 let faFont      // Font Awesome SVG <font> element
 let fisheyeAnimation
 
-let _state      // TODO: needed?
+let _selection  // the selection model for the rendered topicmap (a Selection object, defined in dm5-topicmaps),
+                // initialized by renderTopicmap() method
 
+// a promise resolved once the Font Awesome SVG is loaded
 const svgReady = dm5.restClient.getXML(fa).then(svg => {
   // console.log('### SVG ready!')
   faFont = svg.querySelector('font')
@@ -33,16 +35,14 @@ cytoscape.use(require('cytoscape-edge-connections'))
 
 export default class CytoscapeView {
 
-  constructor (parent, container, box, contextCommands, state, dispatch) {
+  constructor (parent, container, box, contextCommands, dispatch) {
     this.parent = parent,
     cy = this.instantiateCy(container)
     this.box = box              // the measurement box
     this.contextMenus(contextCommands)
     this.edgeHandles()
     ec = this.edgeConnections()
-    _state = state
     this.dispatch = dispatch
-    this.svgReady = svgReady    // a promise resolved once the Font Awesome SVG is loaded ### TODO: make private?
     // Note: by using arrow functions in a select handler 'this' refers to this CytoscapeView instance (instead of the
     // clicked Cytoscape element). In standard ES6 class methods can't be defined in arrow notation. This would require
     // the stage-2 "class properties" feature. For some reason the Babel "transform-class-properties" plugin does not
@@ -58,17 +58,20 @@ export default class CytoscapeView {
 
   // -------------------------------------------------------------------------------------------------------- Public API
 
-  renderTopicmap () {
-    // Note: the cytoscape-amd extension expects an aux node still to exist at the time its edge is removed.
-    // So we must remove the edges first.
-    cy.remove('edge')
-    cy.remove('node')
-    cy.add(_state.topicmap
-      .filterTopics(viewTopic => viewTopic.isVisible())
-      .map(cyNode)
-    )
-    ec.addEdges(_state.topicmap.mapAssocs(cyEdge))
-    // console.log('### Topicmap rendering complete!')
+  renderTopicmap (topicmap, selection) {
+    _selection = selection
+    return svgReady.then(() => {
+      // Note: the cytoscape-amd extension expects an aux node still to exist at the time its edge is removed.
+      // So we must remove the edges first.
+      cy.remove('edge')
+      cy.remove('node')
+      cy.add(topicmap
+        .filterTopics(viewTopic => viewTopic.isVisible())
+        .map(cyNode)
+      )
+      ec.addEdges(topicmap.mapAssocs(cyEdge))
+      // console.log('### Topicmap rendering complete!')
+    })
   }
 
   addTopic (viewTopic) {
@@ -380,7 +383,7 @@ export default class CytoscapeView {
   topicDrag (node) {
     if (!ec.isAuxNode(node)) {    // aux nodes don't emit topic-drag events
       if (this.isTopicSelected(id(node)) && this.isMultiSelection()) {
-        // console.log('drag multi', _state.selection.topicIds)
+        // console.log('drag multi', _selection.topicIds)
         this.emitTopicsDrag()
       } else {
         // console.log('drag single', id(node))
@@ -398,7 +401,7 @@ export default class CytoscapeView {
   }
 
   emitTopicsDrag (node) {
-    this.parent.$emit('topics-drag', _state.selection.topicIds.map(id => {
+    this.parent.$emit('topics-drag', _selection.topicIds.map(id => {
       const pos = this.cyElement(id).position()
       return {
         topicId: id,
@@ -435,7 +438,7 @@ export default class CytoscapeView {
   invokeTopicHandler (id, cmd) {
     let arg
     if (cmd.multi) {
-      arg = this.isTopicSelected(id) ? idLists(_state.selection) : {topicIds: [id], assocIds: []}
+      arg = this.isTopicSelected(id) ? idLists() : {topicIds: [id], assocIds: []}
     } else {
       arg = id
     }
@@ -445,7 +448,7 @@ export default class CytoscapeView {
   invokeAssocHandler (id, cmd) {
     let arg
     if (cmd.multi) {
-      arg = this.isAssocSelected(id) ? idLists(_state.selection) : {topicIds: [], assocIds: [id]}
+      arg = this.isAssocSelected(id) ? idLists() : {topicIds: [], assocIds: [id]}
     } else {
       arg = id
     }
@@ -453,15 +456,15 @@ export default class CytoscapeView {
   }
 
   isTopicSelected (id) {
-    return _state.selection.includesTopic(id)
+    return _selection.includesTopic(id)
   }
 
   isAssocSelected (id) {
-    return _state.selection.includesAssoc(id)
+    return _selection.includesAssoc(id)
   }
 
   isMultiSelection () {
-    return _state.selection.isMulti()
+    return _selection.isMulti()
   }
 }
 
@@ -516,13 +519,13 @@ function id (ele) {
 }
 
 /**
- * Creates ID lists from a selection.
+ * Creates ID lists from the selection.
  * Note: the caller will pass the ID lists to a command handler. The ID lists are created by cloning in order
  * to allow the command handler to modify the selection without creating a side effect in the ID lists.
  */
-function idLists (selection) {
+function idLists () {
   return {
-    topicIds: dm5.utils.clone(selection.topicIds),
-    assocIds: dm5.utils.clone(selection.assocIds)
+    topicIds: dm5.utils.clone(_selection.topicIds),
+    assocIds: dm5.utils.clone(_selection.assocIds)
   }
 }

@@ -1,3 +1,5 @@
+// TODO: rename to topimap-controller.js?
+
 import CytoscapeView from './cytoscape-view'
 import Vue from 'vue'
 import dm5 from 'dm5'
@@ -18,14 +20,16 @@ const state = {
 
   topicmap: undefined,            // the rendered topicmap (dm5.Topicmap)
   topicmapWritable: undefined,    // True if the current user has WRITE permission for the rendered topicmap
-  selection: undefined,           // the selection model of the rendered topicmap (a Selection object)
+  selection: undefined,           // the selection model for the rendered topicmap (a Selection object, defined in
+                                  // dm5-topicmaps), initialized by "renderTopicmap" action
 
   object: undefined,              // the selected object (dm5.DMXObject)
   objectWritable: undefined,      // True if the current user has WRITE permission for the selected object
 
   // Cytoscape View
 
-  details: {},    // In-map details. Detail records keyed by object ID:
+  details: {},    // In-map details. Detail records keyed by object ID (created by createDetail() and
+                  // createSelectionDetail()):
                   //  {
                   //    id        ID of "object" (Number). May be set before "object" is actually available.
                   //    object    The object to render (dm5.Topic, dm5.Assoc)
@@ -322,7 +326,7 @@ const actions = {
    */
   _initCytoscape ({dispatch}, {parent, container, box, contextCommands}) {
     // console.log('_initCytoscape')
-    cyView = new CytoscapeView(parent, container, box, contextCommands, state, dispatch)
+    cyView = new CytoscapeView(parent, container, box, contextCommands, dispatch)
   },
 
   _syncObject (_, object) {
@@ -370,7 +374,7 @@ const actions = {
     state.topicmapWritable = writable
     state.selection = selection
     state.details = {}
-    return cyView.svgReady.then(cyView.renderTopicmap).then(showPinnedDetails)
+    return cyView.renderTopicmap(topicmap, selection).then(showPinnedDetails)
   },
 
   syncAddTopic (_, id) {
