@@ -80,10 +80,18 @@ export default class CytoscapeView {
   }
 
   playFisheyeAnimation() {
+    // console.log('playFisheyeAnimation')
     fisheyeAnimation && fisheyeAnimation.stop()
     fisheyeAnimation = cy.layout({
       name: 'cose-bilkent',
       fit: false,
+      /* animateFilter: (node, i) => {
+        if (ec.isAuxNode(node)) {
+          console.log(node.id(), ec.isAuxNode(node), node.position(), node.renderedPosition())
+          // return false
+        }
+        return true // !ec.isAuxNode(node)
+      }, */
       randomize: false,
       nodeRepulsion: 0,
       idealEdgeLength: 0,
@@ -364,7 +372,9 @@ export default class CytoscapeView {
       this.dispatch('_syncPan', cy.pan())
     }).on('zoom', () => {
       this.dispatch('_syncZoom', cy.zoom())
-    })
+    }) /* .on('ready', () => {
+      console.log('### Cytoscape ready')
+    }) */
   }
 
   topicDrag (node) {

@@ -690,19 +690,10 @@ function _unpinAssocIfPinned (id, dispatch) {
 function showPinnedDetails () {
   state.topicmap
     .filterTopics(viewTopic => viewTopic.isVisible() && viewTopic.isPinned())
-    .forEach(viewTopic =>
-      createDetail(viewTopic).then(detail => {
-        showDetail(detail)
-      })
-    )
+    .forEach(viewTopic => createDetail(viewTopic).then(showDetail))
   state.topicmap
-    // this renderer doesn't support assoc-connected assocs ### TODO
-    .filterAssocs(viewAssoc => !viewAssoc.hasAssocPlayer() && viewAssoc.isPinned())
-    .forEach(viewAssoc =>
-      createDetail(viewAssoc).then(detail => {
-        showDetail(detail)
-      })
-    )
+    .filterAssocs(viewAssoc => viewAssoc.isPinned())
+    .forEach(viewAssoc => createDetail(viewAssoc).then(showDetail))
 }
 
 /**
@@ -797,7 +788,7 @@ function measureDetail(detail) {
     width:  detailDOM.clientWidth,
     height: detailDOM.clientHeight
   }
-  // console.log('measureDetail', node.id(), state.size.width, state.size.height)
+  // console.log('measureDetail', detail.node.id(), detail.size.width, detail.size.height)
   detail.node.style(detail.size)
   cyView.playFisheyeAnimation()
 }
