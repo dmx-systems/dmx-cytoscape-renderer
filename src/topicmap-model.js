@@ -685,11 +685,82 @@ function _unpinAssocIfPinned (id, dispatch) {
   }
 }
 
+// Helper
+
+/**
+ * Auto-position topic if no position is set.
+ */
+function initPos (viewTopic) {
+  // console.log('initPos', viewTopic.id, viewTopic.getViewProp('dmx.topicmaps.x') !== undefined,
+  //   state.object && state.object.id)
+  if (viewTopic.getViewProp('dmx.topicmaps.x') === undefined) {
+    const pos = {}
+    if (state.object) {
+      // If there is a single selection: place lower/right to the selected topic/assoc
+      // TODO: more elaborated placement, e.g. at near free position?
+      const p = state.topicmap.getPosition(state.object.id)
+      pos.x = p.x + 60
+      pos.y = p.y + 120
+    } else {
+      pos.x = 100
+      pos.y = 100
+    }
+    viewTopic.setPosition(pos)
+  }
+}
+
 // === Cytoscape View ===
+
+/**
+ * Unselects the selected element, removes the corresponding detail (if not pinned), and plays the restore animation.
+ *
+ * Precondition:
+ * - an element is selected
+ *
+ * @return  a promise resolved once the restore animation is complete.
+ */
+function unselectElement () {
+  if (!ele) {
+    throw Error('unselectElement() called when no element is selected')
+  }
+  // console.log('unselectElement', eleId(ele), cyView.cy.elements(":selected").size())
+  // Note 1: when the user clicks on the background Cytoscape unselects the selected element on its own.
+  // Calling cy.elements(":selected") afterwards would return an empty collection.
+  // This is why we maintain an explicit "ele" state.
+  // Note 2: unselect() removes the element's selection style when manually stripping topic/assoc from
+  // browser URL. In this situation cy.elements(":selected") would return a non-empty collection.
+  cyView.unselect(ele)
+  const detail = selectionDetail()
+  return !detail.pinned ? removeDetail(detail) : Promise.resolve()
+}
+
+/**
+ * @return  a promise resolved once the animation is complete.
+ */
+function playRestoreAnimation () {
+  // console.log('starting restore animation')
+  return Promise.all(state.topicmap
+    .filterTopics(viewTopic => viewTopic.isVisible())
+    .map(viewTopic => _syncTopicPosition(viewTopic.id))
+  )
+}
+
+/**
+ * @return  a promise resolved once the animation is complete.
+ */
+function _syncTopicPosition (id) {
+  return cyElement(id).animation({
+    // duration: 3000,
+    position: state.topicmap.getTopic(id).getPosition(),
+    easing: 'ease-in-out-cubic'
+  }).play().promise()
+}
+
+// Details
 
 function showPinnedDetails () {
   state.topicmap
-    .filterTopics(viewTopic => viewTopic.isVisible() && viewTopic.isPinned())
+    .filterTopics(viewTopic => viewTopic.isPinned() && viewTopic.isVisible())
     .forEach(viewTopic => createDetail(viewTopic).then(showDetail))
   state.topicmap
     .filterAssocs(viewAssoc => viewAssoc.isPinned())
@@ -771,6 +842,14 @@ function createSelectionDetail () {
   return detail
 }
 
+function showDetail (detail) {
+  detail.node.addClass('expanded')
+  Vue.set(state.details, detail.id, detail)       // Vue.set() triggers dm5-detail-layer rendering
+  Vue.nextTick(() => {
+    measureDetail(detail)
+  })
+}
+
 /**
  * Measures the size of the given detail, resizes the detail node, and plays the fisheye animation.
  *
@@ -791,54 +870,6 @@ function measureDetail(detail) {
   // console.log('measureDetail', detail.node.id(), detail.size.width, detail.size.height)
   detail.node.style(detail.size)
   cyView.playFisheyeAnimation()
-}
-
-function playFisheyeAnimationIfDetailsOnscreen () {
-  if (!dm5.utils.isEmpty(state.details)) {
-    cyView.playFisheyeAnimation()
-  }
-}
-
-/**
- * @return  a promise resolved once the animation is complete.
- */
-function _syncTopicPosition (id) {
-  return cyElement(id).animation({
-    // duration: 3000,
-    position: state.topicmap.getTopic(id).getPosition(),
-    easing: 'ease-in-out-cubic'
-  }).play().promise()
-}
-
-/**
- * Unselects the selected element, removes the corresponding detail (if not pinned), and plays the restore animation.
- *
- * Precondition:
- * - an element is selected
- *
- * @return  a promise resolved once the restore animation is complete.
- */
-function unselectElement () {
-  if (!ele) {
-    throw Error('unselectElement() called when no element is selected')
-  }
-  // console.log('unselectElement', eleId(ele), cyView.cy.elements(":selected").size())
-  // Note 1: when the user clicks on the background Cytoscape unselects the selected element on its own.
-  // Calling cy.elements(":selected") afterwards would return an empty collection.
-  // This is why we maintain an explicit "ele" state.
-  // Note 2: unselect() removes the element's selection style when manually stripping topic/assoc from
-  // browser URL. In this situation cy.elements(":selected") would return a non-empty collection.
-  cyView.unselect(ele)
-  const detail = selectionDetail()
-  return !detail.pinned ? removeDetail(detail) : Promise.resolve()
-}
-
-function showDetail (detail) {
-  detail.node.addClass('expanded')
-  Vue.set(state.details, detail.id, detail)       // Vue.set() triggers dm5-detail-layer rendering
-  Vue.nextTick(() => {
-    measureDetail(detail)
-  })
 }
 
 /**
@@ -877,15 +908,10 @@ function updateDetailPos (detail) {
   detail.pos = detail.node.renderedPosition()
 }
 
-/**
- * @return  a promise resolved once the animation is complete.
- */
-function playRestoreAnimation () {
-  // console.log('starting restore animation')
-  return Promise.all(state.topicmap
-    .filterTopics(viewTopic => viewTopic.isVisible())
-    .map(viewTopic => _syncTopicPosition(viewTopic.id))
-  )
+function playFisheyeAnimationIfDetailsOnscreen () {
+  if (!dm5.utils.isEmpty(state.details)) {
+    cyView.playFisheyeAnimation()
+  }
 }
 
 function selectionDetail () {
@@ -903,27 +929,7 @@ function detail (id) {
   return detail
 }
 
-/**
- * Auto-position topic if no position is set.
- */
-function initPos (viewTopic) {
-  // console.log('initPos', viewTopic.id, viewTopic.getViewProp('dmx.topicmaps.x') !== undefined,
-  //   state.object && state.object.id)
-  if (viewTopic.getViewProp('dmx.topicmaps.x') === undefined) {
-    const pos = {}
-    if (state.object) {
-      // If there is a single selection: place lower/right to the selected topic/assoc
-      // TODO: more elaborated placement, e.g. at near free position?
-      const p = state.topicmap.getPosition(state.object.id)
-      pos.x = p.x + 60
-      pos.y = p.y + 120
-    } else {
-      pos.x = 100
-      pos.y = 100
-    }
-    viewTopic.setPosition(pos)
-  }
-}
+// Helper
 
 /**
  * Gets the Cytoscape element with the given ID. ### TODO: copy in cytoscape-view.js
