@@ -1,4 +1,20 @@
-// TODO: rename to topimap-controller.js?
+/*
+  TODO: architecture; separate topicmap model from renderer
+    1. Topicmap controller
+      - holds topicmap, e.g. dm5.Topicmap or dm5.Geomap (model)
+      - provides update facility; updates all 3 aspects together
+        - client state
+        - server state
+        - view; knows the current renderer
+    2. Renderer (view): knows the topicmap model it can render; utilizes specific renderer library
+  The same topicmap model can be rendered by different renderers then.
+  Examples:
+    - the standard topicmap model could be rendered by Cytoscape or by D3
+    - the geomap model could be rendered by Leaflet or by OpenLayers
+  At the moment both aspects (model updates and view updates) are melted together in this file (while most Cytoscape
+  specifics are already factored out as cytoscape-view.js).
+  Implementing e,g, a D3 renderer would cause code/structure duplication.
+*/
 
 import CytoscapeView from './cytoscape-view'
 import Vue from 'vue'
@@ -52,6 +68,19 @@ const actions = {
   fetchTopicmap (_, id) {
     // console.log('fetchTopicmap', id, '(topicmap-model)')
     return dm5.restClient.getTopicmap(id)
+  },
+
+  /**
+   * @returns   a promise resolved once topicmap rendering is complete.
+   */
+  renderTopicmap (_, {topicmap, writable, selection}) {
+    // console.log('renderTopicmap', topicmap.id)
+    ele = undefined
+    state.topicmap = topicmap
+    state.topicmapWritable = writable
+    state.selection = selection
+    state.details = {}
+    return cyView.renderTopicmap(topicmap, selection).then(showPinnedDetails)
   },
 
   // TODO: rename "reveal" functions to "show"
@@ -315,9 +344,7 @@ const actions = {
 
   // === Cytoscape View ===
 
-  // TODO: transform these actions into CytoscapeView methods?
-
-  // Module internal
+  // Module internal (dispatched from dm5-cytoscape-renderer components or cytoscape-view.js)
 
   /**
    * @param   parent      the dm5-topicmap-panel (a Vue instance)
@@ -360,22 +387,10 @@ const actions = {
     // TODO: not supported by Cytoscape
   },
 
-  // Cross-Module
+  // Private (dispatched from this file)
 
   // The "sync" actions adapt (Cytoscape) view to ("topicmap") model changes
-
-  /**
-   * @returns   a promise resolved once topicmap rendering is complete.
-   */
-  renderTopicmap (_, {topicmap, writable, selection}) {
-    // console.log('renderTopicmap', topicmap.id)
-    ele = undefined
-    state.topicmap = topicmap
-    state.topicmapWritable = writable
-    state.selection = selection
-    state.details = {}
-    return cyView.renderTopicmap(topicmap, selection).then(showPinnedDetails)
-  },
+  // ### TODO: transform these 11 private actions into CytoscapeView methods
 
   syncAddTopic (_, id) {
     // console.log('syncAddTopic', id)
@@ -415,7 +430,43 @@ const actions = {
     cyView.updateAssocColor(id, state.topicmap.getAssoc(id).getColor())
   },
 
+  syncTopicPosition (_, id) {
+    // console.log('syncTopicPosition', id)
+    _syncTopicPosition(id)
+  },
+
+  syncTopicVisibility (_, id) {
+    // console.log('syncTopicVisibility', id)
+    const viewTopic = state.topicmap.getTopic(id)
+    if (viewTopic.isVisible()) {
+      cyView.addTopic(viewTopic)
+    } else {
+      cyView.remove(id)
+    }
+  },
+
+  syncPinned (_, {objectId, pinned}) {
+    // console.log('syncPinned', objectId, pinned)
+    if (!pinned && !isSelected(objectId)) {
+      removeDetail(detail(objectId)).then(playFisheyeAnimationIfDetailsOnscreen)
+    }
+  },
+
+  syncRemoveTopic (_, id) {
+    // console.log('syncRemoveTopic', id)
+    cyView.remove(id)
+  },
+
+  syncRemoveAssoc (_, id) {
+    // console.log('syncRemoveAssoc', id)
+    cyView.remove(id)
+  },
+
+  // Cross-Module
+
   /**
+   * ### TODO: rename to "renderAsSelected"?
+   *
    * Renders given topic/assoc as selected.
    * Shows the detail DOM and plays the fisheye animation.
    *
@@ -478,38 +529,6 @@ const actions = {
       throw Error(`_syncUnselect(${id}) called when "ele" is not set`)
     }
     cyView.unselectById(id)
-  },
-
-  syncTopicPosition (_, id) {
-    // console.log('syncTopicPosition', id)
-    _syncTopicPosition(id)
-  },
-
-  syncTopicVisibility (_, id) {
-    // console.log('syncTopicVisibility', id)
-    const viewTopic = state.topicmap.getTopic(id)
-    if (viewTopic.isVisible()) {
-      cyView.addTopic(viewTopic)
-    } else {
-      cyView.remove(id)
-    }
-  },
-
-  syncPinned (_, {objectId, pinned}) {
-    // console.log('syncPinned', objectId, pinned)
-    if (!pinned && !isSelected(objectId)) {
-      removeDetail(detail(objectId)).then(playFisheyeAnimationIfDetailsOnscreen)
-    }
-  },
-
-  syncRemoveTopic (_, id) {
-    // console.log('syncRemoveTopic', id)
-    cyView.remove(id)
-  },
-
-  syncRemoveAssoc (_, id) {
-    // console.log('syncRemoveAssoc', id)
-    cyView.remove(id)
   },
 
   resizeTopicmapRenderer () {
