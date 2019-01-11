@@ -392,18 +392,18 @@ const actions = {
 
   syncTopic (_, id) {
     // console.log('syncTopic', id)
-    cyElement(id).data('label', state.topicmap.getTopic(id).value)
+    cyView.updateTopicLabel(id, state.topicmap.getTopic(id).value)
   },
 
   syncTopicIcon (_, id) {
     // console.log('syncTopicIcon', id)
-    cyElement(id).data('icon', state.topicmap.getTopic(id).icon)
+    cyView.updateTopicIcon(id, state.topicmap.getTopic(id).icon)
   },
 
   syncAssoc (_, id) {
     // console.log('syncAssoc', id)
     const assoc = state.topicmap.getAssoc(id)
-    cyElement(id).data({
+    cyView.updateAssoc(id, {
       typeUri: assoc.typeUri,
       label:   assoc.value,
       color:   assoc.getColor()
@@ -412,7 +412,7 @@ const actions = {
 
   syncAssocColor (_, id) {
     // console.log('syncAssocColor', id)
-    cyElement(id).data('color', state.topicmap.getAssoc(id).getColor())
+    cyView.updateAssocColor(id, state.topicmap.getAssoc(id).getColor())
   },
 
   /**
@@ -440,7 +440,7 @@ const actions = {
       // console.log('restore animation complete')
       showDetail(createSelectionDetail())
     })
-    ele = cyView.select(cyElement(id))    // select() restores selection after switching topicmap
+    ele = cyView.selectById(id)     // selectById() restores selection after switching topicmap
     if (ele.size() !== 1) {
       throw Error(`can't select element ${id} (not found in topicmap ${state.topicmap.id})`)
     }
@@ -463,7 +463,7 @@ const actions = {
     if (ele) {
       throw Error(`_syncSelect(${id}) called when "ele" is set (${eleId(ele)})`)
     }
-    cyView.select(cyElement(id))
+    cyView.selectById(id)
   },
 
   /**
@@ -477,7 +477,7 @@ const actions = {
     if (!ele) {
       throw Error(`_syncUnselect(${id}) called when "ele" is not set`)
     }
-    cyView.unselect(cyElement(id))    // TODO: assert that cyElement() not empty?
+    cyView.unselectById(id)
   },
 
   syncTopicPosition (_, id) {
@@ -491,7 +491,7 @@ const actions = {
     if (viewTopic.isVisible()) {
       cyView.addTopic(viewTopic)
     } else {
-      cyElement(id).remove()
+      cyView.remove(id)
     }
   },
 
@@ -504,13 +504,12 @@ const actions = {
 
   syncRemoveTopic (_, id) {
     // console.log('syncRemoveTopic', id)
-    cyElement(id).remove()
-    // Note: the connected edges are removed automatically by Cytoscape
+    cyView.remove(id)
   },
 
   syncRemoveAssoc (_, id) {
     // console.log('syncRemoveAssoc', id)
-    cyElement(id).remove()
+    cyView.remove(id)
   },
 
   resizeTopicmapRenderer () {
@@ -753,11 +752,7 @@ function playRestoreAnimation () {
  * @return  a promise resolved once the animation is complete.
  */
 function _syncTopicPosition (id) {
-  return cyElement(id).animation({
-    // duration: 3000,
-    position: state.topicmap.getTopic(id).getPosition(),
-    easing: 'ease-in-out-cubic'
-  }).play().promise()
+  return cyView.updateTopicPosition(id, state.topicmap.getTopic(id).getPosition())
 }
 
 // Details
@@ -772,15 +767,15 @@ function showPinnedDetails () {
 }
 
 /**
- * Creates a detail record for the given element.
+ * Creates a detail record for the given object.
  *
  * @param   viewObject    a dm5.ViewTopic or a dm5.ViewAssoc
  */
 function createDetail (viewObject) {
-  const ele = cyElement(viewObject.id)
-  const node = ele.isNode() ? ele : cyView.auxNode(ele)
+  const id = viewObject.id
+  const node = cyView.detailNode(id)
   const detail = {
-    id: viewObject.id,
+    id,
     object: undefined,
     pos: node.renderedPosition(),
     size: undefined,
@@ -817,12 +812,11 @@ function createDetail (viewObject) {
 function createSelectionDetail () {
   // console.log('createSelectionDetail', state.object)
   const id = eleId(ele)
-  let node, viewObject
+  const node = cyView.detailNode(id)
+  let viewObject
   if (ele.isNode()) {
-    node = ele
     viewObject = state.topicmap.getTopic(id)
   } else {
-    node = cyView.auxNode(ele)
     viewObject = state.topicmap.getAssoc(id)
     cyView.select(node)     // select aux node along with assoc
   }
@@ -934,17 +928,6 @@ function detail (id) {
 }
 
 // Helper
-
-/**
- * Gets the Cytoscape element with the given ID. ### TODO: copy in cytoscape-view.js
- *
- * @param   id    a DMX object id (number)
- *
- * @return  A collection of 1 or 0 elements. ### TODO: throw if 0?
- */
-function cyElement (id) {
-  return cyView.cyElement(id)
-}
 
 function isSelected (objectId) {
   return ele && eleId(ele) === objectId

@@ -65,10 +65,7 @@ export default class CytoscapeView {
       // So we must remove the edges first.
       cy.remove('edge')
       cy.remove('node')
-      cy.add(topicmap
-        .filterTopics(viewTopic => viewTopic.isVisible())
-        .map(cyNode)
-      )
+      cy.add(topicmap.filterTopics(viewTopic => viewTopic.isVisible()).map(cyNode))
       ec.addEdges(topicmap.mapAssocs(cyEdge))
       // console.log('### Topicmap rendering complete!')
     })
@@ -80,6 +77,68 @@ export default class CytoscapeView {
 
   addAssoc (viewAssoc) {
     ec.addEdge(cyEdge(viewAssoc))
+  }
+
+  remove (id) {
+    cyElement(id).remove()
+    // Note: the connected edges are removed automatically by Cytoscape
+  }
+
+  selectById (id) {
+    return this.select(cyElement(id))
+  }
+
+  unselectById (id) {
+    return this.unselect(cyElement(id))     // TODO: assert that cyElement() not empty?
+  }
+
+  /**
+   * Programmatically selects a Cytoscape element *without* emitting a (Cytoscape) `select` event.
+   */
+  select (ele) {
+    this.offSelectHandlers()
+    ele.select()
+    this.onSelectHandlers()
+    return ele
+  }
+
+  /**
+   * Programmatically unselects a Cytoscape element *without* emitting a (Cytoscape) `unselect` event.
+   */
+  unselect (ele) {
+    this.offUnselectHandlers()
+    ele.unselect()
+    this.onUnselectHandlers()
+    return ele
+  }
+
+  // TODO: should we update per-field (like topic) or combined (like assoc)?
+
+  updateTopicLabel (id, label) {
+    cyElement(id).data('label', label)
+  }
+
+  updateTopicIcon (id, icon) {
+    cyElement(id).data('icon', icon)
+  }
+
+  updateAssoc (id, data) {
+    cyElement(id).data(data)
+  }
+
+  updateAssocColor (id, color) {
+    cyElement(id).data('color', color)
+  }
+
+  /**
+   * @return  a promise resolved once the animation is complete.
+   */
+  updateTopicPosition (id, pos) {
+    return cyElement(id).animation({
+      // duration: 3000,
+      position: pos,
+      easing: 'ease-in-out-cubic'
+    }).play().promise()
   }
 
   playFisheyeAnimation() {
@@ -103,13 +162,14 @@ export default class CytoscapeView {
     }).run()
   }
 
-  auxNode (edge) {
-    return ec.auxNode(edge)
-  }
-
-  // TODO: make it private?
-  cyElement (id) {
-    return cy.getElementById(id.toString())   // Note: a Cytoscape element ID is a string
+  /**
+   * Returns the detail node for the given DMX object.
+   *
+   * @param   id    a DMX object id (number)
+   */
+  detailNode (id) {
+    const ele = cyElement(id)
+    return ele.isNode() ? ele : ec.auxNode(ele)
   }
 
   resize () {
@@ -220,11 +280,6 @@ export default class CytoscapeView {
       },
       wheelSensitivity: 0.2
     })
-  }
-
-  // ### TODO: copy in topic-model.js
-  cyElement (id) {
-    return cy.getElementById(id.toString())
   }
 
   // Node Rendering
@@ -402,35 +457,13 @@ export default class CytoscapeView {
 
   emitTopicsDrag (node) {
     this.parent.$emit('topics-drag', _selection.topicIds.map(id => {
-      const pos = this.cyElement(id).position()
+      const pos = cyElement(id).position()
       return {
         topicId: id,
         x: pos.x,
         y: pos.y
       }
     }))
-  }
-
-  // View Synchronization
-
-  /**
-   * Programmatically selects a Cytoscape element *without* emitting a (Cytoscape) `select` event.
-   */
-  select (ele) {
-    this.offSelectHandlers()
-    ele.select()
-    this.onSelectHandlers()
-    return ele
-  }
-
-  /**
-   * Programmatically unselects a Cytoscape element *without* emitting a (Cytoscape) `unselect` event.
-   */
-  unselect (ele) {
-    this.offUnselectHandlers()
-    ele.unselect()
-    this.onUnselectHandlers()
-    return ele
   }
 
   // Helper
@@ -467,6 +500,8 @@ export default class CytoscapeView {
     return _selection.isMulti()
   }
 }
+
+// ----------------------------------------------------------------------------------------------------- Private Methods
 
 /**
  * Builds a Cytoscape node from a dm5.ViewTopic
@@ -528,4 +563,15 @@ function idLists () {
     topicIds: dm5.utils.clone(_selection.topicIds),
     assocIds: dm5.utils.clone(_selection.assocIds)
   }
+}
+
+/**
+ * Gets the Cytoscape element with the given ID.
+ *
+ * @param   id    a DMX object id (number)
+ *
+ * @return  A collection of 1 or 0 elements. ### TODO: throw if 0?
+ */
+function cyElement (id) {
+  return cy.getElementById(id.toString())     // Note: a Cytoscape element ID is a string
 }
