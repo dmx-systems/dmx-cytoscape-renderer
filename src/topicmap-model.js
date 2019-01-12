@@ -293,19 +293,20 @@ const actions = {
   _setTopicPosition ({dispatch}, {topicmapId, topicId, pos}) {
     if (topicmapId === state.topicmap.id) {
       state.topicmap.getTopic(topicId).setPosition(pos)                   // update state
-      dispatch('syncTopicPosition', topicId)                              // sync view
+      _syncTopicPosition(topicId)                                         // update view
     }
   },
 
   _setTopicVisibility ({dispatch}, {topicmapId, topicId, visibility}) {
     if (topicmapId === state.topicmap.id) {
-      // update state
-      if (!visibility) {
-        state.topicmap.removeAssocs(topicId)
+      const viewTopic = state.topicmap.getTopic(topicId)
+      viewTopic.setVisibility(visibility)                                 // update state
+      if (visibility) {
+        cyView.addTopic(viewTopic)                                        // update view
+      } else {
+        state.topicmap.removeAssocs(topicId)                              // update state
+        cyView.remove(topicId)                                            // update view
       }
-      state.topicmap.getTopic(topicId).setVisibility(visibility)
-      // sync view
-      dispatch('syncTopicVisibility', topicId)
     }
   },
 
@@ -411,17 +412,17 @@ const actions = {
     cyView.addAssoc(viewAssoc)
   }, */
 
-  syncTopic (_, id) {
+  /* syncTopic (_, id) {
     // console.log('syncTopic', id)
     cyView.updateTopicLabel(id, state.topicmap.getTopic(id).value)
-  },
+  }, */
 
-  syncTopicIcon (_, id) {
+  /* syncTopicIcon (_, id) {
     // console.log('syncTopicIcon', id)
     cyView.updateTopicIcon(id, state.topicmap.getTopic(id).icon)
-  },
+  }, */
 
-  syncAssoc (_, id) {
+  /* syncAssoc (_, id) {
     // console.log('syncAssoc', id)
     const assoc = state.topicmap.getAssoc(id)
     cyView.updateAssoc(id, {
@@ -429,19 +430,19 @@ const actions = {
       label:   assoc.value,
       color:   assoc.getColor()
     })
-  },
+  }, */
 
-  syncAssocColor (_, id) {
+  /* syncAssocColor (_, id) {
     // console.log('syncAssocColor', id)
     cyView.updateAssocColor(id, state.topicmap.getAssoc(id).getColor())
-  },
+  }, */
 
-  syncTopicPosition (_, id) {
+  /* syncTopicPosition (_, id) {
     // console.log('syncTopicPosition', id)
     _syncTopicPosition(id)
-  },
+  }, */
 
-  syncTopicVisibility (_, id) {
+  /* syncTopicVisibility (_, id) {
     // console.log('syncTopicVisibility', id)
     const viewTopic = state.topicmap.getTopic(id)
     if (viewTopic.isVisible()) {
@@ -449,7 +450,7 @@ const actions = {
     } else {
       cyView.remove(id)
     }
-  },
+  }, */
 
   syncPinned (_, {objectId, pinned}) {
     // console.log('syncPinned', objectId, pinned)
@@ -619,8 +620,11 @@ function updateTopic (topic, dispatch) {
   // console.log('updateTopic', topic)
   const _topic = state.topicmap.getTopicIfExists(topic.id)
   if (_topic) {
-    _topic.value = topic.value              // update state
-    dispatch('syncTopic', topic.id)         // sync view
+    const value = topic.value
+    // update state
+    _topic.value = value
+    // update view
+    cyView.updateTopicLabel(topic.id, value)
   }
 }
 
@@ -630,9 +634,17 @@ function updateTopic (topic, dispatch) {
 function updateAssoc (assoc, dispatch) {
   const _assoc = state.topicmap.getAssocIfExists(assoc.id)
   if (_assoc) {
-    _assoc.value = assoc.value              // update state
-    _assoc.typeUri = assoc.typeUri          // update state
-    dispatch('syncAssoc', assoc.id)         // sync view
+    const value = assoc.value
+    const typeUri = assoc.typeUri
+    // update state
+    _assoc.value = value
+    _assoc.typeUri = typeUri
+    // update view
+    cyView.updateAssoc(assoc.id, {
+      typeUri: typeUri,           // TODO: drop it?
+      label:   value,
+      color:   assoc.getColor()   // FIXME: color aux node as well
+    })
   }
 }
 
@@ -669,7 +681,7 @@ function updateTopicIcons (typeUri, dispatch) {
     // Note: no state update here. Topic icon is not part of ViewTopic but computed based on type definition.
     // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
     // processes directives.
-    dispatch('syncTopicIcon', topic.id)         // sync view
+    cyView.updateTopicIcon(topic.id, topic.icon)          // update view
   })
 }
 
@@ -681,7 +693,7 @@ function updateAssocColors (typeUri, dispatch) {
     // Note: no state update here. Assoc color is not part of ViewAssoc but computed based on type definition.
     // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
     // processes directives.
-    dispatch('syncAssocColor', assoc.id)        // sync view
+    cyView.updateAssocColor(assoc.id, assoc.getColor())   // update view    // TODO: assoc color getter
   })
 }
 
