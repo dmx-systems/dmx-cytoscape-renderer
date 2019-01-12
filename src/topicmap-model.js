@@ -94,12 +94,12 @@ const actions = {
    * @param   select  Optional: if trueish the revealed topic is selected programmatically.
    */
   revealTopic ({dispatch}, {topic, pos, select}) {
-    // update state + sync view
+    // update state + view
     const op = _revealTopic(topic, pos, select, dispatch)
     // update server
     if (state.topicmapWritable) {
       if (op.type === 'add') {
-        dm5.restClient.addTopicToTopicmap(state.topicmap.id, topic.id, op.viewProps)
+        dm5.restClient.addTopicToTopicmap(state.topicmap.id, topic.id, op.viewTopic.viewProps)
       } else if (op.type === 'show') {
         dm5.restClient.setTopicVisibility(state.topicmap.id, topic.id, true)
       }
@@ -107,25 +107,28 @@ const actions = {
   },
 
   revealAssoc ({dispatch}, {assoc, select}) {
-    // update state + sync view
+    // update state + view
     const op = _revealAssoc(assoc, select, dispatch)
     // update server
     if (state.topicmapWritable) {
       if (op.type === 'add') {
-        dm5.restClient.addAssocToTopicmap(state.topicmap.id, assoc.id, op.viewProps)
+        dm5.restClient.addAssocToTopicmap(state.topicmap.id, assoc.id, op.viewAssoc.viewProps)
       }
     }
   },
 
   // TODO: add "select" param?
   revealRelatedTopic ({dispatch}, relTopic) {
-    // update state + sync view
+    // update state + view
     const topicOp = _revealTopic(relTopic, undefined, true, dispatch)   // pos=undefined, select=true
     const assocOp = _revealAssoc(relTopic.assoc, false, dispatch)       // select=false
     // update server
     if (state.topicmapWritable) {
-      if (topicOp.type || assocOp.type) {
-        dm5.restClient.addRelatedTopicToTopicmap(state.topicmap.id, relTopic.id, relTopic.assoc.id, topicOp.viewProps)
+      if (assocOp.type) {
+        // Note: the case the topic is revealed but not the assoc can't happen
+        // Note: if the topic is not revealed (but the assoc is) topicOp.viewTopic is undefined
+        const viewProps = topicOp.viewTopic && topicOp.viewTopic.viewProps
+        dm5.restClient.addRelatedTopicToTopicmap(state.topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
       }
     }
   },
@@ -272,15 +275,18 @@ const actions = {
 
   _addTopicToTopicmap ({dispatch}, {topicmapId, viewTopic}) {
     if (topicmapId === state.topicmap.id) {
-      state.topicmap.addTopic(new dm5.ViewTopic(viewTopic))               // update state
-      dispatch('syncAddTopic', viewTopic.id)                              // sync view
+      const _viewTopic = new dm5.ViewTopic(viewTopic)
+      state.topicmap.addTopic(_viewTopic)                                 // update state
+      cyView.addTopic(_viewTopic)                                         // update view
     }
   },
 
+  // TODO: rename prop to "viewAssoc"
   _addAssocToTopicmap ({dispatch}, {topicmapId, assoc}) {
     if (topicmapId === state.topicmap.id) {
-      state.topicmap.addAssoc(new dm5.ViewAssoc(assoc))                   // update state
-      dispatch('syncAddAssoc', assoc.id)                                  // sync view
+      const _viewAssoc = new dm5.ViewAssoc(assoc)
+      state.topicmap.addAssoc(_viewAssoc)                                 // update state
+      cyView.addAssoc(_viewAssoc)                                         // update view
     }
   },
 
@@ -390,20 +396,20 @@ const actions = {
   // Private (dispatched from this file)
 
   // The "sync" actions adapt (Cytoscape) view to ("topicmap") model changes
-  // ### TODO: transform these 11 private actions into CytoscapeView methods
+  // ### TODO: drop these 11 private actions, instead call CytoscapeView methods directly
 
-  syncAddTopic (_, id) {
+  /* syncAddTopic (_, id) {
     // console.log('syncAddTopic', id)
     const viewTopic = state.topicmap.getTopic(id)
     initPos(viewTopic)
     cyView.addTopic(viewTopic)
-  },
+  }, */
 
-  syncAddAssoc (_, id) {
+  /* syncAddAssoc (_, id) {
     // console.log('syncAddAssoc', id)
     const viewAssoc = state.topicmap.getAssoc(id)
     cyView.addAssoc(viewAssoc)
-  },
+  }, */
 
   syncTopic (_, id) {
     // console.log('syncTopic', id)
@@ -559,7 +565,7 @@ export default {
 
 // === DMX Model ===
 
-// Update state + sync view
+// Update state + view
 
 /**
  * @param   topic   the topic to reveal (dm5.Topic).
@@ -570,9 +576,9 @@ export default {
 function _revealTopic (topic, pos, select, dispatch) {
   // update state
   const op = state.topicmap.revealTopic(topic, pos)
-  // sync view
+  // update view
   if (op.type === 'add' || op.type === 'show') {
-    dispatch('syncAddTopic', topic.id)
+    cyView.addTopic(initPos(op.viewTopic))
   }
   select && dispatch('callTopicRoute', topic.id)     // TODO: don't dispatch into host application
   return op
@@ -583,7 +589,7 @@ function _revealAssoc (assoc, select, dispatch) {
   const op = state.topicmap.revealAssoc(assoc)
   // sync view
   if (op.type === 'add') {
-    dispatch('syncAddAssoc', assoc.id)
+    cyView.addAssoc(op.viewAssoc)
   }
   select && dispatch('callAssocRoute', assoc.id)     // TODO: don't dispatch into host application
   return op
@@ -729,6 +735,7 @@ function initPos (viewTopic) {
     }
     viewTopic.setPosition(pos)
   }
+  return viewTopic
 }
 
 // === Cytoscape View ===
