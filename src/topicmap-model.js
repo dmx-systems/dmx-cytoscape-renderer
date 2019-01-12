@@ -143,7 +143,7 @@ const actions = {
     // console.log('setTopicPosition', id)
     // update state
     state.topicmap.getTopic(id).setPosition(pos)
-    // sync view (up-to-date already)
+    // update view (up-to-date already)
     // update server
     if (state.topicmapWritable) {
       dm5.restClient.setTopicPosition(state.topicmap.id, id, pos)
@@ -167,7 +167,7 @@ const actions = {
         y: coord.y
       })
     )
-    // sync view (up-to-date already)
+    // update view (up-to-date already)
     // update server
     if (state.topicmapWritable) {
       dm5.restClient.setTopicPositions(state.topicmap.id, coords)
@@ -177,7 +177,7 @@ const actions = {
   // TODO: move update-server aspect to main application? Move this action to webclient.js?
   hideMulti ({dispatch}, idLists) {
     // console.log('hideMulti', idLists.topicIds, idLists.assocIds)
-    // update state + sync view (for immediate visual feedback)
+    // update state + view (for immediate visual feedback)
     idLists.topicIds.forEach(id => dispatch('_hideTopic', id))
     idLists.assocIds.forEach(id => dispatch('_hideAssoc', id))
     // update server
@@ -186,20 +186,20 @@ const actions = {
     }
   },
 
-  setTopicPinned ({dispatch}, {topicId, pinned}) {
+  setTopicPinned (_, {topicId, pinned}) {
     console.log('setTopicPinned', topicId, pinned)
-    // update state + sync view
-    _setTopicPinned(topicId, pinned, dispatch)
+    // update state + view
+    _setTopicPinned(topicId, pinned)
     // update server
     dm5.restClient.setTopicViewProps(state.topicmap.id, topicId, {    // FIXME: check topicmapWritable?
       'dmx.topicmaps.pinned': pinned
     })
   },
 
-  setAssocPinned ({dispatch}, {assocId, pinned}) {
+  setAssocPinned (_, {assocId, pinned}) {
     console.log('setAssocPinned', assocId, pinned)
-    // update state + sync view
-    _setAssocPinned(assocId, pinned, dispatch)
+    // update state + view
+    _setAssocPinned(assocId, pinned)
     // update server
     dm5.restClient.setAssocViewProps(state.topicmap.id, assocId, {    // FIXME: check topicmapWritable?
       'dmx.topicmaps.pinned': pinned
@@ -207,7 +207,7 @@ const actions = {
   },
 
   /**
-   * Low-level action that updates client state and syncs the view.
+   * Low-level action that updates client state and view.
    * Server state is *not* updated as done by hideMulti() high-level action (see above).
    *
    * Note: there is no high-level action to hide a single topic.
@@ -218,12 +218,12 @@ const actions = {
     // update state
     state.topicmap.removeAssocs(id)
     state.topicmap.getTopic(id).setVisibility(false)
-    // sync view
-    dispatch('syncRemoveTopic', id)
+    // update view
+    cyView.remove(id)
   },
 
   /**
-   * Low-level action that updates client state and syncs the view.
+   * Low-level action that updates client state and view.
    * Server state is *not* updated as done by hideMulti() high-level action (see above).
    *
    * Note: there is no high-level action to hide a single assoc.
@@ -235,45 +235,45 @@ const actions = {
       unpinAssocIfPinned(id, dispatch)
       // update state
       state.topicmap.removeAssoc(id)
-      // sync view
-      dispatch('syncRemoveAssoc', id)
+      // update view
+      cyView.remove(id)
     }
   },
 
   /**
-   * Low-level action that updates client state and syncs the view.
+   * Low-level action that updates client state and view.
    * Server state is *not* updated as done by deleteMulti() high-level action (see dm4-webclient/webclient.js).
    *
    * Note: there is no high-level action to delete a single topic.
    * Deleting is always performed as a multi-operation, that is in a single request.
    */
-  _deleteTopic ({dispatch}, id) {
-    _unpinTopicIfPinned(id, dispatch)
+  _deleteTopic (_, id) {
+    _unpinTopicIfPinned(id)
     // update state
     state.topicmap.removeAssocs(id)
     state.topicmap.removeTopic(id)
-    // sync view
-    dispatch('syncRemoveTopic', id)
+    // update view
+    cyView.remove(id)
   },
 
   /**
-   * Low-level action that updates client state and syncs the view.
+   * Low-level action that updates client state and view.
    * Server state is *not* updated as done by deleteMulti() high-level action (see dm4-webclient/webclient.js).
    *
    * Note: there is no high-level action to delete a single assoc.
    * Deleting is always performed as a multi-operation, that is in a single request.
    */
-  _deleteAssoc ({dispatch}, id) {
-    _unpinAssocIfPinned(id, dispatch)
+  _deleteAssoc (_, id) {
+    _unpinAssocIfPinned(id)
     // update state
     state.topicmap.removeAssoc(id)
-    // sync view
-    dispatch('syncRemoveAssoc', id)
+    // update view
+    cyView.remove(id)
   },
 
   // WebSocket messages
 
-  _addTopicToTopicmap ({dispatch}, {topicmapId, viewTopic}) {
+  _addTopicToTopicmap (_, {topicmapId, viewTopic}) {
     if (topicmapId === state.topicmap.id) {
       const _viewTopic = new dm5.ViewTopic(viewTopic)
       state.topicmap.addTopic(_viewTopic)                                 // update state
@@ -282,7 +282,7 @@ const actions = {
   },
 
   // TODO: rename prop to "viewAssoc"
-  _addAssocToTopicmap ({dispatch}, {topicmapId, assoc}) {
+  _addAssocToTopicmap (_, {topicmapId, assoc}) {
     if (topicmapId === state.topicmap.id) {
       const _viewAssoc = new dm5.ViewAssoc(assoc)
       state.topicmap.addAssoc(_viewAssoc)                                 // update state
@@ -290,14 +290,14 @@ const actions = {
     }
   },
 
-  _setTopicPosition ({dispatch}, {topicmapId, topicId, pos}) {
+  _setTopicPosition (_, {topicmapId, topicId, pos}) {
     if (topicmapId === state.topicmap.id) {
       state.topicmap.getTopic(topicId).setPosition(pos)                   // update state
       _syncTopicPosition(topicId)                                         // update view
     }
   },
 
-  _setTopicVisibility ({dispatch}, {topicmapId, topicId, visibility}) {
+  _setTopicVisibility (_, {topicmapId, topicId, visibility}) {
     if (topicmapId === state.topicmap.id) {
       const viewTopic = state.topicmap.getTopic(topicId)
       viewTopic.setVisibility(visibility)                                 // update state
@@ -310,40 +310,40 @@ const actions = {
     }
   },
 
-  _removeAssocFromTopicmap ({dispatch}, {topicmapId, assocId}) {
+  _removeAssocFromTopicmap (_, {topicmapId, assocId}) {
     if (topicmapId === state.topicmap.id) {
       // update state
       state.topicmap.removeAssoc(assocId)
-      // sync view
-      dispatch('syncRemoveAssoc', assocId)
+      // update view
+      cyView.remove(assocId)
     }
   },
 
-  _processDirectives ({dispatch}, directives) {
+  _processDirectives (_, directives) {
     // console.log(`Cytoscape Renderer: processing ${directives.length} directives`)
     directives.forEach(dir => {
       switch (dir.type) {
       case "UPDATE_TOPIC":
         const topic = new dm5.Topic(dir.arg)
-        updateTopic(topic, dispatch)
+        updateTopic(topic)
         updateDetail(topic)
         break
       case "DELETE_TOPIC":
-        deleteTopic(dir.arg, dispatch)
+        deleteTopic(dir.arg)
         break
       case "UPDATE_ASSOCIATION":
         const assoc = new dm5.Assoc(dir.arg)
-        updateAssoc(assoc, dispatch)
+        updateAssoc(assoc)
         updateDetail(assoc)
         break
       case "DELETE_ASSOCIATION":
-        deleteAssoc(dir.arg, dispatch)
+        deleteAssoc(dir.arg)
         break
       case "UPDATE_TOPIC_TYPE":
-        updateTopicIcons(dir.arg.uri, dispatch)
+        updateTopicIcons(dir.arg.uri)
         break
       case "UPDATE_ASSOCIATION_TYPE":
-        updateAssocColors(dir.arg.uri, dispatch)
+        updateAssocColors(dir.arg.uri)
         break
       }
     })
@@ -392,81 +392,6 @@ const actions = {
   _shutdownCytoscape () {
     // console.log('Unregistering cxtmenu extension')
     // TODO: not supported by Cytoscape
-  },
-
-  // Private (dispatched from this file)
-
-  // The "sync" actions adapt (Cytoscape) view to ("topicmap") model changes
-  // ### TODO: drop these 11 private actions, instead call CytoscapeView methods directly
-
-  /* syncAddTopic (_, id) {
-    // console.log('syncAddTopic', id)
-    const viewTopic = state.topicmap.getTopic(id)
-    initPos(viewTopic)
-    cyView.addTopic(viewTopic)
-  }, */
-
-  /* syncAddAssoc (_, id) {
-    // console.log('syncAddAssoc', id)
-    const viewAssoc = state.topicmap.getAssoc(id)
-    cyView.addAssoc(viewAssoc)
-  }, */
-
-  /* syncTopic (_, id) {
-    // console.log('syncTopic', id)
-    cyView.updateTopicLabel(id, state.topicmap.getTopic(id).value)
-  }, */
-
-  /* syncTopicIcon (_, id) {
-    // console.log('syncTopicIcon', id)
-    cyView.updateTopicIcon(id, state.topicmap.getTopic(id).icon)
-  }, */
-
-  /* syncAssoc (_, id) {
-    // console.log('syncAssoc', id)
-    const assoc = state.topicmap.getAssoc(id)
-    cyView.updateAssoc(id, {
-      typeUri: assoc.typeUri,
-      label:   assoc.value,
-      color:   assoc.getColor()
-    })
-  }, */
-
-  /* syncAssocColor (_, id) {
-    // console.log('syncAssocColor', id)
-    cyView.updateAssocColor(id, state.topicmap.getAssoc(id).getColor())
-  }, */
-
-  /* syncTopicPosition (_, id) {
-    // console.log('syncTopicPosition', id)
-    _syncTopicPosition(id)
-  }, */
-
-  /* syncTopicVisibility (_, id) {
-    // console.log('syncTopicVisibility', id)
-    const viewTopic = state.topicmap.getTopic(id)
-    if (viewTopic.isVisible()) {
-      cyView.addTopic(viewTopic)
-    } else {
-      cyView.remove(id)
-    }
-  }, */
-
-  syncPinned (_, {objectId, pinned}) {
-    // console.log('syncPinned', objectId, pinned)
-    if (!pinned && !isSelected(objectId)) {
-      removeDetail(detail(objectId)).then(playFisheyeAnimationIfDetailsOnscreen)
-    }
-  },
-
-  syncRemoveTopic (_, id) {
-    // console.log('syncRemoveTopic', id)
-    cyView.remove(id)
-  },
-
-  syncRemoveAssoc (_, id) {
-    // console.log('syncRemoveAssoc', id)
-    cyView.remove(id)
   },
 
   // Cross-Module
@@ -588,7 +513,7 @@ function _revealTopic (topic, pos, select, dispatch) {
 function _revealAssoc (assoc, select, dispatch) {
   // update state
   const op = state.topicmap.revealAssoc(assoc)
-  // sync view
+  // update view
   if (op.type === 'add') {
     cyView.addAssoc(op.viewAssoc)
   }
@@ -596,18 +521,18 @@ function _revealAssoc (assoc, select, dispatch) {
   return op
 }
 
-function _setTopicPinned (topicId, pinned, dispatch) {
+function _setTopicPinned (topicId, pinned) {
   // update state
   state.topicmap.getTopic(topicId).setPinned(pinned)
-  // sync view
-  dispatch('syncPinned', {objectId: topicId, pinned})
+  // update view
+  _syncPinned(topicId, pinned)
 }
 
-function _setAssocPinned (assocId, pinned, dispatch) {
+function _setAssocPinned (assocId, pinned) {
   // update state
   state.topicmap.getAssoc(assocId).setPinned(pinned)
-  // sync view
-  dispatch('syncPinned', {objectId: assocId, pinned})
+  // update view
+  _syncPinned(assocId, pinned)
 }
 
 // Process directives
@@ -616,7 +541,7 @@ function _setAssocPinned (assocId, pinned, dispatch) {
  * Processes an UPDATE_TOPIC directive.
  * Updates the topicmap model when a topic value has changed.
  */
-function updateTopic (topic, dispatch) {
+function updateTopic (topic) {
   // console.log('updateTopic', topic)
   const _topic = state.topicmap.getTopicIfExists(topic.id)
   if (_topic) {
@@ -631,7 +556,7 @@ function updateTopic (topic, dispatch) {
 /**
  * Processes an UPDATE_ASSOCIATION directive.
  */
-function updateAssoc (assoc, dispatch) {
+function updateAssoc (assoc) {
   const _assoc = state.topicmap.getAssocIfExists(assoc.id)
   if (_assoc) {
     const value = assoc.value
@@ -651,32 +576,32 @@ function updateAssoc (assoc, dispatch) {
 /**
  * Processes a DELETE_TOPIC directive.
  */
-function deleteTopic (topic, dispatch) {
+function deleteTopic (topic) {
   const _topic = state.topicmap.getTopicIfExists(topic.id)
   if (_topic) {
     // Note: state.topicmap.removeAssocs() is not called here (compare to _deleteTopic() action above).
     // The assocs will be removed while processing the DELETE_ASSOCIATION directives as received along with the
     // DELETE_TOPIC directive.
     state.topicmap.removeTopic(topic.id)    // update state
-    dispatch('syncRemoveTopic', topic.id)   // sync view
+    cyView.remove(topic.id)                 // update view
   }
 }
 
 /**
  * Processes a DELETE_ASSOCIATION directive.
  */
-function deleteAssoc (assoc, dispatch) {
+function deleteAssoc (assoc) {
   const _assoc = state.topicmap.getAssocIfExists(assoc.id)
   if (_assoc) {
     state.topicmap.removeAssoc(assoc.id)    // update state
-    dispatch('syncRemoveAssoc', assoc.id)   // sync view
+    cyView.remove(assoc.id)                 // update view
   }
 }
 
 /**
  * Processes an UPDATE_TOPIC_TYPE directive.
  */
-function updateTopicIcons (typeUri, dispatch) {
+function updateTopicIcons (typeUri) {
   state.topicmap.filterTopics(topic => topic.typeUri === typeUri).forEach(topic => {
     // Note: no state update here. Topic icon is not part of ViewTopic but computed based on type definition.
     // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
@@ -688,7 +613,7 @@ function updateTopicIcons (typeUri, dispatch) {
 /**
  * Processes an UPDATE_ASSOCIATION_TYPE directive.
  */
-function updateAssocColors (typeUri, dispatch) {
+function updateAssocColors (typeUri) {
   state.topicmap.filterAssocs(assoc => assoc.typeUri === typeUri).forEach(assoc => {
     // Note: no state update here. Assoc color is not part of ViewAssoc but computed based on type definition.
     // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
@@ -702,26 +627,26 @@ function updateAssocColors (typeUri, dispatch) {
 function unpinTopicIfPinned (id, dispatch) {
   if (state.topicmap.getTopic(id).isPinned()) {
     // TODO: don't send request. Make unpin implicit to hide at server-side.
-    dispatch('setTopicPinned', {topicId: id, pinned: false})      // update state + sync view + update server
+    dispatch('setTopicPinned', {topicId: id, pinned: false})      // update state + view + server
   }
 }
 
 function unpinAssocIfPinned (id, dispatch) {
   if (state.topicmap.getAssoc(id).isPinned()) {
     // TODO: don't send request. Make unpin implicit to hide at server-side.
-    dispatch('setAssocPinned', {assocId: id, pinned: false})      // update state + sync view + update server
+    dispatch('setAssocPinned', {assocId: id, pinned: false})      // update state + view + server
   }
 }
 
-function _unpinTopicIfPinned (id, dispatch) {
+function _unpinTopicIfPinned (id) {
   if (state.topicmap.getTopic(id).isPinned()) {
-    _setTopicPinned(id, false, dispatch)                          // update state + sync view
+    _setTopicPinned(id, false)                                    // update state + view
   }
 }
 
-function _unpinAssocIfPinned (id, dispatch) {
+function _unpinAssocIfPinned (id) {
   if (state.topicmap.getAssoc(id).isPinned()) {
-    _setAssocPinned(id, false, dispatch)                          // update state + sync view
+    _setAssocPinned(id, false)                                    // update state + view
   }
 }
 
@@ -791,6 +716,13 @@ function playRestoreAnimation () {
  */
 function _syncTopicPosition (id) {
   return cyView.updateTopicPosition(id, state.topicmap.getTopic(id).getPosition())
+}
+
+function _syncPinned (id, pinned) {
+  // console.log('_syncPinned', id, pinned)
+  if (!pinned && !isSelected(id)) {
+    removeDetail(detail(id)).then(playFisheyeAnimationIfDetailsOnscreen)
+  }
 }
 
 // Details
@@ -917,7 +849,7 @@ function removeDetail (detail) {
   detail.node.off('position')                       // FIXME: do not unregister *all* position handlers?
   // update state
   Vue.delete(state.details, detail.id)              // Vue.delete() triggers dm5-detail-layer rendering
-  // sync view
+  // update view
   detail.node.removeClass('expanded')
   detail.node.style({width: null, height: null})    // reset size
   return playRestoreAnimation()
