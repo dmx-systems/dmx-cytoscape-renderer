@@ -512,7 +512,6 @@ function cyNode (viewTopic) {
   return {
     data: {
       id:      viewTopic.id,
-      typeUri: viewTopic.typeUri,     // TODO: needed?
       label:   viewTopic.value,
       icon:    viewTopic.icon,
       viewTopic
@@ -532,7 +531,6 @@ function cyEdge (viewAssoc) {
   return {
     data: {
       id:      viewAssoc.id,
-      typeUri: viewAssoc.typeUri,   // TODO: needed?
       label:   viewAssoc.value,
       color:   viewAssoc.color,
       source:  viewAssoc.role1.id,

@@ -560,15 +560,13 @@ function updateAssoc (assoc) {
   const _assoc = state.topicmap.getAssocIfExists(assoc.id)
   if (_assoc) {
     const value = assoc.value
-    const typeUri = assoc.typeUri
     // update state
     _assoc.value = value
-    _assoc.typeUri = typeUri
+    _assoc.typeUri = assoc.typeUri
     // update view
     cyView.updateAssoc(assoc.id, {
-      typeUri: typeUri,           // TODO: drop it?
-      label:   value,
-      color:   assoc.color        // FIXME: color aux node as well
+      label: value,
+      color: assoc.color        // FIXME: color aux node as well
     })
   }
 }
