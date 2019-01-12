@@ -568,7 +568,7 @@ function updateAssoc (assoc) {
     cyView.updateAssoc(assoc.id, {
       typeUri: typeUri,           // TODO: drop it?
       label:   value,
-      color:   assoc.getColor()   // FIXME: color aux node as well
+      color:   assoc.color        // FIXME: color aux node as well
     })
   }
 }
@@ -582,8 +582,8 @@ function deleteTopic (topic) {
     // Note: state.topicmap.removeAssocs() is not called here (compare to _deleteTopic() action above).
     // The assocs will be removed while processing the DELETE_ASSOCIATION directives as received along with the
     // DELETE_TOPIC directive.
-    state.topicmap.removeTopic(topic.id)    // update state
-    cyView.remove(topic.id)                 // update view
+    state.topicmap.removeTopic(topic.id)              // update state
+    cyView.remove(topic.id)                           // update view
   }
 }
 
@@ -593,8 +593,8 @@ function deleteTopic (topic) {
 function deleteAssoc (assoc) {
   const _assoc = state.topicmap.getAssocIfExists(assoc.id)
   if (_assoc) {
-    state.topicmap.removeAssoc(assoc.id)    // update state
-    cyView.remove(assoc.id)                 // update view
+    state.topicmap.removeAssoc(assoc.id)              // update state
+    cyView.remove(assoc.id)                           // update view
   }
 }
 
@@ -606,7 +606,7 @@ function updateTopicIcons (typeUri) {
     // Note: no state update here. Topic icon is not part of ViewTopic but computed based on type definition.
     // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
     // processes directives.
-    cyView.updateTopicIcon(topic.id, topic.icon)          // update view
+    cyView.updateTopicIcon(topic.id, topic.icon)      // update view
   })
 }
 
@@ -618,7 +618,7 @@ function updateAssocColors (typeUri) {
     // Note: no state update here. Assoc color is not part of ViewAssoc but computed based on type definition.
     // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
     // processes directives.
-    cyView.updateAssocColor(assoc.id, assoc.getColor())   // update view    // TODO: assoc color getter
+    cyView.updateAssocColor(assoc.id, assoc.color)    // update view
   })
 }
 

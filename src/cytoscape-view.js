@@ -534,7 +534,7 @@ function cyEdge (viewAssoc) {
       id:      viewAssoc.id,
       typeUri: viewAssoc.typeUri,   // TODO: needed?
       label:   viewAssoc.value,
-      color:   viewAssoc.getColor(),
+      color:   viewAssoc.color,
       source:  viewAssoc.role1.id,
       target:  viewAssoc.role2.id,
       viewAssoc
