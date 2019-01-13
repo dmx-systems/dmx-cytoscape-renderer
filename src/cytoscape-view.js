@@ -41,7 +41,7 @@ export default class CytoscapeView {
     this.box = box              // the measurement box
     this.contextMenus(contextCommands)
     this.edgeHandles()
-    ec = this.edgeConnections()
+    ec = cy.edgeConnections()
     this.dispatch = dispatch
     // Note: by using arrow functions in a select handler 'this' refers to this CytoscapeView instance (instead of the
     // clicked Cytoscape element). In standard ES6 class methods can't be defined in arrow notation. This would require
@@ -367,17 +367,6 @@ export default class CytoscapeView {
     this.parent.$emit('assoc-create', {
       playerId1: playerId(sourceNode),
       playerId2: playerId(targetNode)
-    })
-  }
-
-  // Edge Connections
-
-  edgeConnections () {
-    return cy.edgeConnections({
-      edgeSelector: 'edge[color]',
-      auxNodeData: edge => ({
-        color: edge.data('color')
-      })
     })
   }
 
