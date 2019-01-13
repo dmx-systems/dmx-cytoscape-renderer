@@ -219,12 +219,10 @@ export default class CytoscapeView {
           }
         },
         {
-          selector: 'node[color]',
+          selector: 'node.aux-node',
           style: {
-            'shape': 'ellipse',
-            'background-color': 'data(color)',
             'width': 6,
-            'height': 6,
+            'height': 6
           }
         },
         {
