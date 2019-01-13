@@ -182,7 +182,7 @@ export default class CytoscapeView {
     // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
     // In this case the original edge ID is contained in the node's "edgeId" data.
     return e => {
-      const assocId = ec.edgeId(e.target)
+      const assocId = edgeId(e.target)
       if (assocId) {
         if (suffix === 'select') {    // aux nodes don't emit assoc-unselect events
           this.parent.$emit('assoc-' + suffix, assocId)
@@ -326,7 +326,7 @@ export default class CytoscapeView {
     // In this case the original edge ID is contained in the node's "edgeId" data.
     cy.cxtmenu({
       selector: 'node',
-      commands: ele => ec.isAuxNode(ele) ? assocCommands(ec.edgeId(ele)) : topicCommands(id(ele)),
+      commands: ele => ec.isAuxNode(ele) ? assocCommands(edgeId(ele)) : topicCommands(id(ele)),
       atMouse: true
     })
     cy.cxtmenu({
@@ -528,8 +528,12 @@ function cyEdge (viewAssoc) {
 }
 
 function playerId (node) {
-  const edgeId = ec.edgeId(node)
-  return !edgeId ? {topicId: id(node)} : {assocId: edgeId}
+  const _edgeId = edgeId(node)
+  return !_edgeId ? {topicId: id(node)} : {assocId: _edgeId}
+}
+
+function edgeId (node) {
+  return Number(ec.edgeId(node))
 }
 
 // copy in dm5-detail-layer.vue
