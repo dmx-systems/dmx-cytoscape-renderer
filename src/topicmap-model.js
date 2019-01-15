@@ -13,7 +13,7 @@
     - the geomap model could be rendered by Leaflet or by OpenLayers
   At the moment both aspects (model updates and view updates) are melted together in this file (while most Cytoscape
   specifics are already factored out as cytoscape-view.js).
-  Implementing e,g, a D3 renderer would cause code/structure duplication.
+  Implementing e.g. a D3 renderer would cause code/structure duplication.
 */
 
 import CytoscapeView from './cytoscape-view'
@@ -31,8 +31,6 @@ let ele           // The single selection: a selected Cytoscape element (node or
                   // (unless pinned). ### TODO: introduce multi-selection state in this component?
 
 const state = {
-
-  // DMX Model
 
   topicmap: undefined,            // the rendered topicmap (dm5.Topicmap)
   topicmapWritable: undefined,    // True if the current user has WRITE permission for the rendered topicmap
@@ -63,8 +61,6 @@ const state = {
 
 const actions = {
 
-  // === DMX Model ===
-
   fetchTopicmap (_, id) {
     // console.log('fetchTopicmap', id, '(topicmap-model)')
     return dm5.restClient.getTopicmap(id)
@@ -83,7 +79,7 @@ const actions = {
     return cyView.renderTopicmap(topicmap, selection).then(showPinnedDetails)
   },
 
-  // TODO: rename "reveal" functions to "show"
+  // TODO: rename "reveal" functions to "show"/"render"?
 
   /**
    * Reveals a topic on the topicmap panel.
@@ -216,7 +212,7 @@ const actions = {
   _hideTopic ({dispatch}, id) {
     unpinTopicIfPinned(id, dispatch)
     // update state
-    state.topicmap.removeAssocs(id)
+    state.topicmap.removeAssocsWithPlayer(id)
     state.topicmap.getTopic(id).setVisibility(false)
     // update view
     cyView.remove(id)
@@ -234,6 +230,7 @@ const actions = {
     if (state.topicmap.hasAssoc(id)) {
       unpinAssocIfPinned(id, dispatch)
       // update state
+      state.topicmap.removeAssocsWithPlayer(id)
       state.topicmap.removeAssoc(id)
       // update view
       cyView.remove(id)
@@ -250,7 +247,7 @@ const actions = {
   _deleteTopic (_, id) {
     _unpinTopicIfPinned(id)
     // update state
-    state.topicmap.removeAssocs(id)
+    state.topicmap.removeAssocsWithPlayer(id)
     state.topicmap.removeTopic(id)
     // update view
     cyView.remove(id)
@@ -266,6 +263,7 @@ const actions = {
   _deleteAssoc (_, id) {
     _unpinAssocIfPinned(id)
     // update state
+    state.topicmap.removeAssocsWithPlayer(id)
     state.topicmap.removeAssoc(id)
     // update view
     cyView.remove(id)
@@ -304,7 +302,7 @@ const actions = {
       if (visibility) {
         cyView.addTopic(viewTopic)                                        // update view
       } else {
-        state.topicmap.removeAssocs(topicId)                              // update state
+        state.topicmap.removeAssocsWithPlayer(topicId)                    // update state
         cyView.remove(topicId)                                            // update view
       }
     }
@@ -313,7 +311,7 @@ const actions = {
   _removeAssocFromTopicmap (_, {topicmapId, assocId}) {
     if (topicmapId === state.topicmap.id) {
       // update state
-      state.topicmap.removeAssoc(assocId)
+      state.topicmap.removeAssoc(assocId)   // FIXME: remove assocs with player as well?
       // update view
       cyView.remove(assocId)
     }
@@ -577,7 +575,7 @@ function updateAssoc (assoc) {
 function deleteTopic (topic) {
   const _topic = state.topicmap.getTopicIfExists(topic.id)
   if (_topic) {
-    // Note: state.topicmap.removeAssocs() is not called here (compare to _deleteTopic() action above).
+    // Note: state.topicmap.removeAssocsWithPlayer() is not called here (compare to _deleteTopic() action above).
     // The assocs will be removed while processing the DELETE_ASSOCIATION directives as received along with the
     // DELETE_TOPIC directive.
     state.topicmap.removeTopic(topic.id)              // update state
@@ -591,6 +589,7 @@ function deleteTopic (topic) {
 function deleteAssoc (assoc) {
   const _assoc = state.topicmap.getAssocIfExists(assoc.id)
   if (_assoc) {
+    // FIXME: remove assocs with player as well?
     state.topicmap.removeAssoc(assoc.id)              // update state
     cyView.remove(assoc.id)                           // update view
   }
