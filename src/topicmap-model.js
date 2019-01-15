@@ -279,10 +279,9 @@ const actions = {
     }
   },
 
-  // TODO: rename prop to "viewAssoc"
-  _addAssocToTopicmap (_, {topicmapId, assoc}) {
+  _addAssocToTopicmap (_, {topicmapId, viewAssoc}) {
     if (topicmapId === state.topicmap.id) {
-      const _viewAssoc = new dm5.ViewAssoc(assoc)
+      const _viewAssoc = new dm5.ViewAssoc(viewAssoc)
       state.topicmap.addAssoc(_viewAssoc)                                 // update state
       cyView.addAssoc(_viewAssoc)                                         // update view
     }
