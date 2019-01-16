@@ -310,7 +310,8 @@ const actions = {
   _removeAssocFromTopicmap (_, {topicmapId, assocId}) {
     if (topicmapId === state.topicmap.id) {
       // update state
-      state.topicmap.removeAssoc(assocId)   // FIXME: remove assocs with player as well?
+      state.topicmap.removeAssocsWithPlayer(assocId)
+      state.topicmap.removeAssoc(assocId)
       // update view
       cyView.remove(assocId)
     }
