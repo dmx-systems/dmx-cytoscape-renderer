@@ -562,5 +562,9 @@ function idLists () {
  * @return  A collection of 1 or 0 elements. ### TODO: throw if 0?
  */
 function cyElement (id) {
-  return cy.getElementById(id.toString())     // Note: a Cytoscape element ID is a string
+  const ele = cy.getElementById(id.toString())     // Note: a Cytoscape element ID is a string
+  if (ele.empty()) {
+    throw Error(`element ${id} not in graph`)
+  }
+  return ele
 }

@@ -26,8 +26,8 @@ let ele           // The single selection: a selected Cytoscape element (node or
                   // single selection.
                   // The selected element's details are displayed in-map. On unselect the details disappear
                   // (unless pinned).
-                  // Note: the host application can visualize multi selections by the means of '_syncSelect' and
-                  // '_syncUnselect' actions. The details of multi selection elements are *not* displayed in-map
+                  // Note: the host application can visualize multi selections by the means of '_renderAsSelected' and
+                  // '_renderAsUnselected' actions. The details of multi selection elements are *not* displayed in-map
                   // (unless pinned). ### TODO: introduce multi-selection state in this component?
 
 const state = {
@@ -395,9 +395,7 @@ const actions = {
   // Cross-Module
 
   /**
-   * ### TODO: rename to "renderAsSelected"?
-   *
-   * Renders given topic/assoc as selected.
+   * Renders the given topic/assoc as selected.
    * Shows the detail DOM and plays the fisheye animation.
    *
    * Precondition:
@@ -410,25 +408,26 @@ const actions = {
    * @param   p   a promise resolved once topic/assoc data has arrived (global "object" state is up-to-date).
    *              Note: the detail overlay's size can only be measured once "object" details are rendered.
    */
-  syncSelect (_, {id, p}) {
-    // console.log('syncSelect', id)
+  renderAsSelected (_, {id, p}) {
+    // Note: if selectById() throws we don't want create the promise. Otherwise we would get 2 error messages instead of
+    // one due to nested promises. renderAsSelected() runs itself in a promise executor function (before an object can
+    // be rendered as selected the topicmap must be available).
+    const _ele = cyView.selectById(id)     // selectById() restores selection after switching topicmap
+    //
     // Note 1: programmatic unselect() is required for browser history navigation. When *interactively* selecting a node
-    // Cytoscape removes the current selection before. When *programmatically* selecting a node Cytoscape does *not*
-    // remove the current selection.
+    // Cytoscape removes the current selection before. In contrast when *programmatically* selecting a node Cytoscape
+    // does *not* remove the current selection.
     // Note 2: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
     // available. The actual order of these 2 occasions doesn't matter.
     Promise.all([p, ...ele ? [unselectElement()] : []]).then(() => {
-      // console.log('restore animation complete')
       showDetail(createSelectionDetail())
     })
-    ele = cyView.selectById(id)     // selectById() restores selection after switching topicmap
-    if (ele.size() !== 1) {
-      throw Error(`can't select element ${id} (not found in topicmap ${state.topicmap.id})`)
-    }
+    //
+    ele = _ele
   },
 
-  syncUnselect () {
-    // console.log('syncUnselect')
+  renderAsUnselected () {
+    // console.log('renderAsUnselected')
     unselectElement().then(playFisheyeAnimationIfDetailsOnscreen)
     ele = undefined
   },
@@ -439,10 +438,10 @@ const actions = {
    *
    * @throws  if this component is in single selection state.
    */
-  _syncSelect (_, id) {
-    // console.log('_syncSelect', id)
+  _renderAsSelected (_, id) {
+    // console.log('_renderAsSelected', id)
     if (ele) {
-      throw Error(`_syncSelect(${id}) called when "ele" is set (${eleId(ele)})`)
+      throw Error(`_renderAsSelected(${id}) called when "ele" is set (${eleId(ele)})`)
     }
     cyView.selectById(id)
   },
@@ -453,10 +452,10 @@ const actions = {
    *
    * @throws  if this component is not in single selection state.
    */
-  _syncUnselect (_, id) {
-    // console.log('_syncUnselect', id)
+  _renderAsUnselected (_, id) {
+    // console.log('_renderAsUnselected', id)
     if (!ele) {
-      throw Error(`_syncUnselect(${id}) called when "ele" is not set`)
+      throw Error(`_renderAsUnselected(${id}) called when "ele" is not set`)
     }
     cyView.unselectById(id)
   },
