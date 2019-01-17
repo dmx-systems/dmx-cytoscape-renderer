@@ -555,11 +555,13 @@ function idLists () {
 }
 
 /**
- * Gets the Cytoscape element with the given ID.
+ * Returns the Cytoscape element with the given ID.
  *
- * @param   id    a DMX object id (number)
+ * @param   id      a DMX object id (number)
  *
- * @return  A collection of 1 or 0 elements. ### TODO: throw if 0?
+ * @throws  Error   if there is no such element in the graph
+ *
+ * @return  the element (1-element Cytoscape collection)
  */
 function cyElement (id) {
   const ele = cy.getElementById(id.toString())     // Note: a Cytoscape element ID is a string

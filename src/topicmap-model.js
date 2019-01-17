@@ -32,10 +32,12 @@ let ele           // The single selection: a selected Cytoscape element (node or
 
 const state = {
 
+  // these 3 properties are always initialized together by the "renderTopicmap" action
+  // TODO: must this be reactive state? Would local variables be sufficient?
   topicmap: undefined,            // the rendered topicmap (dm5.Topicmap)
   topicmapWritable: undefined,    // True if the current user has WRITE permission for the rendered topicmap
   selection: undefined,           // the selection model for the rendered topicmap (a Selection object, defined in
-                                  // dm5-topicmaps), initialized by "renderTopicmap" action
+                                  // dm5-topicmaps)
 
   object: undefined,              // the selected object (dm5.DMXObject)
   objectWritable: undefined,      // True if the current user has WRITE permission for the selected object
@@ -295,6 +297,7 @@ const actions = {
   },
 
   _setTopicVisibility (_, {topicmapId, topicId, visibility}) {
+    console.log('_setTopicVisibility (Cytoscape Renderer)')
     if (topicmapId === state.topicmap.id) {
       const viewTopic = state.topicmap.getTopic(topicId)
       viewTopic.setVisibility(visibility)                                 // update state
@@ -308,6 +311,7 @@ const actions = {
   },
 
   _removeAssocFromTopicmap (_, {topicmapId, assocId}) {
+    console.log('_removeAssocFromTopicmap (Cytoscape Renderer)')
     if (topicmapId === state.topicmap.id) {
       // update state
       state.topicmap.removeAssocsWithPlayer(assocId)
@@ -414,9 +418,9 @@ const actions = {
     // be rendered as selected the topicmap must be available).
     const _ele = cyView.selectById(id)     // selectById() restores selection after switching topicmap
     //
-    // Note 1: programmatic unselect() is required for browser history navigation. When *interactively* selecting a node
-    // Cytoscape removes the current selection before. In contrast when *programmatically* selecting a node Cytoscape
-    // does *not* remove the current selection.
+    // Note 1: programmatic unselect() is required for browser history navigation. If *interactively* selecting a node
+    // Cytoscape removes the current selection before. In contrast if *programmatically* selecting a node Cytoscape does
+    // *not* remove the current selection.
     // Note 2: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
     // available. The actual order of these 2 occasions doesn't matter.
     Promise.all([p, ...ele ? [unselectElement()] : []]).then(() => {
@@ -730,6 +734,7 @@ function showPinnedDetails () {
   state.topicmap
     .filterAssocs(viewAssoc => viewAssoc.isPinned())
     .forEach(viewAssoc => createDetail(viewAssoc).then(showDetail))
+  return state.topicmap
 }
 
 /**
