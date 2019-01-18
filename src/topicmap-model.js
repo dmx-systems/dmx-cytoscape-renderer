@@ -120,6 +120,7 @@ const actions = {
     // update state + view
     const topicOp = _revealTopic(relTopic, undefined, true, dispatch)   // pos=undefined, select=true
     const assocOp = _revealAssoc(relTopic.assoc, false, dispatch)       // select=false
+    // console.log('revealRelatedTopic', topicOp, assocOp)
     // update server
     if (state.topicmapWritable) {
       if (assocOp.type) {

@@ -228,8 +228,17 @@ export default class CytoscapeView {
         {
           selector: 'node.eh-handle',
           style: {
+            'background-color': HIGHLIGHT_COLOR,
             'width': 12,
             'height': 12
+          }
+        },
+        {
+          selector: 'node.eh-source, node.eh-target',
+          style: {
+            'border-width': 2,
+            'border-color': HIGHLIGHT_COLOR,
+            'border-opacity': 1
           }
         },
         {
@@ -262,14 +271,6 @@ export default class CytoscapeView {
           selector: 'node.expanded',
           style: {
             'border-opacity': 0
-          }
-        },
-        {
-          selector: 'node.eh-source, node.eh-target',
-          style: {
-            'border-width': 3,
-            'border-color': HOVER_BORDER_COLOR,
-            'border-opacity': 1
           }
         }
       ],
