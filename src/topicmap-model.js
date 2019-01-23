@@ -42,10 +42,8 @@ const state = {
   object: undefined,              // the selected object (dm5.DMXObject)
   objectWritable: undefined,      // True if the current user has WRITE permission for the selected object
 
-  // Cytoscape View
-
   details: {},    // In-map details. Detail records keyed by object ID (created by createDetail() and
-                  // createSelectionDetail()):
+                  // createDetailForSelection()):
                   //  {
                   //    id        ID of "object" (Number). May be set before "object" is actually available.
                   //    object    The object to render (dm5.Topic, dm5.Assoc)
@@ -377,7 +375,13 @@ const actions = {
 
   _syncDetailSize: dm5.utils.debounce((_, id) => {
     // console.log('_syncDetailSize', id)
-    measureDetail(detail(id))
+    // Note: at the time assoc parts arrive the detail size needs to be adjusted.
+    // If the assoc is unselected meanwhile the detail record does not exist anymore.
+    const detail = _detail(id)
+    if (!detail) {
+      console.warn(`adjustDetailSize() when detail ${id} is undefined`)
+    }
+    detail && adjustDetailSize(detail)
   }, 300),
 
   _syncPan () {
@@ -425,7 +429,10 @@ const actions = {
     // Note 2: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
     // available. The actual order of these 2 occasions doesn't matter.
     Promise.all([p, ...ele ? [unselectElement()] : []]).then(() => {
-      showDetail(createSelectionDetail())
+      if (!ele) {
+        console.warn('createDetailForSelection() when "ele" is undefined')
+      }
+      ele && showDetail(createDetailForSelection())
     })
     //
     ele = _ele
@@ -698,7 +705,11 @@ function unselectElement () {
   // browser URL. In this situation cy.elements(":selected") would return a non-empty collection.
   cyView.unselect(ele)
   const detail = selectionDetail()
-  return !detail.pinned ? removeDetail(detail) : Promise.resolve()
+  // Note: the detail record might be removed meanwhile (TODO: why?)
+  if (!detail) {
+    console.warn(`removeDetail() when detail ${ele.id()} is undefined`)
+  }
+  return detail && !detail.pinned ? removeDetail(detail) : Promise.resolve()
 }
 
 /**
@@ -781,8 +792,8 @@ function createDetail (viewObject) {
  *
  * @return  the created detail record
  */
-function createSelectionDetail () {
-  // console.log('createSelectionDetail', state.object)
+function createDetailForSelection () {
+  // console.log('createDetailForSelection', state.object)
   const id = eleId(ele)
   const node = cyView.detailNode(id)
   let viewObject
@@ -816,19 +827,19 @@ function showDetail (detail) {
   detail.node.addClass('expanded')
   Vue.set(state.details, detail.id, detail)       // Vue.set() triggers dm5-detail-layer rendering
   Vue.nextTick(() => {
-    measureDetail(detail)
+    adjustDetailSize(detail)
   })
 }
 
 /**
- * Measures the size of the given detail, resizes the detail node, and plays the fisheye animation.
+ * Measures the size of the given detail, resizes the detail node accordingly, and plays the fisheye animation.
  *
  * Precondition:
  * - the DOM is updated already.
  *
  * @param   detail    a detail record
  */
-function measureDetail(detail) {
+function adjustDetailSize(detail) {
   const detailDOM = document.querySelector(`.dm5-detail-layer .dm5-detail[data-detail-id="${detail.id}"]`)
   if (!detailDOM) {
     throw Error(`detail DOM ${detail.id} not found`)
@@ -837,7 +848,7 @@ function measureDetail(detail) {
     width:  detailDOM.clientWidth,
     height: detailDOM.clientHeight
   }
-  // console.log('measureDetail', detail.node.id(), detail.size.width, detail.size.height)
+  // console.log('adjustDetailSize', detail.node.id(), detail.size.width, detail.size.height)
   detail.node.style(detail.size)
   cyView.playFisheyeAnimation()
 }
@@ -848,6 +859,7 @@ function measureDetail(detail) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function removeDetail (detail) {
+  // console.log('removeDetail', detail.id)
   detail.node.off('position')                       // FIXME: do not unregister *all* position handlers?
   // update state
   Vue.delete(state.details, detail.id)              // Vue.delete() triggers dm5-detail-layer rendering
@@ -884,19 +896,26 @@ function playFisheyeAnimationIfDetailsOnscreen () {
   }
 }
 
+/**
+ * @return    may undefined
+ */
 function selectionDetail () {
   if (!ele) {
     throw Error('selectionDetail() called when nothing is selected')
   }
-  return detail(eleId(ele))
+  return _detail(eleId(ele))
 }
 
 function detail (id) {
-  const detail = state.details[id]
+  const detail = _detail(id)
   if (!detail) {
     throw Error(`detail record ${id} not found`)
   }
   return detail
+}
+
+function _detail (id) {
+  return state.details[id]
 }
 
 // Helper
