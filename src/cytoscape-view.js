@@ -8,7 +8,6 @@ const FONT_FAMILY          = style.getPropertyValue('--main-font-family')
 const MAIN_FONT_SIZE       = style.getPropertyValue('--main-font-size')
 const LABEL_FONT_SIZE      = style.getPropertyValue('--label-font-size')
 const ICON_COLOR           = style.getPropertyValue('--color-topic-icon')
-const HOVER_BORDER_COLOR   = style.getPropertyValue('--color-topic-hover')
 const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
 const BACKGROUND_COLOR     = style.getPropertyValue('--background-color')
 const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
@@ -323,11 +322,12 @@ export default class CytoscapeView {
    * Creates both the topic context menu and the assoc context menu.
    */
   contextMenus (contextCommands) {
-    // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
-    // In this case the original edge ID is contained in the node's "edgeId" data.
+    // Note 1: no context menu (undefined) for "edge handle" nodes
+    // Note 2: for (expanded) "aux nodes" show the *assoc* context menu
     cy.cxtmenu({
       selector: 'node',
-      commands: ele => ec.isAuxNode(ele) ? assocCommands(edgeId(ele)) : topicCommands(id(ele)),
+      commands: ele => this.isEdgeHandle(ele) ? undefined : ec.isAuxNode(ele) ? assocCommands(edgeId(ele)) :
+                                                                                topicCommands(id(ele)),
       atMouse: true
     })
     cy.cxtmenu({
@@ -369,6 +369,10 @@ export default class CytoscapeView {
       playerId1: playerId(sourceNode),
       playerId2: playerId(targetNode)
     })
+  }
+
+  isEdgeHandle (ele) {
+    return ele.hasClass('eh-handle')
   }
 
   // Event Handling
