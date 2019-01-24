@@ -12,16 +12,6 @@ const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
 const BACKGROUND_COLOR     = style.getPropertyValue('--background-color')
 const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
 
-let cy                  // Cytoscape instance
-let ec                  // cytoscape-edge-connections API object
-let parent              // the dm5-topicmap-panel (a Vue instance); used as event emitter
-let box                 // the measurement box
-let dispatch
-let faFont              // Font Awesome SVG <font> element
-let fisheyeAnimation
-let selection           // the selection model for the rendered topicmap (a Selection object, defined in dm5-topicmaps),
-                        // initialized by renderTopicmap() method
-
 const onSelectNode   = nodeHandler('select')
 const onSelectEdge   = edgeHandler('select')
 const onUnselectNode = nodeHandler('unselect')
@@ -32,6 +22,16 @@ const svgReady = dm5.restClient.getXML(fa).then(svg => {
   // console.log('### SVG ready!')
   faFont = svg.querySelector('font')
 })
+
+let cy                  // Cytoscape instance
+let ec                  // cytoscape-edge-connections API object
+let parent              // the dm5-topicmap-panel (a Vue instance); used as event emitter
+let box                 // the measurement box
+let dispatch
+let faFont              // Font Awesome SVG <font> element
+let fisheyeAnimation
+let selection           // the selection model for the rendered topicmap (a Selection object, defined in dm5-topicmaps),
+                        // initialized by renderTopicmap() method
 
 // register extensions
 cytoscape.use(require('cytoscape-cose-bilkent'))
@@ -308,6 +308,26 @@ function contextMenus (contextCommands) {
   }))
 }
 
+function invokeTopicHandler (id, cmd) {
+  let arg
+  if (cmd.multi) {
+    arg = isTopicSelected(id) ? idLists() : {topicIds: [id], assocIds: []}
+  } else {
+    arg = id
+  }
+  cmd.handler(arg)
+}
+
+function invokeAssocHandler (id, cmd) {
+  let arg
+  if (cmd.multi) {
+    arg = isAssocSelected(id) ? idLists() : {topicIds: [], assocIds: [id]}
+  } else {
+    arg = id
+  }
+  cmd.handler(arg)
+}
+
 // Edge Handles
 
 function edgeHandles () {
@@ -464,40 +484,6 @@ function playFisheyeAnimation() {
 
 // Helper
 
-function invokeTopicHandler (id, cmd) {
-  let arg
-  if (cmd.multi) {
-    arg = isTopicSelected(id) ? idLists() : {topicIds: [id], assocIds: []}
-  } else {
-    arg = id
-  }
-  cmd.handler(arg)
-}
-
-function invokeAssocHandler (id, cmd) {
-  let arg
-  if (cmd.multi) {
-    arg = isAssocSelected(id) ? idLists() : {topicIds: [], assocIds: [id]}
-  } else {
-    arg = id
-  }
-  cmd.handler(arg)
-}
-
-function isTopicSelected (id) {
-  return selection.includesTopic(id)
-}
-
-function isAssocSelected (id) {
-  return selection.includesAssoc(id)
-}
-
-function isMultiSelection () {
-  return selection.isMulti()
-}
-
-// ---
-
 /**
  * Builds a Cytoscape node from a dm5.ViewTopic
  *
@@ -534,6 +520,22 @@ function cyEdge (viewAssoc) {
     }
   }
 }
+
+// ---
+
+function isTopicSelected (id) {
+  return selection.includesTopic(id)
+}
+
+function isAssocSelected (id) {
+  return selection.includesAssoc(id)
+}
+
+function isMultiSelection () {
+  return selection.isMulti()
+}
+
+// ---
 
 function playerId (node) {
   const _edgeId = edgeId(node)
