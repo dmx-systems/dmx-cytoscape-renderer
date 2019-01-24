@@ -14,11 +14,19 @@ const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
 
 let cy          // Cytoscape instance
 let ec          // cytoscape-edge-connections API object
+let parent
+let box
 let faFont      // Font Awesome SVG <font> element
 let fisheyeAnimation
 
-let _selection  // the selection model for the rendered topicmap (a Selection object, defined in dm5-topicmaps),
+let selection   // the selection model for the rendered topicmap (a Selection object, defined in dm5-topicmaps),
                 // initialized by renderTopicmap() method
+let dispatch
+
+const onSelectNode   = nodeHandler('select')
+const onSelectEdge   = edgeHandler('select')
+const onUnselectNode = nodeHandler('unselect')
+const onUnselectEdge = edgeHandler('unselect')
 
 // a promise resolved once the Font Awesome SVG is loaded
 const svgReady = dm5.restClient.getXML(fa).then(svg => {
@@ -34,31 +42,21 @@ cytoscape.use(require('cytoscape-edge-connections'))
 
 export default class CytoscapeView {
 
-  constructor (parent, container, box, contextCommands, dispatch) {
-    this.parent = parent,
+  constructor (_parent, container, _box, contextCommands, _dispatch) {
+    parent = _parent,
     cy = this.instantiateCy(container)
-    this.box = box              // the measurement box
+    box = _box              // the measurement box
     this.contextMenus(contextCommands)
     this.edgeHandles()
     ec = cy.edgeConnections()
-    this.dispatch = dispatch
-    // Note: by using arrow functions in a select handler 'this' refers to this CytoscapeView instance (instead of the
-    // clicked Cytoscape element). In standard ES6 class methods can't be defined in arrow notation. This would require
-    // the stage-2 "class properties" feature. For some reason the Babel "transform-class-properties" plugin does not
-    // work when the application is build by Jenkins CI.
-    // The workaround is to define the select handlers in the constructor.
-    // ### TODO: retry. Meanwhile we use GitLab CI/CD.
-    this.onSelectNode   = this.nodeHandler('select')
-    this.onSelectEdge   = this.edgeHandler('select')
-    this.onUnselectNode = this.nodeHandler('unselect')
-    this.onUnselectEdge = this.edgeHandler('unselect')
+    dispatch = _dispatch
     this.eventHandlers()
   }
 
   // -------------------------------------------------------------------------------------------------------- Public API
 
-  renderTopicmap (topicmap, selection) {
-    _selection = selection
+  renderTopicmap (topicmap, _selection) {
+    selection = _selection
     return svgReady.then(() => {
       // Note: the cytoscape-amd extension expects an aux node still to exist at the time its edge is removed.
       // So we must remove the edges first.
@@ -177,27 +175,6 @@ export default class CytoscapeView {
 
   // TODO: make the following private if due ---------------------------------------------------------------------------
 
-  nodeHandler (suffix) {
-    // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
-    // In this case the original edge ID is contained in the node's "edgeId" data.
-    return e => {
-      const assocId = edgeId(e.target)
-      if (assocId) {
-        if (suffix === 'select') {    // aux nodes don't emit assoc-unselect events
-          this.parent.$emit('assoc-' + suffix, assocId)
-        }
-      } else {
-        this.parent.$emit('topic-' + suffix, id(e.target))
-      }
-    }
-  }
-
-  edgeHandler (suffix) {
-    return e => {
-      this.parent.$emit('assoc-' + suffix, id(e.target))
-    }
-  }
-
   // Cytoscape Instantiation
 
   instantiateCy (container) {
@@ -309,10 +286,10 @@ export default class CytoscapeView {
   }
 
   measureText (text) {
-    this.box.textContent = text
+    box.textContent = text
     return {
-      width: this.box.clientWidth,
-      height: this.box.clientHeight
+      width: box.clientWidth,
+      height: box.clientHeight
     }
   }
 
@@ -365,7 +342,7 @@ export default class CytoscapeView {
   }
 
   emitAssocCreate (sourceNode, targetNode) {
-    this.parent.$emit('assoc-create', {
+    parent.$emit('assoc-create', {
       playerId1: playerId(sourceNode),
       playerId2: playerId(targetNode)
     })
@@ -378,23 +355,23 @@ export default class CytoscapeView {
   // Event Handling
 
   onSelectHandlers () {
-    cy.on('select', 'node', this.onSelectNode)
-      .on('select', 'edge', this.onSelectEdge)
+    cy.on('select', 'node', onSelectNode)
+      .on('select', 'edge', onSelectEdge)
   }
 
   offSelectHandlers () {
-    cy.off('select', 'node', this.onSelectNode)
-      .off('select', 'edge', this.onSelectEdge)
+    cy.off('select', 'node', onSelectNode)
+      .off('select', 'edge', onSelectEdge)
   }
 
   onUnselectHandlers () {
-    cy.on('unselect', 'node', this.onUnselectNode)
-      .on('unselect', 'edge', this.onUnselectEdge)
+    cy.on('unselect', 'node', onUnselectNode)
+      .on('unselect', 'edge', onUnselectEdge)
   }
 
   offUnselectHandlers () {
-    cy.off('unselect', 'node', this.onUnselectNode)
-      .off('unselect', 'edge', this.onUnselectEdge)
+    cy.off('unselect', 'node', onUnselectNode)
+      .off('unselect', 'edge', onUnselectEdge)
   }
 
   /**
@@ -407,11 +384,11 @@ export default class CytoscapeView {
       const clicks = e.originalEvent.detail
       // console.log('tap node', id(e.target), e.originalEvent, clicks)
       if (clicks === 2) {
-        this.parent.$emit('topic-double-click', e.target.data('viewTopic'))
+        parent.$emit('topic-double-click', e.target.data('viewTopic'))
       }
     }).on('cxttap', e => {
       if (e.target === cy) {
-        this.parent.$emit('topicmap-contextmenu', {
+        parent.$emit('topicmap-contextmenu', {
           model:  e.position,
           render: e.renderedPosition
         })
@@ -419,9 +396,9 @@ export default class CytoscapeView {
     }).on('dragfreeon', e => {
       this.topicDrag(e.target)
     }).on('pan', () => {
-      this.dispatch('_syncPan', cy.pan())
+      dispatch('_syncPan', cy.pan())
     }).on('zoom', () => {
-      this.dispatch('_syncZoom', cy.zoom())
+      dispatch('_syncZoom', cy.zoom())
     }) /* .on('ready', () => {
       console.log('### Cytoscape ready')
     }) */
@@ -430,25 +407,25 @@ export default class CytoscapeView {
   topicDrag (node) {
     if (!ec.isAuxNode(node)) {    // aux nodes don't emit topic-drag events
       if (this.isTopicSelected(id(node)) && this.isMultiSelection()) {
-        // console.log('drag multi', _selection.topicIds)
+        // console.log('drag multi', selection.topicIds)
         this.emitTopicsDrag()
       } else {
         // console.log('drag single', id(node))
         this.emitTopicDrag(node)
       }
     }
-    this.dispatch('_playFisheyeAnimation')    // TODO: play only if details are visible
+    dispatch('_playFisheyeAnimation')    // TODO: play only if details are visible
   }
 
   emitTopicDrag (node) {
-    this.parent.$emit('topic-drag', {
+    parent.$emit('topic-drag', {
       id: id(node),
       pos: node.position()
     })
   }
 
   emitTopicsDrag (node) {
-    this.parent.$emit('topics-drag', _selection.topicIds.map(id => {
+    parent.$emit('topics-drag', selection.topicIds.map(id => {
       const pos = cyElement(id).position()
       return {
         topicId: id,
@@ -481,19 +458,42 @@ export default class CytoscapeView {
   }
 
   isTopicSelected (id) {
-    return _selection.includesTopic(id)
+    return selection.includesTopic(id)
   }
 
   isAssocSelected (id) {
-    return _selection.includesAssoc(id)
+    return selection.includesAssoc(id)
   }
 
   isMultiSelection () {
-    return _selection.isMulti()
+    return selection.isMulti()
   }
 }
 
 // ----------------------------------------------------------------------------------------------------- Private Methods
+
+function nodeHandler (suffix) {
+  // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
+  // In this case the original edge ID is contained in the node's "edgeId" data.
+  return e => {
+    const assocId = edgeId(e.target)
+    if (assocId) {
+      if (suffix === 'select') {    // aux nodes don't emit assoc-unselect events
+        parent.$emit('assoc-' + suffix, assocId)
+      }
+    } else {
+      parent.$emit('topic-' + suffix, id(e.target))
+    }
+  }
+}
+
+function edgeHandler (suffix) {
+  return e => {
+    parent.$emit('assoc-' + suffix, id(e.target))
+  }
+}
+
+// ---
 
 /**
  * Builds a Cytoscape node from a dm5.ViewTopic
@@ -554,8 +554,8 @@ function id (ele) {
  */
 function idLists () {
   return {
-    topicIds: dm5.utils.clone(_selection.topicIds),
-    assocIds: dm5.utils.clone(_selection.assocIds)
+    topicIds: dm5.utils.clone(selection.topicIds),
+    assocIds: dm5.utils.clone(selection.assocIds)
   }
 }
 
