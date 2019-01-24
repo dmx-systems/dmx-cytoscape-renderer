@@ -355,13 +355,13 @@ const actions = {
   // Module internal (dispatched from dm5-cytoscape-renderer components or cytoscape-view.js)
 
   /**
-   * @param   parent      the dm5-topicmap-panel (a Vue instance)
    * @param   container   the container DOM element for the Cytoscape instance
+   * @param   parent      the dm5-topicmap-panel (a Vue instance)
    * @param   box         the DOM element used for measurement
    */
-  _initCytoscape ({dispatch}, {parent, container, box, contextCommands}) {
+  _initCytoscape ({dispatch}, {container, contextCommands, parent, box}) {
     // console.log('_initCytoscape')
-    cyView = new CytoscapeView(parent, container, box, contextCommands, dispatch)
+    cyView = new CytoscapeView(container, contextCommands, parent, box, dispatch)
   },
 
   _syncObject (_, object) {
@@ -390,10 +390,6 @@ const actions = {
 
   _syncZoom (_, zoom) {
     state.zoom = zoom
-  },
-
-  _playFisheyeAnimation () {
-    cyView.playFisheyeAnimation()
   },
 
   _shutdownCytoscape () {

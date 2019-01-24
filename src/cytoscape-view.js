@@ -12,16 +12,15 @@ const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
 const BACKGROUND_COLOR     = style.getPropertyValue('--background-color')
 const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
 
-let cy          // Cytoscape instance
-let ec          // cytoscape-edge-connections API object
-let parent
-let box
-let faFont      // Font Awesome SVG <font> element
-let fisheyeAnimation
-
-let selection   // the selection model for the rendered topicmap (a Selection object, defined in dm5-topicmaps),
-                // initialized by renderTopicmap() method
+let cy                  // Cytoscape instance
+let ec                  // cytoscape-edge-connections API object
+let parent              // the dm5-topicmap-panel (a Vue instance); used as event emitter
+let box                 // the measurement box
 let dispatch
+let faFont              // Font Awesome SVG <font> element
+let fisheyeAnimation
+let selection           // the selection model for the rendered topicmap (a Selection object, defined in dm5-topicmaps),
+                        // initialized by renderTopicmap() method
 
 const onSelectNode   = nodeHandler('select')
 const onSelectEdge   = edgeHandler('select')
@@ -42,15 +41,15 @@ cytoscape.use(require('cytoscape-edge-connections'))
 
 export default class CytoscapeView {
 
-  constructor (_parent, container, _box, contextCommands, _dispatch) {
-    parent = _parent,
-    cy = this.instantiateCy(container)
-    box = _box              // the measurement box
-    this.contextMenus(contextCommands)
-    this.edgeHandles()
-    ec = cy.edgeConnections()
+  constructor (container, contextCommands, _parent, _box, _dispatch) {
+    parent   = _parent,
+    box      = _box
     dispatch = _dispatch
-    this.eventHandlers()
+    cy = instantiateCy(container)
+    ec = cy.edgeConnections()
+    contextMenus(contextCommands)
+    edgeHandles()
+    eventHandlers()
   }
 
   // -------------------------------------------------------------------------------------------------------- Public API
@@ -93,9 +92,9 @@ export default class CytoscapeView {
    * Programmatically selects a Cytoscape element *without* emitting a (Cytoscape) `select` event.
    */
   select (ele) {
-    this.offSelectHandlers()
+    offSelectHandlers()
     ele.select()
-    this.onSelectHandlers()
+    onSelectHandlers()
     return ele
   }
 
@@ -103,9 +102,9 @@ export default class CytoscapeView {
    * Programmatically unselects a Cytoscape element *without* emitting a (Cytoscape) `unselect` event.
    */
   unselect (ele) {
-    this.offUnselectHandlers()
+    offUnselectHandlers()
     ele.unselect()
-    this.onUnselectHandlers()
+    onUnselectHandlers()
     return ele
   }
 
@@ -139,24 +138,7 @@ export default class CytoscapeView {
   }
 
   playFisheyeAnimation() {
-    // console.log('playFisheyeAnimation')
-    fisheyeAnimation && fisheyeAnimation.stop()
-    fisheyeAnimation = cy.layout({
-      name: 'cose-bilkent',
-      fit: false,
-      /* animateFilter: (node, i) => {
-        if (ec.isAuxNode(node)) {
-          console.log(node.id(), ec.isAuxNode(node), node.position(), node.renderedPosition())
-          // return false
-        }
-        return true // !ec.isAuxNode(node)
-      }, */
-      randomize: false,
-      nodeRepulsion: 0,
-      idealEdgeLength: 0,
-      edgeElasticity: 0,
-      tile: false
-    }).run()
+    playFisheyeAnimation()
   }
 
   /**
@@ -172,305 +154,208 @@ export default class CytoscapeView {
   resize () {
     cy.resize()
   }
-
-  // TODO: make the following private if due ---------------------------------------------------------------------------
-
-  // Cytoscape Instantiation
-
-  instantiateCy (container) {
-    return cytoscape({
-      container,
-      style: [
-        {
-          selector: 'node[icon]',
-          style: {
-            'shape': 'rectangle',
-            'background-image': ele => this.renderNode(ele).url,
-            'background-opacity': 0,
-            'width':  ele => this.renderNode(ele).width,
-            'height': ele => this.renderNode(ele).height,
-            'border-width': 1,
-            'border-color': BORDER_COLOR_LIGHTER,
-            'border-opacity': 1
-          }
-        },
-        {
-          selector: 'node.aux-node',
-          style: {
-            'width': 6,
-            'height': 6
-          }
-        },
-        {
-          selector: 'node.eh-handle',
-          style: {
-            'background-color': HIGHLIGHT_COLOR,
-            'width': 12,
-            'height': 12
-          }
-        },
-        {
-          selector: 'node.eh-source, node.eh-target',
-          style: {
-            'border-width': 2,
-            'border-color': HIGHLIGHT_COLOR,
-            'border-opacity': 1
-          }
-        },
-        {
-          selector: 'edge[color]',
-          style: {
-            'width': 3,
-            'line-color': 'data(color)',
-            'curve-style': 'bezier',
-            'label': 'data(label)',
-            'font-family': FONT_FAMILY,
-            'font-size': LABEL_FONT_SIZE,
-            'text-margin-y': '-10',
-            'text-rotation': 'autorotate'
-          }
-        },
-        {
-          selector: 'node:selected',
-          style: {
-            'border-width': 2,
-            'border-color': HIGHLIGHT_COLOR
-          }
-        },
-        {
-          selector: 'edge:selected',
-          style: {
-            'width': 6
-          }
-        },
-        {
-          selector: 'node.expanded',
-          style: {
-            'border-opacity': 0
-          }
-        }
-      ],
-      layout: {
-        name: 'preset'
-      },
-      wheelSensitivity: 0.2
-    })
-  }
-
-  // Node Rendering
-
-  // TODO: memoization
-  renderNode (ele) {
-    const label = ele.data('label')
-    const iconPath = this.faGlyphPath(ele.data('icon'))
-    const size = this.measureText(label)
-    const width = size.width + 32
-    const height = size.height + 8
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-        <rect x="0" y="0" width="${width}" height="${height}" fill="${BACKGROUND_COLOR}"></rect>
-        <text x="26" y="${height - 7}" font-family="${FONT_FAMILY}" font-size="${MAIN_FONT_SIZE}">${label}</text>
-        <path d="${iconPath}" fill="${ICON_COLOR}" transform="scale(0.009 -0.009) translate(600 -2000)"></path>
-      </svg>`
-    return {
-      url: 'data:image/svg+xml,' + encodeURIComponent(svg),
-      width, height
-    }
-  }
-
-  faGlyphPath (unicode) {
-    try {
-      return faFont.querySelector(`glyph[unicode="${unicode}"]`).getAttribute('d')
-    } catch (e) {
-      throw Error(`Font Awesome glyph "${unicode}" not available (${e})`)
-    }
-  }
-
-  measureText (text) {
-    box.textContent = text
-    return {
-      width: box.clientWidth,
-      height: box.clientHeight
-    }
-  }
-
-  // Context Menus
-
-  /**
-   * Creates both the topic context menu and the assoc context menu.
-   */
-  contextMenus (contextCommands) {
-    // Note 1: no context menu (undefined) for "edge handle" nodes
-    // Note 2: for (expanded) "aux nodes" show the *assoc* context menu
-    cy.cxtmenu({
-      selector: 'node',
-      commands: ele => this.isEdgeHandle(ele) ? undefined : ec.isAuxNode(ele) ? assocCommands(edgeId(ele)) :
-                                                                                topicCommands(id(ele)),
-      atMouse: true
-    })
-    cy.cxtmenu({
-      selector: 'edge',
-      commands: ele => assocCommands(id(ele))
-    })
-
-    const topicCommands = id => contextCommands.topic.map(cmd => ({
-      content: cmd.label,
-      select: ele => this.invokeTopicHandler(id, cmd),
-      disabled: !cmd.multi && this.isTopicSelected(id) && this.isMultiSelection()
-    }))
-
-    const assocCommands = id => contextCommands.assoc.map(cmd => ({
-      content: cmd.label,
-      select: ele => this.invokeAssocHandler(id, cmd),
-      disabled: !cmd.multi && this.isAssocSelected(id) && this.isMultiSelection()
-    }))
-  }
-
-  // Edge Handles
-
-  edgeHandles () {
-    cy.edgehandles({
-      preview: false,
-      handlePosition (node) {
-        return !ec.isAuxNode(node) ? 'middle top' : 'middle middle'
-      },
-      complete: (sourceNode, targetNode, addedEles) => {
-        // console.log('complete', sourceNode, targetNode, addedEles)
-        this.emitAssocCreate(sourceNode, targetNode)
-        addedEles.remove()
-      }
-    })
-  }
-
-  emitAssocCreate (sourceNode, targetNode) {
-    parent.$emit('assoc-create', {
-      playerId1: playerId(sourceNode),
-      playerId2: playerId(targetNode)
-    })
-  }
-
-  isEdgeHandle (ele) {
-    return ele.hasClass('eh-handle')
-  }
-
-  // Event Handling
-
-  onSelectHandlers () {
-    cy.on('select', 'node', onSelectNode)
-      .on('select', 'edge', onSelectEdge)
-  }
-
-  offSelectHandlers () {
-    cy.off('select', 'node', onSelectNode)
-      .off('select', 'edge', onSelectEdge)
-  }
-
-  onUnselectHandlers () {
-    cy.on('unselect', 'node', onUnselectNode)
-      .on('unselect', 'edge', onUnselectEdge)
-  }
-
-  offUnselectHandlers () {
-    cy.off('unselect', 'node', onUnselectNode)
-      .off('unselect', 'edge', onUnselectEdge)
-  }
-
-  /**
-   * Registers Cytoscape event handlers.
-   */
-  eventHandlers () {
-    this.onSelectHandlers()
-    this.onUnselectHandlers()
-    cy.on('tap', 'node', e => {
-      const clicks = e.originalEvent.detail
-      // console.log('tap node', id(e.target), e.originalEvent, clicks)
-      if (clicks === 2) {
-        parent.$emit('topic-double-click', e.target.data('viewTopic'))
-      }
-    }).on('cxttap', e => {
-      if (e.target === cy) {
-        parent.$emit('topicmap-contextmenu', {
-          model:  e.position,
-          render: e.renderedPosition
-        })
-      }
-    }).on('dragfreeon', e => {
-      this.topicDrag(e.target)
-    }).on('pan', () => {
-      dispatch('_syncPan', cy.pan())
-    }).on('zoom', () => {
-      dispatch('_syncZoom', cy.zoom())
-    }) /* .on('ready', () => {
-      console.log('### Cytoscape ready')
-    }) */
-  }
-
-  topicDrag (node) {
-    if (!ec.isAuxNode(node)) {    // aux nodes don't emit topic-drag events
-      if (this.isTopicSelected(id(node)) && this.isMultiSelection()) {
-        // console.log('drag multi', selection.topicIds)
-        this.emitTopicsDrag()
-      } else {
-        // console.log('drag single', id(node))
-        this.emitTopicDrag(node)
-      }
-    }
-    dispatch('_playFisheyeAnimation')    // TODO: play only if details are visible
-  }
-
-  emitTopicDrag (node) {
-    parent.$emit('topic-drag', {
-      id: id(node),
-      pos: node.position()
-    })
-  }
-
-  emitTopicsDrag (node) {
-    parent.$emit('topics-drag', selection.topicIds.map(id => {
-      const pos = cyElement(id).position()
-      return {
-        topicId: id,
-        x: pos.x,
-        y: pos.y
-      }
-    }))
-  }
-
-  // Helper
-
-  invokeTopicHandler (id, cmd) {
-    let arg
-    if (cmd.multi) {
-      arg = this.isTopicSelected(id) ? idLists() : {topicIds: [id], assocIds: []}
-    } else {
-      arg = id
-    }
-    cmd.handler(arg)
-  }
-
-  invokeAssocHandler (id, cmd) {
-    let arg
-    if (cmd.multi) {
-      arg = this.isAssocSelected(id) ? idLists() : {topicIds: [], assocIds: [id]}
-    } else {
-      arg = id
-    }
-    cmd.handler(arg)
-  }
-
-  isTopicSelected (id) {
-    return selection.includesTopic(id)
-  }
-
-  isAssocSelected (id) {
-    return selection.includesAssoc(id)
-  }
-
-  isMultiSelection () {
-    return selection.isMulti()
-  }
 }
 
 // ----------------------------------------------------------------------------------------------------- Private Methods
+
+// Cytoscape Instantiation
+
+function instantiateCy (container) {
+  return cytoscape({
+    container,
+    style: [
+      {
+        selector: 'node[icon]',
+        style: {
+          'shape': 'rectangle',
+          'background-image': ele => renderNode(ele).url,
+          'background-opacity': 0,
+          'width':  ele => renderNode(ele).width,
+          'height': ele => renderNode(ele).height,
+          'border-width': 1,
+          'border-color': BORDER_COLOR_LIGHTER,
+          'border-opacity': 1
+        }
+      },
+      {
+        selector: 'node.aux-node',
+        style: {
+          'width': 6,
+          'height': 6
+        }
+      },
+      {
+        selector: 'node.eh-handle',
+        style: {
+          'background-color': HIGHLIGHT_COLOR,
+          'width': 12,
+          'height': 12
+        }
+      },
+      {
+        selector: 'node.eh-source, node.eh-target',
+        style: {
+          'border-width': 2,
+          'border-color': HIGHLIGHT_COLOR,
+          'border-opacity': 1
+        }
+      },
+      {
+        selector: 'edge[color]',
+        style: {
+          'width': 3,
+          'line-color': 'data(color)',
+          'curve-style': 'bezier',
+          'label': 'data(label)',
+          'font-family': FONT_FAMILY,
+          'font-size': LABEL_FONT_SIZE,
+          'text-margin-y': '-10',
+          'text-rotation': 'autorotate'
+        }
+      },
+      {
+        selector: 'node:selected',
+        style: {
+          'border-width': 2,
+          'border-color': HIGHLIGHT_COLOR
+        }
+      },
+      {
+        selector: 'edge:selected',
+        style: {
+          'width': 6
+        }
+      },
+      {
+        selector: 'node.expanded',
+        style: {
+          'border-opacity': 0
+        }
+      }
+    ],
+    layout: {
+      name: 'preset'
+    },
+    wheelSensitivity: 0.2
+  })
+}
+
+// Node Rendering
+
+// TODO: memoization
+function renderNode (ele) {
+  const label = ele.data('label')
+  const iconPath = faGlyphPath(ele.data('icon'))
+  const size = measureText(label)
+  const width = size.width + 32
+  const height = size.height + 8
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+      <rect x="0" y="0" width="${width}" height="${height}" fill="${BACKGROUND_COLOR}"></rect>
+      <text x="26" y="${height - 7}" font-family="${FONT_FAMILY}" font-size="${MAIN_FONT_SIZE}">${label}</text>
+      <path d="${iconPath}" fill="${ICON_COLOR}" transform="scale(0.009 -0.009) translate(600 -2000)"></path>
+    </svg>`
+  return {
+    url: 'data:image/svg+xml,' + encodeURIComponent(svg),
+    width, height
+  }
+}
+
+function faGlyphPath (unicode) {
+  try {
+    return faFont.querySelector(`glyph[unicode="${unicode}"]`).getAttribute('d')
+  } catch (e) {
+    throw Error(`Font Awesome glyph "${unicode}" not available (${e})`)
+  }
+}
+
+function measureText (text) {
+  box.textContent = text
+  return {
+    width: box.clientWidth,
+    height: box.clientHeight
+  }
+}
+
+// Context Menus
+
+/**
+ * Creates both the topic context menu and the assoc context menu.
+ */
+function contextMenus (contextCommands) {
+  // Note 1: no context menu (undefined) for "edge handle" nodes
+  // Note 2: for (expanded) "aux nodes" show the *assoc* context menu
+  cy.cxtmenu({
+    selector: 'node',
+    commands: ele => isEdgeHandle(ele) ? undefined : ec.isAuxNode(ele) ? assocCommands(edgeId(ele)) :
+                                                                         topicCommands(id(ele)),
+    atMouse: true
+  })
+  cy.cxtmenu({
+    selector: 'edge',
+    commands: ele => assocCommands(id(ele))
+  })
+
+  const topicCommands = id => contextCommands.topic.map(cmd => ({
+    content: cmd.label,
+    select: ele => invokeTopicHandler(id, cmd),
+    disabled: !cmd.multi && isTopicSelected(id) && isMultiSelection()
+  }))
+
+  const assocCommands = id => contextCommands.assoc.map(cmd => ({
+    content: cmd.label,
+    select: ele => invokeAssocHandler(id, cmd),
+    disabled: !cmd.multi && isAssocSelected(id) && isMultiSelection()
+  }))
+}
+
+// Edge Handles
+
+function edgeHandles () {
+  cy.edgehandles({
+    preview: false,
+    handlePosition (node) {
+      return !ec.isAuxNode(node) ? 'middle top' : 'middle middle'
+    },
+    complete: (sourceNode, targetNode, addedEles) => {
+      // console.log('complete', sourceNode, targetNode, addedEles)
+      emitAssocCreate(sourceNode, targetNode)
+      addedEles.remove()
+    }
+  })
+}
+
+function emitAssocCreate (sourceNode, targetNode) {
+  parent.$emit('assoc-create', {
+    playerId1: playerId(sourceNode),
+    playerId2: playerId(targetNode)
+  })
+}
+
+function isEdgeHandle (ele) {
+  return ele.hasClass('eh-handle')
+}
+
+// Event Handling
+
+function onSelectHandlers () {
+  cy.on('select', 'node', onSelectNode)
+    .on('select', 'edge', onSelectEdge)
+}
+
+function offSelectHandlers () {
+  cy.off('select', 'node', onSelectNode)
+    .off('select', 'edge', onSelectEdge)
+}
+
+function onUnselectHandlers () {
+  cy.on('unselect', 'node', onUnselectNode)
+    .on('unselect', 'edge', onUnselectEdge)
+}
+
+function offUnselectHandlers () {
+  cy.off('unselect', 'node', onUnselectNode)
+    .off('unselect', 'edge', onUnselectEdge)
+}
 
 function nodeHandler (suffix) {
   // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
@@ -491,6 +376,124 @@ function edgeHandler (suffix) {
   return e => {
     parent.$emit('assoc-' + suffix, id(e.target))
   }
+}
+
+/**
+ * Registers Cytoscape event handlers.
+ */
+function eventHandlers () {
+  onSelectHandlers()
+  onUnselectHandlers()
+  cy.on('tap', 'node', e => {
+    const clicks = e.originalEvent.detail
+    // console.log('tap node', id(e.target), e.originalEvent, clicks)
+    if (clicks === 2) {
+      parent.$emit('topic-double-click', e.target.data('viewTopic'))
+    }
+  }).on('cxttap', e => {
+    if (e.target === cy) {
+      parent.$emit('topicmap-contextmenu', {
+        model:  e.position,
+        render: e.renderedPosition
+      })
+    }
+  }).on('dragfreeon', e => {
+    topicDrag(e.target)
+  }).on('pan', () => {
+    dispatch('_syncPan', cy.pan())
+  }).on('zoom', () => {
+    dispatch('_syncZoom', cy.zoom())
+  }) /* .on('ready', () => {
+    console.log('### Cytoscape ready')
+  }) */
+}
+
+function topicDrag (node) {
+  if (!ec.isAuxNode(node)) {    // aux nodes don't emit topic-drag events
+    if (isTopicSelected(id(node)) && isMultiSelection()) {
+      // console.log('drag multi', selection.topicIds)
+      emitTopicsDrag()
+    } else {
+      // console.log('drag single', id(node))
+      emitTopicDrag(node)
+    }
+  }
+  playFisheyeAnimation()        // TODO: play only if details are visible
+}
+
+function emitTopicDrag (node) {
+  parent.$emit('topic-drag', {
+    id: id(node),
+    pos: node.position()
+  })
+}
+
+function emitTopicsDrag (node) {
+  parent.$emit('topics-drag', selection.topicIds.map(id => {
+    const pos = cyElement(id).position()
+    return {
+      topicId: id,
+      x: pos.x,
+      y: pos.y
+    }
+  }))
+}
+
+// Animation
+
+function playFisheyeAnimation() {
+  // console.log('playFisheyeAnimation')
+  fisheyeAnimation && fisheyeAnimation.stop()
+  fisheyeAnimation = cy.layout({
+    name: 'cose-bilkent',
+    fit: false,
+    /* animateFilter: (node, i) => {
+      if (ec.isAuxNode(node)) {
+        console.log(node.id(), ec.isAuxNode(node), node.position(), node.renderedPosition())
+        // return false
+      }
+      return true // !ec.isAuxNode(node)
+    }, */
+    randomize: false,
+    nodeRepulsion: 0,
+    idealEdgeLength: 0,
+    edgeElasticity: 0,
+    tile: false
+  }).run()
+}
+
+// Helper
+
+function invokeTopicHandler (id, cmd) {
+  let arg
+  if (cmd.multi) {
+    arg = isTopicSelected(id) ? idLists() : {topicIds: [id], assocIds: []}
+  } else {
+    arg = id
+  }
+  cmd.handler(arg)
+}
+
+function invokeAssocHandler (id, cmd) {
+  let arg
+  if (cmd.multi) {
+    arg = isAssocSelected(id) ? idLists() : {topicIds: [], assocIds: [id]}
+  } else {
+    arg = id
+  }
+  cmd.handler(arg)
+}
+
+function isTopicSelected (id) {
+  return selection.includesTopic(id)
+}
+
+function isAssocSelected (id) {
+  return selection.includesAssoc(id)
+}
+
+function isMultiSelection () {
+  return selection.isMulti()
 }
 
 // ---
