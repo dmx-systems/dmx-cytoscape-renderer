@@ -278,6 +278,11 @@ function measureText (text) {
 
 // Context Menus
 
+const FUN = {
+  topic: {handlerArg: topicHandlerArg, isSelected: isTopicSelected},
+  assoc: {handlerArg: assocHandlerArg, isSelected: isAssocSelected}
+}
+
 /**
  * Creates both the topic context menu and the assoc context menu.
  */
@@ -286,46 +291,54 @@ function contextMenus (contextCommands) {
   // Note 2: for (expanded) "aux nodes" show the *assoc* context menu
   cy.cxtmenu({
     selector: 'node',
-    commands: ele => isEdgeHandle(ele) ? undefined : ec.isAuxNode(ele) ? assocCommands(edgeId(ele)) :
-                                                                         topicCommands(id(ele)),
+    commands: ele => isEdgeHandle(ele) ? undefined : ec.isAuxNode(ele) ? commands('assoc', edgeId(ele)) :
+                                                                         commands('topic', id(ele)),
     atMouse: true
   })
   cy.cxtmenu({
     selector: 'edge',
-    commands: ele => assocCommands(id(ele))
+    commands: ele => commands('assoc', id(ele))
   })
 
-  const topicCommands = id => contextCommands.topic.map(cmd => ({
-    content: cmd.label,
-    select: ele => invokeTopicHandler(id, cmd),
-    disabled: !cmd.multi && isTopicSelected(id) && isMultiSelection()
-  }))
-
-  const assocCommands = id => contextCommands.assoc.map(cmd => ({
-    content: cmd.label,
-    select: ele => invokeAssocHandler(id, cmd),
-    disabled: !cmd.multi && isAssocSelected(id) && isMultiSelection()
-  }))
+  function commands (kind, id) {
+    return contextCommands[kind].map(cmd => {
+      const arg = FUN[kind].handlerArg(id, cmd)
+      const disabled = cmd.disabled && cmd.disabled(arg)
+      return {
+        content: cmd.label,
+        select: ele => cmd.handler(arg),
+        disabled: disabled || !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection()
+      }
+    })
+  }
 }
 
-function invokeTopicHandler (id, cmd) {
-  let arg
+function topicHandlerArg (id, cmd) {
   if (cmd.multi) {
-    arg = isTopicSelected(id) ? idLists() : {topicIds: [id], assocIds: []}
+    return isTopicSelected(id) ? idLists() : {topicIds: [id], assocIds: []}
   } else {
-    arg = id
+    return id
   }
-  cmd.handler(arg)
 }
 
-function invokeAssocHandler (id, cmd) {
-  let arg
+function assocHandlerArg (id, cmd) {
   if (cmd.multi) {
-    arg = isAssocSelected(id) ? idLists() : {topicIds: [], assocIds: [id]}
+    return isAssocSelected(id) ? idLists() : {topicIds: [], assocIds: [id]}
   } else {
-    arg = id
+    return id
   }
-  cmd.handler(arg)
+}
+
+/**
+ * Creates ID lists from the selection.
+ * Note: the caller will pass the ID lists to a command handler. The ID lists are created by cloning in order
+ * to allow the command handler to modify the selection without creating a side effect in the ID lists.
+ */
+function idLists () {
+  return {
+    topicIds: dm5.utils.clone(selection.topicIds),
+    assocIds: dm5.utils.clone(selection.assocIds)
+  }
 }
 
 // Edge Handles
@@ -550,18 +563,6 @@ function edgeId (node) {
 function id (ele) {
   // Note: cytoscape element IDs are strings
   return Number(ele.id())
-}
-
-/**
- * Creates ID lists from the selection.
- * Note: the caller will pass the ID lists to a command handler. The ID lists are created by cloning in order
- * to allow the command handler to modify the selection without creating a side effect in the ID lists.
- */
-function idLists () {
-  return {
-    topicIds: dm5.utils.clone(selection.topicIds),
-    assocIds: dm5.utils.clone(selection.assocIds)
-  }
 }
 
 /**
