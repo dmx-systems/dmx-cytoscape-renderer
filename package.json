@@ -3,7 +3,7 @@
   "version": "0.15.0",
   "description": "A DeepaMehta 5 topicmap renderer as a composable GUI component",
   "author": "Jörg Richter",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "repository": {
     "type": "git",
     "url": "https://github.com/jri/dm5-cytoscape-renderer.git"
