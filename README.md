@@ -4,9 +4,26 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.16** -- Jan 29, 2019
+
+* API:
+    * Promise returned by `renderTopicmap` action resolves with topicmap
+    * Context commands: caller can provide function to disable commands dynamically
+* Fixes:
+    * No context menu for "edge handle" nodes
+    * Pinned assocs which have assoc players
+    * Remove assocs with assoc players from client state on hide/delete
+    * Client-sync when revealing assocs with assoc players
+    * `addAssocToTopicmap` message contains assoc view props
+    * Make async operations more robust
+* Chore:
+    * Adapt to `dm5` library and `cytoscpae-edge-connections`
+    * Internal refactoring
+    * Change license to `GPL-3.0-or-later`
+
 **0.15** -- Jan 5, 2019
 
-* Edges can connect edges (utilizing `cytoscpae-edge-connections`)
+* Assocs can connect other assocs (utilizing `cytoscpae-edge-connections`)
 * New create-association gesture: drawing instead of drag'n'drop (utilizing `cytoscape-edgehandles`)
 * Rename event `topic-drop-on-topic` -> `assoc-create`
 
@@ -89,4 +106,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Jan 5, 2019
+Jan 29, 2019

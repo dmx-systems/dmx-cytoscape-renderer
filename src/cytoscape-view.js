@@ -57,8 +57,8 @@ export default class CytoscapeView {
   renderTopicmap (topicmap, _selection) {
     selection = _selection
     return svgReady.then(() => {
-      // Note: the cytoscape-amd extension expects an aux node still to exist at the time its edge is removed.
-      // So we must remove the edges first.
+      // Note: the cytoscape-edge-connections extension expects an aux node still to exist at the time its edge is
+      // removed. So we must remove the edges first.
       cy.remove('edge')
       cy.remove('node')
       cy.add(topicmap.filterTopics(viewTopic => viewTopic.isVisible()).map(cyNode))

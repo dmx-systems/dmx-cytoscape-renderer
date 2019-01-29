@@ -671,8 +671,8 @@ function initPos (viewTopic) {
       pos.x = p.x + 60
       pos.y = p.y + 120
     } else {
-      pos.x = 100
-      pos.y = 100
+      pos.x = 200
+      pos.y = 240
     }
     viewTopic.setPosition(pos)
   }
@@ -922,7 +922,7 @@ function isSelected (objectId) {
 
 // copy in dm5-cytoscape-renderer.vue
 // copy in dm5-detail-layer.vue
-// copy in cytoscape-amd.js
+// copy in cytoscape-edge-connections (index.js)
 function eleId (ele) {
   // Note: Cytoscape element IDs are strings
   return Number(ele.id())
