@@ -27,6 +27,7 @@ let cy                  // Cytoscape instance
 let ec                  // cytoscape-edge-connections API object
 let parent              // the dm5-topicmap-panel (a Vue instance); used as event emitter
 let box                 // the measurement box
+let modifiers           // modifier keys
 let dispatch
 let faFont              // Font Awesome SVG <font> element
 let fisheyeAnimation
@@ -41,10 +42,11 @@ cytoscape.use(require('cytoscape-edge-connections'))
 
 export default class CytoscapeView {
 
-  constructor (container, contextCommands, _parent, _box, _dispatch) {
-    parent   = _parent,
-    box      = _box
-    dispatch = _dispatch
+  constructor (container, contextCommands, _parent, _box, _modifiers, _dispatch) {
+    parent    = _parent,
+    box       = _box
+    modifiers = _modifiers
+    dispatch  = _dispatch
     cy = instantiateCy(container)
     ec = cy.edgeConnections()
     contextMenus(contextCommands)
@@ -291,8 +293,11 @@ function contextMenus (contextCommands) {
   // Note 2: for (expanded) "aux nodes" show the *assoc* context menu
   cy.cxtmenu({
     selector: 'node',
-    commands: ele => isEdgeHandle(ele) ? undefined : ec.isAuxNode(ele) ? commands('assoc', edgeId(ele)) :
-                                                                         commands('topic', id(ele)),
+    commands: ele => {
+      console.log('commands', modifiers.alt)
+      return isEdgeHandle(ele) ? undefined : ec.isAuxNode(ele) ? commands('assoc', edgeId(ele)) :
+                                                                 commands('topic', id(ele))
+    },
     atMouse: true
   })
   cy.cxtmenu({

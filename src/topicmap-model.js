@@ -20,15 +20,17 @@ import CytoscapeView from './cytoscape-view'
 import Vue from 'vue'
 import dm5 from 'dm5'
 
-let cyView        // the CytoscapeView instance, instantiated by "_initCytoscape" action
+let cyView          // the CytoscapeView instance, instantiated by "_initCytoscape" action
 
-let ele           // The single selection: a selected Cytoscape element (node or edge). Undefined if there is no
-                  // single selection.
-                  // The selected element's details are displayed in-map. On unselect the details disappear
-                  // (unless pinned).
-                  // Note: the host application can visualize multi selections by the means of '_renderAsSelected' and
-                  // '_renderAsUnselected' actions. The details of multi selection elements are *not* displayed in-map
-                  // (unless pinned). ### TODO: introduce multi-selection state in this component?
+let ele             // The single selection: a selected Cytoscape element (node or edge). Undefined if there is no
+                    // single selection.
+                    // The selected element's details are displayed in-map. On unselect the details disappear
+                    // (unless pinned).
+                    // Note: the host application can visualize multi selections by the means of '_renderAsSelected' and
+                    // '_renderAsUnselected' actions. The details of multi selection elements are *not* displayed in-map
+                    // (unless pinned). ### TODO: introduce multi-selection state in this component?
+
+let modifiers = {}  // modifier keys
 
 const state = {
 
@@ -361,7 +363,7 @@ const actions = {
    */
   _initCytoscape ({dispatch}, {container, contextCommands, parent, box}) {
     // console.log('_initCytoscape')
-    cyView = new CytoscapeView(container, contextCommands, parent, box, dispatch)
+    cyView = new CytoscapeView(container, contextCommands, parent, box, modifiers, dispatch)
   },
 
   _syncObject (_, object) {
@@ -390,6 +392,10 @@ const actions = {
 
   _syncZoom (_, zoom) {
     state.zoom = zoom
+  },
+
+  _setModifiers (_, _modifiers) {
+    modifiers.alt = _modifiers.alt
   },
 
   _shutdownCytoscape () {
