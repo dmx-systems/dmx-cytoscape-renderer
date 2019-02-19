@@ -87,11 +87,11 @@ export default class CytoscapeView {
   }
 
   unselectById (id) {
-    return this.unselect(cyElement(id))     // TODO: assert that cyElement() not empty?
+    return this.unselect(cyElement(id))     // FIXME: might cyElement() fail?
   }
 
   /**
-   * Programmatically selects a Cytoscape element *without* emitting a (Cytoscape) `select` event.
+   * Selects a Cytoscape element programmatically *without* emitting a (Cytoscape) `select` event.
    */
   select (ele) {
     offSelectHandlers()
@@ -101,7 +101,7 @@ export default class CytoscapeView {
   }
 
   /**
-   * Programmatically unselects a Cytoscape element *without* emitting a (Cytoscape) `unselect` event.
+   * Unselects a Cytoscape element programmatically *without* emitting a (Cytoscape) `unselect` event.
    */
   unselect (ele) {
     offUnselectHandlers()
@@ -110,22 +110,12 @@ export default class CytoscapeView {
     return ele
   }
 
-  // TODO: should we update per-field (like topic) or combined (like assoc)?
-
-  updateTopicLabel (id, label) {
-    cyElement(id).data('label', label)
-  }
-
-  updateTopicIcon (id, icon) {
-    cyElement(id).data('icon', icon)
+  updateTopic (id, data) {
+    cyElement(id).data(data)
   }
 
   updateAssoc (id, data) {
     cyElement(id).data(data)
-  }
-
-  updateAssocColor (id, color) {
-    cyElement(id).data('color', color)
   }
 
   /**

@@ -550,17 +550,19 @@ function _setAssocPinned (assocId, pinned) {
 
 /**
  * Processes an UPDATE_TOPIC directive.
- * Updates the topicmap model when a topic value has changed.
  */
 function updateTopic (topic) {
   // console.log('updateTopic', topic)
-  const _topic = state.topicmap.getTopicIfExists(topic.id)
-  if (_topic) {
-    const value = topic.value
+  const viewTopic = state.topicmap.getTopicIfExists(topic.id)
+  if (viewTopic) {
     // update state
-    _topic.value = value
+    viewTopic.value = topic.value
     // update view
-    cyView.updateTopicLabel(topic.id, value)
+    if (viewTopic.isVisible()) {
+      cyView.updateTopic(topic.id, {
+        label: topic.value
+      })
+    }
   }
 }
 
@@ -568,16 +570,15 @@ function updateTopic (topic) {
  * Processes an UPDATE_ASSOCIATION directive.
  */
 function updateAssoc (assoc) {
-  const _assoc = state.topicmap.getAssocIfExists(assoc.id)
-  if (_assoc) {
-    const value = assoc.value
+  const viewAssoc = state.topicmap.getAssocIfExists(assoc.id)
+  if (viewAssoc) {
     // update state
-    _assoc.value = value
-    _assoc.typeUri = assoc.typeUri
+    viewAssoc.value = assoc.value
+    viewAssoc.typeUri = assoc.typeUri
     // update view
     cyView.updateAssoc(assoc.id, {
-      label: value,
-      color: assoc.color        // FIXME: color aux node as well
+      label: assoc.value,
+      color: assoc.color
     })
   }
 }
@@ -586,8 +587,8 @@ function updateAssoc (assoc) {
  * Processes a DELETE_TOPIC directive.
  */
 function deleteTopic (topic) {
-  const _topic = state.topicmap.getTopicIfExists(topic.id)
-  if (_topic) {
+  const viewTopic = state.topicmap.getTopicIfExists(topic.id)
+  if (viewTopic) {
     // Note: state.topicmap.removeAssocsWithPlayer() is not called here (compare to _deleteTopic() action above).
     // The assocs will be removed while processing the DELETE_ASSOCIATION directives as received along with the
     // DELETE_TOPIC directive.
@@ -600,8 +601,8 @@ function deleteTopic (topic) {
  * Processes a DELETE_ASSOCIATION directive.
  */
 function deleteAssoc (assoc) {
-  const _assoc = state.topicmap.getAssocIfExists(assoc.id)
-  if (_assoc) {
+  const viewAssoc = state.topicmap.getAssocIfExists(assoc.id)
+  if (viewAssoc) {
     // FIXME: remove assocs with player as well?
     state.topicmap.removeAssoc(assoc.id)              // update state
     cyView.remove(assoc.id)                           // update view
@@ -619,7 +620,11 @@ function updateTopicIcons (typeUri) {
       // Note: no state update here. Topic icon is not part of ViewTopic but computed based on type definition.
       // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
       // processes directives.
-      cyView.updateTopicIcon(topic.id, topic.icon)      // update view
+      //
+      // update view
+      cyView.updateTopic(topic.id, {
+        icon: topic.icon
+      })
     })
 }
 
@@ -631,7 +636,11 @@ function updateAssocColors (typeUri) {
     // Note: no state update here. Assoc color is not part of ViewAssoc but computed based on type definition.
     // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
     // processes directives.
-    cyView.updateAssocColor(assoc.id, assoc.color)    // update view
+    //
+    // update view
+    cyView.updateAssoc(assoc.id, {
+      color: assoc.color
+    })
   })
 }
 
