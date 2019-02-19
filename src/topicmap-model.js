@@ -612,12 +612,15 @@ function deleteAssoc (assoc) {
  * Processes an UPDATE_TOPIC_TYPE directive.
  */
 function updateTopicIcons (typeUri) {
-  state.topicmap.filterTopics(topic => topic.typeUri === typeUri).forEach(topic => {
-    // Note: no state update here. Topic icon is not part of ViewTopic but computed based on type definition.
-    // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
-    // processes directives.
-    cyView.updateTopicIcon(topic.id, topic.icon)      // update view
-  })
+  state.topicmap
+    .filterTopics(topic => topic.typeUri === typeUri)
+    .filter(topic => topic.isVisible())
+    .forEach(topic => {
+      // Note: no state update here. Topic icon is not part of ViewTopic but computed based on type definition.
+      // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
+      // processes directives.
+      cyView.updateTopicIcon(topic.id, topic.icon)      // update view
+    })
 }
 
 /**
