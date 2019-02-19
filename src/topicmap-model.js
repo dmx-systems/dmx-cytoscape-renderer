@@ -292,8 +292,11 @@ const actions = {
 
   _setTopicPosition (_, {topicmapId, topicId, pos}) {
     if (topicmapId === state.topicmap.id) {
-      state.topicmap.getTopic(topicId).setPosition(pos)                   // update state
-      _syncTopicPosition(topicId)                                         // update view
+      const viewTopic = state.topicmap.getTopic(topicId)
+      viewTopic.setPosition(pos)                                          // update state
+      if (viewTopic.isVisible()) {
+        cyView.updateTopicPos(topicId, pos)                               // update view
+      }
     }
   },
 
@@ -733,15 +736,8 @@ function playRestoreAnimation () {
   // console.log('starting restore animation')
   return Promise.all(state.topicmap
     .filterTopics(viewTopic => viewTopic.isVisible())
-    .map(viewTopic => _syncTopicPosition(viewTopic.id))
+    .map(viewTopic => cyView.updateTopicPos(viewTopic.id, viewTopic.getPosition()))
   )
-}
-
-/**
- * @return  a promise resolved once the animation is complete.
- */
-function _syncTopicPosition (id) {
-  return cyView.updateTopicPosition(id, state.topicmap.getTopic(id).getPosition())
 }
 
 function _syncPinned (id, pinned) {

@@ -121,7 +121,7 @@ export default class CytoscapeView {
   /**
    * @return  a promise resolved once the animation is complete.
    */
-  updateTopicPosition (id, pos) {
+  updateTopicPos (id, pos) {
     return cyElement(id).animation({
       // duration: 3000,
       position: pos,
