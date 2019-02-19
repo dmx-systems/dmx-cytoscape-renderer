@@ -488,12 +488,12 @@ const getters = {
   visibleTopicIds (state) {
     // Note: at startup state.topicmap is undefined
     // console.log('visibleTopicIds getter', state.topicmap)
-    return state.topicmap && state.topicmap.filterTopics(topic => topic.isVisible()).map(topic => topic.id)
+    return state.topicmap && state.topicmap.topics.filter(topic => topic.isVisible()).map(topic => topic.id)
   },
 
   visibleAssocIds (state) {
     // console.log('visibleAssocIds getter', state.topicmap)
-    return state.topicmap && Object.values(state.topicmap.assocs).map(assoc => assoc.id)
+    return state.topicmap && state.topicmap.assocs.map(assoc => assoc.id)
   }
 }
 
@@ -616,8 +616,8 @@ function deleteAssoc (assoc) {
  * Processes an UPDATE_TOPIC_TYPE directive.
  */
 function updateTopicIcons (typeUri) {
-  state.topicmap
-    .filterTopics(topic => topic.typeUri === typeUri)
+  state.topicmap.topics
+    .filter(topic => topic.typeUri === typeUri)
     .filter(topic => topic.isVisible())
     .forEach(topic => {
       // Note: no state update here. Topic icon is not part of ViewTopic but computed based on type definition.
@@ -635,7 +635,7 @@ function updateTopicIcons (typeUri) {
  * Processes an UPDATE_ASSOCIATION_TYPE directive.
  */
 function updateAssocColors (typeUri) {
-  state.topicmap.filterAssocs(assoc => assoc.typeUri === typeUri).forEach(assoc => {
+  state.topicmap.assocs.filter(assoc => assoc.typeUri === typeUri).forEach(assoc => {
     // Note: no state update here. Assoc color is not part of ViewAssoc but computed based on type definition.
     // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
     // processes directives.
@@ -734,8 +734,8 @@ function unselectElement () {
  */
 function playRestoreAnimation () {
   // console.log('starting restore animation')
-  return Promise.all(state.topicmap
-    .filterTopics(viewTopic => viewTopic.isVisible())
+  return Promise.all(state.topicmap.topics
+    .filter(viewTopic => viewTopic.isVisible())
     .map(viewTopic => cyView.updateTopicPos(viewTopic.id, viewTopic.getPosition()))
   )
 }
@@ -750,11 +750,11 @@ function _syncPinned (id, pinned) {
 // Details
 
 function showPinnedDetails () {
-  state.topicmap
-    .filterTopics(viewTopic => viewTopic.isPinned() && viewTopic.isVisible())
+  state.topicmap.topics
+    .filter(viewTopic => viewTopic.isPinned() && viewTopic.isVisible())
     .forEach(viewTopic => createDetail(viewTopic).then(showDetail))
-  state.topicmap
-    .filterAssocs(viewAssoc => viewAssoc.isPinned())
+  state.topicmap.assocs
+    .filter(viewAssoc => viewAssoc.isPinned())
     .forEach(viewAssoc => createDetail(viewAssoc).then(showDetail))
   return state.topicmap
 }
