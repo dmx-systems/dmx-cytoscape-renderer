@@ -294,9 +294,10 @@ function contextMenus (contextCommands) {
   cy.cxtmenu({
     selector: 'node',
     commands: ele => {
-      console.log('commands', modifiers.alt)
-      return isEdgeHandle(ele) ? undefined : ec.isAuxNode(ele) ? commands('assoc', edgeId(ele)) :
-                                                                 commands('topic', id(ele))
+      if (isEdgeHandle(ele)) {
+        return
+      }
+      return ec.isAuxNode(ele) ? commands('assoc', edgeId(ele)) : commands('topic', id(ele))
     },
     atMouse: true
   })
@@ -306,13 +307,15 @@ function contextMenus (contextCommands) {
   })
 
   function commands (kind, id) {
-    return contextCommands[kind].map(cmd => {
+    const danger = modifiers.alt
+    return contextCommands[kind + (danger ? '_danger' : '')].map(cmd => {
       const arg = FUN[kind].handlerArg(id, cmd)
       const disabled = cmd.disabled && cmd.disabled(arg)
       return {
         content: cmd.label,
         select: ele => cmd.handler(arg),
-        disabled: disabled || !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection()
+        disabled: disabled || !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection(),
+        ...danger ? {fillColor: 'rgba(200, 0, 0, 0.75)'} : undefined
       }
     })
   }
