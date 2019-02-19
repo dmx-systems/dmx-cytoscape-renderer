@@ -590,13 +590,19 @@ function updateAssoc (assoc) {
  * Processes a DELETE_TOPIC directive.
  */
 function deleteTopic (topic) {
+  // FIXME: remove topic from *all* topicmaps
   const viewTopic = state.topicmap.getTopicIfExists(topic.id)
   if (viewTopic) {
     // Note: state.topicmap.removeAssocsWithPlayer() is not called here (compare to _deleteTopic() action above).
     // The assocs will be removed while processing the DELETE_ASSOCIATION directives as received along with the
     // DELETE_TOPIC directive.
-    state.topicmap.removeTopic(topic.id)              // update state
-    cyView.remove(topic.id)                           // update view
+    //
+    // update state
+    state.topicmap.removeTopic(topic.id)
+    // update view
+    if (viewTopic.isVisible()) {
+      cyView.remove(topic.id)
+    }
   }
 }
 
@@ -604,11 +610,15 @@ function deleteTopic (topic) {
  * Processes a DELETE_ASSOCIATION directive.
  */
 function deleteAssoc (assoc) {
+  // FIXME: remove assoc from *all* topicmaps
   const viewAssoc = state.topicmap.getAssocIfExists(assoc.id)
   if (viewAssoc) {
     // FIXME: remove assocs with player as well?
-    state.topicmap.removeAssoc(assoc.id)              // update state
-    cyView.remove(assoc.id)                           // update view
+    //
+    // update state
+    state.topicmap.removeAssoc(assoc.id)
+    // update view
+    cyView.remove(assoc.id)
   }
 }
 
