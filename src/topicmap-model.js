@@ -43,6 +43,7 @@ const state = {
 
   object: undefined,              // the selected object (dm5.DMXObject)
   objectWritable: undefined,      // True if the current user has WRITE permission for the selected object
+  showInmapDetails: undefined,    // whether to show in-map details for a single selection (Boolean)
 
   details: {},    // In-map details. Detail records keyed by object ID (created by createDetail() and
                   // createDetailForSelection()):
@@ -378,6 +379,11 @@ const actions = {
     state.objectWritable = writable
   },
 
+  _syncShowInmapDetails (_, showInmapDetails) {
+    console.log('_syncShowInmapDetails', showInmapDetails)
+    state.showInmapDetails = showInmapDetails
+  },
+
   _syncDetailSize: dm5.utils.debounce((_, id) => {
     // console.log('_syncDetailSize', id)
     // Note: at the time assoc parts arrive the detail size needs to be adjusted.
@@ -433,12 +439,13 @@ const actions = {
     // *not* remove the current selection.
     // Note 2: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
     // available. The actual order of these 2 occasions doesn't matter.
+    // ### console.log('renderAsSelected', state.showInmapDetails)
+    // ### TODO: if (state.showInmapDetails) {
     Promise.all([p, ...ele ? [unselectElement()] : []]).then(() => {
-      if (!ele) {
-        console.warn('createDetailForSelection() when "ele" is undefined')
-      }
+      !ele && console.warn('createDetailForSelection() when "ele" is undefined')
       ele && showDetail(createDetailForSelection())
     })
+    // ### }
     //
     ele = _ele
   },

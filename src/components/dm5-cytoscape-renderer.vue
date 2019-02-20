@@ -42,8 +42,9 @@ export default {
 
   data () {
     return {
-      object: undefined,      // updated by parent component
-      writable: undefined     // updated by parent component
+      object: undefined,            // updated by parent component
+      writable: undefined,          // updated by parent component
+      showInmapDetails: undefined   // updated by parent component
     }
   },
 
@@ -57,6 +58,11 @@ export default {
     writable () {
       // console.log('writable watcher dm5-cytoscape-renderer', this.writable)
       this.$store.dispatch('_syncWritable', this.writable)
+    },
+
+    showInmapDetails () {
+      // console.log('showInmapDetails watcher dm5-cytoscape-renderer', this.showInmapDetails)
+      this.$store.dispatch('_syncShowInmapDetails', this.showInmapDetails)
     }
   },
 
