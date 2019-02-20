@@ -9,6 +9,8 @@
 </template>
 
 <script>
+import dm5 from 'dm5'
+
 export default {
 
   created () {
@@ -36,16 +38,11 @@ export default {
   ],
 
   props: {
+    object: dm5.DMXObject,
+    writable: Boolean,
+    showInmapDetails: Boolean,
     contextCommands: Object,
     quillConfig: Object
-  },
-
-  data () {
-    return {
-      object: undefined,            // updated by parent component
-      writable: undefined,          // updated by parent component
-      showInmapDetails: undefined   // updated by parent component
-    }
   },
 
   watch: {
