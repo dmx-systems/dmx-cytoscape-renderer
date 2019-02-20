@@ -407,11 +407,6 @@ const actions = {
     modifiers.alt = _modifiers.alt
   },
 
-  _shutdownCytoscape () {
-    // console.log('Unregistering cxtmenu extension')
-    // TODO: not supported by Cytoscape
-  },
-
   // Cross-Module
 
   /**

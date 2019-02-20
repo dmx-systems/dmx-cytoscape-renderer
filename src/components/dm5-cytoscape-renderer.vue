@@ -30,7 +30,7 @@ export default {
 
   destroyed () {
     console.log('dm5-cytoscape-renderer destroyed')
-    this.$store.dispatch('_shutdownCytoscape')
+    // Note: at this time the store modules are switched already
   },
 
   mixins: [
