@@ -14,7 +14,8 @@ import dm5 from 'dm5'
 export default {
 
   created () {
-    // console.log('dm5-cytoscape-renderer created')
+    // console.log('dm5-cytoscape-renderer created', this.showInmapDetails)
+    this._syncShowInmapDetails()
   },
 
   // create Cytoscape instance once DOM is ready
@@ -59,7 +60,7 @@ export default {
 
     showInmapDetails () {
       // console.log('showInmapDetails watcher dm5-cytoscape-renderer', this.showInmapDetails)
-      this.$store.dispatch('_syncShowInmapDetails', this.showInmapDetails)
+      this._syncShowInmapDetails()
     }
   },
 
@@ -71,6 +72,10 @@ export default {
 
     revealChildTopic (relTopic) {
       this.$parent.$emit('child-topic-reveal', relTopic)
+    },
+
+    _syncShowInmapDetails () {
+      this.$store.dispatch('_syncShowInmapDetails', this.showInmapDetails)
     },
 
     mousedown (e) {

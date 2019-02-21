@@ -380,8 +380,16 @@ const actions = {
   },
 
   _syncShowInmapDetails (_, showInmapDetails) {
-    console.log('_syncShowInmapDetails', showInmapDetails)
+    console.log('_syncShowInmapDetails', showInmapDetails, ele && eleId(ele))
     state.showInmapDetails = showInmapDetails
+    //
+    if (ele) {
+      if (showInmapDetails) {
+        showDetail(createDetailForSelection())
+      } else {
+        removeSelectionDetail()
+      }
+    }
   },
 
   _syncDetailSize: dm5.utils.debounce((_, id) => {
@@ -434,13 +442,13 @@ const actions = {
     // *not* remove the current selection.
     // Note 2: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
     // available. The actual order of these 2 occasions doesn't matter.
-    // ### console.log('renderAsSelected', state.showInmapDetails)
-    // ### TODO: if (state.showInmapDetails) {
-    Promise.all([p, ...ele ? [unselectElement()] : []]).then(() => {
-      !ele && console.warn('createDetailForSelection() when "ele" is undefined')
-      ele && showDetail(createDetailForSelection())
-    })
-    // ### }
+    console.log('renderAsSelected', state.showInmapDetails)
+    if (state.showInmapDetails) {
+      Promise.all([p, ...ele ? [unselectElement()] : []]).then(() => {
+        !ele && console.warn('createDetailForSelection() when "ele" is undefined')
+        ele && showDetail(createDetailForSelection())
+      })
+    }
     //
     ele = _ele
   },
@@ -723,6 +731,7 @@ function initPos (viewTopic) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function unselectElement () {
+  console.log('unselectElement', ele && eleId(ele))
   if (!ele) {
     throw Error('unselectElement() called when no element is selected')
   }
@@ -733,10 +742,16 @@ function unselectElement () {
   // Note 2: unselect() removes the element's selection style when manually stripping topic/assoc from
   // browser URL. In this situation cy.elements(":selected") would return a non-empty collection.
   cyView.unselect(ele)
+  //
+  return removeSelectionDetail()
+}
+
+function removeSelectionDetail () {
   const detail = selectionDetail()
   // Note: the detail record might be removed meanwhile (TODO: why?)
   if (!detail) {
-    console.warn(`removeDetail() when detail ${ele.id()} is undefined`)
+    // console.warn(`removeDetail() when detail ${ele.id()} is undefined`)
+    // happens when inmap-details are off
   }
   return detail && !detail.pinned ? removeDetail(detail) : Promise.resolve()
 }
