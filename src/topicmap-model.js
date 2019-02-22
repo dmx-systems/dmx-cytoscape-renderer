@@ -43,7 +43,7 @@ const state = {
 
   object: undefined,              // the selected object (dm5.DMXObject)
   objectWritable: undefined,      // True if the current user has WRITE permission for the selected object
-  showInmapDetails: undefined,    // whether to show in-map details for a single selection (Boolean)
+  showInmapDetails: undefined,    // whether to show in-map details for a single selection (Boolean) ### FIXME: drop it!
 
   details: {},    // In-map details. Detail records keyed by object ID (created by createDetail() and
                   // createDetailForSelection()):
@@ -358,7 +358,7 @@ const actions = {
 
   // === Cytoscape View ===
 
-  // Module internal (dispatched from dm5-cytoscape-renderer components or cytoscape-view.js)
+  // Module internal actions (dispatched from dm5-cytoscape-renderer components or cytoscape-view.js)
 
   /**
    * @param   container   the container DOM element for the Cytoscape instance
@@ -385,7 +385,7 @@ const actions = {
     //
     if (ele) {
       if (showInmapDetails) {
-        showDetail(createDetailForSelection())
+        // showDetail(createDetailForSelection())
       } else {
         removeSelectionDetail()
       }
@@ -429,7 +429,7 @@ const actions = {
    *
    * @param   id  id of a topic or an assoc
    * @param   p   a promise resolved once topic/assoc data has arrived (global "object" state is up-to-date).
-   *              Note: the detail overlay's size can only be measured once "object" details are rendered.
+   *              Note: the detail's size can only be measured once "object" details are rendered.
    */
   renderAsSelected (_, {id, p}) {
     // Note: if selectById() throws we don't want create the promise. Otherwise we would get 2 error messages instead of
@@ -442,12 +442,9 @@ const actions = {
     // *not* remove the current selection.
     // Note 2: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
     // available. The actual order of these 2 occasions doesn't matter.
-    console.log('renderAsSelected', state.showInmapDetails)
+    // console.log('renderAsSelected', state.showInmapDetails)
     if (state.showInmapDetails) {
-      Promise.all([p, ...ele ? [unselectElement()] : []]).then(() => {
-        !ele && console.warn('createDetailForSelection() when "ele" is undefined')
-        ele && showDetail(createDetailForSelection())
-      })
+      Promise.all([p, ...ele ? [unselectElement()] : []]).then(createAndShowSelectionDetail)
     }
     //
     ele = _ele
@@ -485,6 +482,10 @@ const actions = {
       throw Error(`_renderAsUnselected(${id}) called when "ele" is not set`)
     }
     cyView.unselectById(id)
+  },
+
+  _showDetail () {
+    createAndShowSelectionDetail()
   },
 
   resizeTopicmapRenderer () {
@@ -866,6 +867,11 @@ function showDetail (detail) {
   Vue.nextTick(() => {
     adjustDetailSize(detail)
   })
+}
+
+function createAndShowSelectionDetail () {
+  !ele && console.warn('createDetailForSelection() when "ele" is undefined')
+  ele && showDetail(createDetailForSelection())
 }
 
 /**
