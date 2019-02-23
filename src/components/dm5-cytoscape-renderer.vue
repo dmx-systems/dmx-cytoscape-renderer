@@ -14,8 +14,7 @@ import dm5 from 'dm5'
 export default {
 
   created () {
-    // console.log('dm5-cytoscape-renderer created', this.showInmapDetails)
-    this._syncShowInmapDetails()
+    // console.log('dm5-cytoscape-renderer created')
   },
 
   // create Cytoscape instance once DOM is ready
@@ -41,7 +40,6 @@ export default {
   props: {
     object: dm5.DMXObject,
     writable: Boolean,
-    showInmapDetails: Boolean,
     contextCommands: Object,
     quillConfig: Object
   },
@@ -56,11 +54,6 @@ export default {
     writable () {
       // console.log('writable watcher dm5-cytoscape-renderer', this.writable)
       this.$store.dispatch('_syncWritable', this.writable)
-    },
-
-    showInmapDetails () {
-      // console.log('showInmapDetails watcher dm5-cytoscape-renderer', this.showInmapDetails)
-      this._syncShowInmapDetails()
     }
   },
 
@@ -72,10 +65,6 @@ export default {
 
     revealChildTopic (relTopic) {
       this.$parent.$emit('child-topic-reveal', relTopic)
-    },
-
-    _syncShowInmapDetails () {
-      this.$store.dispatch('_syncShowInmapDetails', this.showInmapDetails)
     },
 
     mousedown (e) {

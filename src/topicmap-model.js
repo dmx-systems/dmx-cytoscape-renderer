@@ -43,7 +43,6 @@ const state = {
 
   object: undefined,              // the selected object (dm5.DMXObject)
   objectWritable: undefined,      // True if the current user has WRITE permission for the selected object
-  showInmapDetails: undefined,    // whether to show in-map details for a single selection (Boolean) ### FIXME: drop it!
 
   details: {},    // In-map details. Detail records keyed by object ID (created by createDetail() and
                   // createDetailForSelection()):
@@ -379,20 +378,6 @@ const actions = {
     state.objectWritable = writable
   },
 
-  // TODO: drop it!
-  _syncShowInmapDetails (_, showInmapDetails) {
-    // console.log('_syncShowInmapDetails', showInmapDetails, ele && eleId(ele))
-    state.showInmapDetails = showInmapDetails
-    //
-    if (ele) {
-      if (showInmapDetails) {
-        // showDetail(createDetailForSelection())
-      } else {
-        // removeSelectionDetail()
-      }
-    }
-  },
-
   _syncDetailSize: dm5.utils.debounce((_, id) => {
     // console.log('_syncDetailSize', id)
     // Note: at the time assoc parts arrive the detail size needs to be adjusted.
@@ -428,24 +413,27 @@ const actions = {
    * Postcondition:
    * - "ele" is up-to-date
    *
-   * @param   id  id of a topic or an assoc
-   * @param   p   a promise resolved once topic/assoc data has arrived (global "object" state is up-to-date).
-   *              Note: the detail's size can only be measured once "object" details are rendered.
+   * @param   id
+   *            id of a topic or an assoc
+   * @param   p
+   *            a promise resolved once topic/assoc data has arrived (global "object" state is up-to-date).
+   *            Note: the detail's size can only be measured once "object" details are rendered.
+   * @param   showDetails
+   *            whether to show topic/assoc in-map details (Boolean)
    */
-  renderAsSelected (_, {id, p}) {
+  renderAsSelected (_, {id, p, showDetails}) {
     // Note: if selectById() throws we don't want create the promise. Otherwise we would get 2 error messages instead of
     // one due to nested promises. renderAsSelected() runs itself in a promise executor function (before an object can
     // be rendered as selected the topicmap must be available).
     const _ele = cyView.selectById(id)     // selectById() restores selection after switching topicmap
     //
-    // Note 1: programmatic unselect() is required for browser history navigation. If *interactively* selecting a node
+    // Note: programmatic unselect() is required for browser history navigation. If *interactively* selecting a node
     // Cytoscape removes the current selection before. In contrast if *programmatically* selecting a node Cytoscape does
     // *not* remove the current selection.
-    // Note 2: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
-    // available. The actual order of these 2 occasions doesn't matter.
-    // console.log('renderAsSelected', state.showInmapDetails)
-    const p2 = ele ? unselectElement() : Promise.resolve()
-    if (state.showInmapDetails) {
+    const p2 = ele && unselectElement()
+    if (showDetails) {
+      // Note: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
+      // available. The actual order of these 2 occasions doesn't matter.
       Promise.all([p, p2]).then(createAndShowSelectionDetail)
     }
     //
