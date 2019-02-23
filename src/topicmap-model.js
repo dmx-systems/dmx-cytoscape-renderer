@@ -379,15 +379,16 @@ const actions = {
     state.objectWritable = writable
   },
 
+  // TODO: drop it!
   _syncShowInmapDetails (_, showInmapDetails) {
-    console.log('_syncShowInmapDetails', showInmapDetails, ele && eleId(ele))
+    // console.log('_syncShowInmapDetails', showInmapDetails, ele && eleId(ele))
     state.showInmapDetails = showInmapDetails
     //
     if (ele) {
       if (showInmapDetails) {
         // showDetail(createDetailForSelection())
       } else {
-        removeSelectionDetail()
+        // removeSelectionDetail()
       }
     }
   },
@@ -443,8 +444,9 @@ const actions = {
     // Note 2: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
     // available. The actual order of these 2 occasions doesn't matter.
     // console.log('renderAsSelected', state.showInmapDetails)
+    const p2 = ele ? unselectElement() : Promise.resolve()
     if (state.showInmapDetails) {
-      Promise.all([p, ...ele ? [unselectElement()] : []]).then(createAndShowSelectionDetail)
+      Promise.all([p, p2]).then(createAndShowSelectionDetail)
     }
     //
     ele = _ele
@@ -465,7 +467,7 @@ const actions = {
   _renderAsSelected (_, id) {
     // console.log('_renderAsSelected', id)
     if (ele) {
-      throw Error(`_renderAsSelected(${id}) called when "ele" is set (${eleId(ele)})`)
+      throw Error(`_renderAsSelected(${id}) when "ele" is set (${eleId(ele)})`)
     }
     cyView.selectById(id)
   },
@@ -479,13 +481,17 @@ const actions = {
   _renderAsUnselected (_, id) {
     // console.log('_renderAsUnselected', id)
     if (!ele) {
-      throw Error(`_renderAsUnselected(${id}) called when "ele" is not set`)
+      throw Error(`_renderAsUnselected(${id}) when "ele" is not set`)
     }
     cyView.unselectById(id)
   },
 
   _showDetail () {
     createAndShowSelectionDetail()
+  },
+
+  _removeDetail () {
+    removeSelectionDetail()
   },
 
   resizeTopicmapRenderer () {
@@ -732,9 +738,9 @@ function initPos (viewTopic) {
  * @return  a promise resolved once the restore animation is complete.
  */
 function unselectElement () {
-  console.log('unselectElement', ele && eleId(ele))
+  // console.log('unselectElement', ele && eleId(ele))
   if (!ele) {
-    throw Error('unselectElement() called when no element is selected')
+    throw Error('unselectElement() when no element is selected')
   }
   // console.log('unselectElement', eleId(ele), cyView.cy.elements(":selected").size())
   // Note 1: when the user clicks on the background Cytoscape unselects the selected element on its own.
@@ -747,6 +753,10 @@ function unselectElement () {
   return removeSelectionDetail()
 }
 
+/**
+ * Precondition:
+ * - an element is selected
+ */
 function removeSelectionDetail () {
   const detail = selectionDetail()
   // Note: the detail record might be removed meanwhile (TODO: why?)
@@ -940,11 +950,14 @@ function playFisheyeAnimationIfDetailsOnscreen () {
 }
 
 /**
+ * Precondition:
+ * - an element is selected
+ *
  * @return    may undefined
  */
 function selectionDetail () {
   if (!ele) {
-    throw Error('selectionDetail() called when nothing is selected')
+    throw Error('selectionDetail() when nothing is selected')
   }
   return _detail(eleId(ele))
 }
