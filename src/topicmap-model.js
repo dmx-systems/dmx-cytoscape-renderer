@@ -474,10 +474,6 @@ const actions = {
     cyView.unselectById(id)
   },
 
-  _showDetail () {
-    createAndShowSelectionDetail()
-  },
-
   _removeDetail () {
     removeSelectionDetail()
   },
