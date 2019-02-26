@@ -48,8 +48,8 @@ export default {
   computed: {
 
     ...mapState({
-      selection: state => state['dmx.webclient.default_topicmap_renderer'].selection,
-      zoom:      state => state['dmx.webclient.default_topicmap_renderer'].zoom
+      selection: state => state['dmx.topicmaps.topicmap'].selection,
+      zoom:      state => state['dmx.topicmaps.topicmap'].zoom
     }),
 
     object () {

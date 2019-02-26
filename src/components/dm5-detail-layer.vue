@@ -20,7 +20,7 @@ export default {
 
   computed: {
     details () {
-      const topicmapModel = this.$store.state['dmx.webclient.default_topicmap_renderer']
+      const topicmapModel = this.$store.state['dmx.topicmaps.topicmap']
       if (!topicmapModel) {
         // console.log('Cytoscape renderer not available')
       }
