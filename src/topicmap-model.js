@@ -404,17 +404,17 @@ const actions = {
   // Cross-Module
 
   /**
-   * Renders the given topic/assoc as selected.
-   * Shows the detail DOM and plays the fisheye animation.
+   * Renders a topic/assoc as selected, and the previously selected one as unselected, if any.
+   * Shows in-map details and plays the fisheye animation.
    *
    * Precondition:
    * - the topicmap rendering is complete
    *
    * Postcondition:
-   * - "ele" is up-to-date
+   * - "ele" state is up-to-date
    *
    * @param   id
-   *            id of a topic or an assoc
+   *            id of the topic/assoc to render as selected
    * @param   p
    *            a promise resolved once topic/assoc data has arrived (global "object" state is up-to-date).
    *            Note: the detail's size can only be measured once "object" details are rendered.
@@ -422,27 +422,26 @@ const actions = {
    *            whether to show topic/assoc in-map details (Boolean)
    */
   renderAsSelected (_, {id, p, showDetails}) {
+    // console.log('renderAsSelected', id, showDetails)
     // Note: if selectById() throws we don't want create the promise. Otherwise we would get 2 error messages instead of
     // one due to nested promises. renderAsSelected() runs itself in a promise executor function (before an object can
-    // be rendered as selected the topicmap must be available).
+    // be rendered as selected the topicmap rendering must be complete).
     const _ele = cyView.selectById(id)     // selectById() restores selection after switching topicmap
-    //
     // Note: programmatic unselect() is required for browser history navigation. If *interactively* selecting a node
     // Cytoscape removes the current selection before. In contrast if *programmatically* selecting a node Cytoscape does
     // *not* remove the current selection.
     const p2 = ele && unselectElement()
-    if (showDetails) {
-      // Note: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
-      // available. The actual order of these 2 occasions doesn't matter.
-      Promise.all([p, p2]).then(createAndShowSelectionDetail)
-    }
+    // Note: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
+    // available. The actual order of these 2 occasions doesn't matter.
+    showDetails && Promise.all([p, p2]).then(createAndShowSelectionDetail)
     //
     ele = _ele
   },
 
   renderAsUnselected () {
     // console.log('renderAsUnselected')
-    unselectElement().then(playFisheyeAnimationIfDetailsOnscreen)
+    const p = unselectElement()
+    p && p.then(playFisheyeAnimationIfDetailsOnscreen)
     ele = undefined
   },
 
@@ -714,12 +713,13 @@ function initPos (viewTopic) {
 // === Cytoscape View ===
 
 /**
- * Unselects the selected element, removes the corresponding detail (if not pinned), and plays the restore animation.
+ * Unselects the selected element, removes the corresponding detail from screen (if not pinned), and plays the restore
+ * animation.
  *
  * Precondition:
  * - an element is selected
  *
- * @return  a promise resolved once the restore animation is complete.
+ * @return  if the restore animation is played: a promise resolved once the animation is complete, otherwise undefined
  */
 function unselectElement () {
   // console.log('unselectElement', ele && eleId(ele))
@@ -738,17 +738,38 @@ function unselectElement () {
 }
 
 /**
+ * Removes the detail representing the selection from screen (if not pinned), and plays the restore animation.
+ * If no such detail is displayed (or if it is pinned) nothing is performed (in particular no animation is played).
+ *
  * Precondition:
  * - an element is selected
+ *
+ * @return  if the restore animation is played: a promise resolved once the animation is complete, otherwise undefined
  */
 function removeSelectionDetail () {
   const detail = selectionDetail()
-  // Note: the detail record might be removed meanwhile (TODO: why?)
+  // Note: the detail record might be removed meanwhile due to async operation (TODO: why excatly?)
   if (!detail) {
+    // Note: this is expected behavior if in-map detail are not shown. To avoid this condition more complex state
+    // management would be required (in the app's router), in particular in the event of detail panel opening/closing.
     // console.warn(`removeDetail() when detail ${ele.id()} is undefined`)
-    // happens when inmap-details are off
   }
-  return detail && !detail.pinned ? removeDetail(detail) : Promise.resolve()
+  return detail && !detail.pinned && removeDetail(detail)
+}
+
+/**
+ * Looks up the detail record for the selection.
+ *
+ * Precondition:
+ * - an element is selected
+ *
+ * @return    may undefined
+ */
+function selectionDetail () {
+  if (!ele) {
+    throw Error('selectionDetail() when nothing is selected')
+  }
+  return _detail(eleId(ele))
 }
 
 /**
@@ -767,6 +788,18 @@ function _syncPinned (id, pinned) {
   if (!pinned && !isSelected(id)) {
     removeDetail(detail(id)).then(playFisheyeAnimationIfDetailsOnscreen)
   }
+}
+
+function detail (id) {
+  const detail = _detail(id)
+  if (!detail) {
+    throw Error(`detail record ${id} not found`)
+  }
+  return detail
+}
+
+function _detail (id) {
+  return state.details[id]
 }
 
 // Details
@@ -931,31 +964,6 @@ function playFisheyeAnimationIfDetailsOnscreen () {
   if (!dm5.utils.isEmpty(state.details)) {
     cyView.playFisheyeAnimation()
   }
-}
-
-/**
- * Precondition:
- * - an element is selected
- *
- * @return    may undefined
- */
-function selectionDetail () {
-  if (!ele) {
-    throw Error('selectionDetail() when nothing is selected')
-  }
-  return _detail(eleId(ele))
-}
-
-function detail (id) {
-  const detail = _detail(id)
-  if (!detail) {
-    throw Error(`detail record ${id} not found`)
-  }
-  return detail
-}
-
-function _detail (id) {
-  return state.details[id]
 }
 
 // Helper
