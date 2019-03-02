@@ -4,6 +4,18 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.17** -- Mar 2, 2019
+
+* Features:
+    * The display of in-map details is optional on a per-selection basis
+    * Alt-right clicking a topic/assoc invokes a (configurable) "danger zone" menu
+* Fixes:
+    * Update icons when topics are hidden
+    * Various client-sync fixes in conjunction with hidden topics
+    * Don't play restore animation if no in-map details are removed
+* Chore:
+    * Internal refactoring: more efficient communication with `dm5-topicmap-panel` parent component
+
 **0.16** -- Jan 29, 2019
 
 * API:
@@ -106,4 +118,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Jan 29, 2019
+Mar 2, 2019
