@@ -63,8 +63,8 @@ export default class CytoscapeView {
       // removed. So we must remove the edges first.
       cy.remove('edge')
       cy.remove('node')
-      cy.add(topicmap.topics.filter(viewTopic => viewTopic.isVisible()).map(cyNode))
-      ec.addEdges(topicmap.assocs.map(cyEdge))
+      cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))
+      ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
       // console.log('### Topicmap rendering complete!')
     })
   }

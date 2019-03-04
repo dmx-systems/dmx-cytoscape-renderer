@@ -111,6 +111,8 @@ const actions = {
     if (state.topicmapWritable) {
       if (op.type === 'add') {
         dm5.restClient.addAssocToTopicmap(state.topicmap.id, assoc.id, op.viewAssoc.viewProps)
+      } else if (op.type === 'show') {
+        dm5.restClient.setAssocVisibility(state.topicmap.id, assoc.id, true)
       }
     }
   },
@@ -118,8 +120,8 @@ const actions = {
   // TODO: add "select" param?
   revealRelatedTopic ({dispatch}, relTopic) {
     // update state + view
-    const topicOp = _revealTopic(relTopic, undefined, true, dispatch)   // pos=undefined, select=true
-    const assocOp = _revealAssoc(relTopic.assoc, false, dispatch)       // select=false
+    const topicOp = _revealTopic(relTopic, undefined, true,  dispatch)      // pos=undefined, select=true
+    const assocOp = _revealAssoc(relTopic.assoc,      false, dispatch)      //                select=false
     // console.log('revealRelatedTopic', topicOp, assocOp)
     // update server
     if (state.topicmapWritable) {
@@ -528,7 +530,7 @@ function _revealAssoc (assoc, select, dispatch) {
   // update state
   const op = state.topicmap.revealAssoc(assoc)
   // update view
-  if (op.type === 'add') {
+  if (op.type === 'add' || op.type === 'show') {
     cyView.addAssoc(op.viewAssoc)
   }
   select && dispatch('callAssocRoute', assoc.id)     // TODO: don't dispatch into host application
