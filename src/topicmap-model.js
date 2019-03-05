@@ -217,7 +217,7 @@ const actions = {
   _hideTopic ({dispatch}, id) {
     unpinTopicIfPinned(id, dispatch)
     // update state
-    state.topicmap.removeAssocsWithPlayer(id)
+    state.topicmap.hideAssocsWithPlayer(id)
     state.topicmap.getTopic(id).setVisibility(false)
     // update view
     cyView.remove(id)
@@ -232,14 +232,16 @@ const actions = {
    */
   _hideAssoc ({dispatch}, id) {
     // If the assoc is not in the topicmap nothing is performed. This can happen while hide-multi.
-    if (state.topicmap.hasAssoc(id)) {
-      unpinAssocIfPinned(id, dispatch)
-      // update state
-      state.topicmap.removeAssocsWithPlayer(id)
-      state.topicmap.removeAssoc(id)
-      // update view
-      cyView.remove(id)
+    if (!state.topicmap.hasAssoc(id)) {
+      return
     }
+    //
+    unpinAssocIfPinned(id, dispatch)
+    // update state
+    state.topicmap.hideAssocsWithPlayer(id)
+    state.topicmap.getAssoc(id).setVisibility(false)
+    // update view
+    cyView.remove(id)
   },
 
   /**
@@ -303,27 +305,30 @@ const actions = {
   },
 
   _setTopicVisibility (_, {topicmapId, topicId, visibility}) {
-    console.log('_setTopicVisibility (Cytoscape Renderer)')
+    // console.log('_setTopicVisibility (Cytoscape Renderer)')
     if (topicmapId === state.topicmap.id) {
       const viewTopic = state.topicmap.getTopic(topicId)
       viewTopic.setVisibility(visibility)                                 // update state
       if (visibility) {
         cyView.addTopic(viewTopic)                                        // update view
       } else {
-        state.topicmap.removeAssocsWithPlayer(topicId)                    // update state
+        state.topicmap.hideAssocsWithPlayer(topicId)                      // update state
         cyView.remove(topicId)                                            // update view
       }
     }
   },
 
-  _removeAssocFromTopicmap (_, {topicmapId, assocId}) {
-    console.log('_removeAssocFromTopicmap (Cytoscape Renderer)')
+  _setAssocVisibility (_, {topicmapId, assocId, visibility}) {
+    // console.log('_setAssocVisibility (Cytoscape Renderer)')
     if (topicmapId === state.topicmap.id) {
-      // update state
-      state.topicmap.removeAssocsWithPlayer(assocId)
-      state.topicmap.removeAssoc(assocId)
-      // update view
-      cyView.remove(assocId)
+      const viewAssoc = state.topicmap.getAssoc(assocId)
+      viewAssoc.setVisibility(visibility)                                 // update state
+      if (visibility) {
+        cyView.addAssoc(viewAssoc)                                        // update view
+      } else {
+        state.topicmap.hideAssocsWithPlayer(assocId)                      // update state
+        cyView.remove(assocId)                                            // update view
+      }
     }
   },
 
