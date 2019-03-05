@@ -177,7 +177,7 @@ const actions = {
 
   // TODO: move update-server aspect to main application? Move this action to webclient.js?
   hideMulti ({dispatch}, idLists) {
-    console.log('hideMulti', idLists.topicIds, idLists.assocIds)
+    // console.log('hideMulti', idLists.topicIds, idLists.assocIds)
     // update state + view (for immediate visual feedback)
     idLists.topicIds.forEach(id => dispatch('_hideTopic', id))
     idLists.assocIds.forEach(id => dispatch('_hideAssoc', id))
@@ -231,9 +231,9 @@ const actions = {
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
   _hideAssoc ({dispatch}, id) {
-    const assoc = state.topicmap.getAssocIfExists(id)
-    // If the assoc is not in the topicmap or hidden, nothing is performed. This can happen while hide-multi.
-    if (!assoc || !assoc.isVisible()) {
+    const assoc = state.topicmap.getAssoc(id)
+    // If the assoc is already hidden nothing is performed. This can happen while hide-multi.
+    if (!assoc.isVisible()) {
       return
     }
     //
@@ -269,6 +269,11 @@ const actions = {
    * Deleting is always performed as a multi-operation, that is in a single request.
    */
   _deleteAssoc (_, id) {
+    // If the assoc is already deleted nothing is performed. This can happen while delete-multi.
+    if (!state.topicmap.hasAssoc(id)) {
+      return
+    }
+    //
     _unpinAssocIfPinned(id)
     // update state
     state.topicmap.removeAssocsWithPlayer(id)
