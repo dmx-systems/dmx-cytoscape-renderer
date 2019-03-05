@@ -77,9 +77,14 @@ export default class CytoscapeView {
     ec.addEdge(cyEdge(viewAssoc))
   }
 
+  /**
+   * Removes an element from the graph.
+   * If no such element is in the graph nothing is performed.
+   */
   remove (id) {
-    cyElement(id).remove()
-    // Note: the connected edges are removed automatically by Cytoscape
+    _cyElement(id).remove()
+    // Note 1: the connected edges are removed automatically by Cytoscape
+    // Note 2: in case of hide-multi an edge might be removed already. remove() is a no-op then.
   }
 
   selectById (id) {
@@ -573,9 +578,16 @@ function id (ele) {
  * @return  the element (1-element Cytoscape collection)
  */
 function cyElement (id) {
-  const ele = cy.getElementById(id.toString())     // Note: a Cytoscape element ID is a string
+  const ele = _cyElement(id)
   if (ele.empty()) {
     throw Error(`element ${id} not in graph`)
   }
   return ele
+}
+
+/**
+ * @return  a Cytoscape collection containing 1 or 0 elements
+ */
+function _cyElement (id) {
+  return cy.getElementById(id.toString())     // Note: a Cytoscape element ID is a string
 }

@@ -177,7 +177,7 @@ const actions = {
 
   // TODO: move update-server aspect to main application? Move this action to webclient.js?
   hideMulti ({dispatch}, idLists) {
-    // console.log('hideMulti', idLists.topicIds, idLists.assocIds)
+    console.log('hideMulti', idLists.topicIds, idLists.assocIds)
     // update state + view (for immediate visual feedback)
     idLists.topicIds.forEach(id => dispatch('_hideTopic', id))
     idLists.assocIds.forEach(id => dispatch('_hideAssoc', id))
@@ -231,15 +231,16 @@ const actions = {
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
   _hideAssoc ({dispatch}, id) {
-    // If the assoc is not in the topicmap nothing is performed. This can happen while hide-multi.
-    if (!state.topicmap.hasAssoc(id)) {
+    const assoc = state.topicmap.getAssocIfExists(id)
+    // If the assoc is not in the topicmap or hidden, nothing is performed. This can happen while hide-multi.
+    if (!assoc || !assoc.isVisible()) {
       return
     }
     //
     unpinAssocIfPinned(id, dispatch)
     // update state
     state.topicmap.hideAssocsWithPlayer(id)
-    state.topicmap.getAssoc(id).setVisibility(false)
+    assoc.setVisibility(false)
     // update view
     cyView.remove(id)
   },
