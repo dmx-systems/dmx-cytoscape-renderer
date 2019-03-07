@@ -205,11 +205,12 @@ function instantiateCy (container) {
           'width': 3,
           'line-color': 'data(color)',
           'curve-style': 'bezier',
-          'label': 'data(label)',
+          // See label positioning trick: https://github.com/cytoscape/cytoscape.js/issues/2329
+          'label': ele => ele.data('label') + '\n\n\u2060',
           'font-family': FONT_FAMILY,
           'font-size': LABEL_FONT_SIZE,
-          'text-margin-y': '-10',
-          'text-rotation': 'autorotate'
+          'text-rotation': 'autorotate',
+          'text-wrap': 'wrap'
         }
       },
       {
