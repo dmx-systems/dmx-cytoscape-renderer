@@ -34,6 +34,8 @@ let fisheyeAnimation
 let selection           // the selection model for the rendered topicmap (a Selection object, defined in dm5-topicmaps),
                         // initialized by renderTopicmap() method
 
+cytoscape.warnings(false)
+
 // register extensions
 cytoscape.use(require('cytoscape-cose-bilkent'))
 cytoscape.use(require('cytoscape-cxtmenu'))
