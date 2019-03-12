@@ -442,9 +442,7 @@ function eventHandlers () {
     dispatch('_syncPan', cy.pan())
   }).on('zoom', () => {
     dispatch('_syncZoom', cy.zoom())
-  }) /* .on('ready', () => {
-    console.log('### Cytoscape ready')
-  }) */
+  })
 }
 
 function topicDrag (node) {

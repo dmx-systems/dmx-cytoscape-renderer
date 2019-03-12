@@ -117,11 +117,10 @@ const actions = {
     }
   },
 
-  // TODO: add "select" param?
-  revealRelatedTopic ({dispatch}, relTopic) {
+  revealRelatedTopic ({dispatch}, {relTopic, select}) {
     // update state + view
-    const topicOp = _revealTopic(relTopic, undefined, true,  dispatch)      // pos=undefined, select=true
-    const assocOp = _revealAssoc(relTopic.assoc,      false, dispatch)      //                select=false
+    const topicOp = _revealTopic(relTopic, undefined, select, dispatch)      // pos=undefined
+    const assocOp = _revealAssoc(relTopic.assoc,      false,  dispatch)      // select=false
     // console.log('revealRelatedTopic', topicOp, assocOp)
     // update server
     if (state.topicmapWritable) {
@@ -402,11 +401,13 @@ const actions = {
     detail && adjustDetailSize(detail)
   }, 300),
 
-  _syncPan () {
+  _syncPan (_, pan) {
+    // console.log('_syncPan', pan)
     updateAllDetailPos()
   },
 
   _syncZoom (_, zoom) {
+    // console.log('_syncZoom', zoom)
     state.zoom = zoom
   },
 
