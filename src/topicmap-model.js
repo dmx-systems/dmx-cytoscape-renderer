@@ -131,6 +131,8 @@ const actions = {
         dm5.restClient.addRelatedTopicToTopicmap(state.topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
       }
     }
+    //
+    autoRevealAssocs(relTopic.id)
   },
 
   /**
@@ -522,10 +524,20 @@ export default {
 // Update state + view
 
 /**
- * @param   topic   the topic to reveal (dm5.Topic).
- * @param   pos     Optional: the topic position in model coordinates (object with "x", "y" props).
- *                  If not given it's up to the topicmap renderer to position the topic.
- * @param   select  Optional: if trueish the revealed topic is selected programmatically.
+ * @param   id    a topic ID or an assoc ID
+ */
+function autoRevealAssocs (id) {
+  state.topicmap.getAssocsWithPlayer(id)
+    .filter(viewAssoc => state.topicmap.getOtherPlayer(viewAssoc, id).isVisible())
+    .forEach(viewAssoc => _revealAssoc(viewAssoc))
+}
+
+/**
+ * @param   topic     the topic to reveal (dm5.Topic).
+ * @param   pos       Optional: the topic position in model coordinates (object with "x", "y" props).
+ *                    If not given it's up to the topicmap renderer to position the topic.
+ * @param   select    Optional: if trueish the revealed topic is selected programmatically.
+ * @param   dispatch  only needed if `select` is trueish.
  */
 function _revealTopic (topic, pos, select, dispatch) {
   // update state
@@ -538,6 +550,11 @@ function _revealTopic (topic, pos, select, dispatch) {
   return op
 }
 
+/**
+ * @param   assoc     the assoc to reveal (dm5.Assoc).
+ * @param   select    Optional: if trueish the revealed assoc is selected programmatically.
+ * @param   dispatch  only needed if `select` is trueish.
+ */
 function _revealAssoc (assoc, select, dispatch) {
   // update state
   const op = state.topicmap.revealAssoc(assoc)
