@@ -102,6 +102,8 @@ const actions = {
         dm5.restClient.setTopicVisibility(state.topicmap.id, topic.id, true)
       }
     }
+    //
+    autoRevealAssocs(topic.id)
   },
 
   revealAssoc ({dispatch}, {assoc, select}) {
