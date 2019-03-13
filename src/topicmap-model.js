@@ -320,6 +320,7 @@ const actions = {
       viewTopic.setVisibility(visibility)                                 // update state
       if (visibility) {
         cyView.addTopic(viewTopic)                                        // update view
+        autoRevealAssocs(topicId)
       } else {
         state.topicmap.hideAssocsWithPlayer(topicId)                      // update state
         cyView.remove(topicId)                                            // update view
