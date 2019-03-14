@@ -532,7 +532,10 @@ export default {
 function autoRevealAssocs (id) {
   state.topicmap.getAssocsWithPlayer(id)
     .filter(viewAssoc => state.topicmap.getOtherPlayer(viewAssoc, id).isVisible())
-    .forEach(viewAssoc => _revealAssoc(viewAssoc))
+    .forEach(viewAssoc => {
+      _revealAssoc(viewAssoc)
+      autoRevealAssocs(viewAssoc.id)    // recursion
+    })
 }
 
 /**
