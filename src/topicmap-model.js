@@ -81,19 +81,17 @@ const actions = {
     return cyView.renderTopicmap(topicmap, selection).then(showPinnedDetails)
   },
 
-  // TODO: rename "reveal" functions to "show"/"render"?
-
   /**
    * Reveals a topic on the topicmap panel.
    *
    * @param   topic   the topic to reveal (dm5.Topic).
    * @param   pos     Optional: the topic position in model coordinates (object with "x", "y" props).
    *                  If not given it's up to the topicmap renderer to position the topic.
-   * @param   select  Optional: if trueish the revealed topic is selected programmatically.
    */
-  revealTopic ({dispatch}, {topic, pos, select}) {
+  renderTopic (_, {topic, pos}) {
     // update state + view
-    const op = _revealTopic(topic, pos, select, dispatch)
+    const op = _revealTopic(topic, pos)
+    autoRevealAssocs(topic.id)
     // update server
     if (state.topicmapWritable) {
       if (op.type === 'add') {
@@ -102,13 +100,11 @@ const actions = {
         dm5.restClient.setTopicVisibility(state.topicmap.id, topic.id, true)
       }
     }
-    //
-    autoRevealAssocs(topic.id)
   },
 
-  revealAssoc ({dispatch}, {assoc, select}) {
+  renderAssoc (_, assoc) {
     // update state + view
-    const op = _revealAssoc(assoc, select, dispatch)
+    const op = _revealAssoc(assoc)
     // update server
     if (state.topicmapWritable) {
       if (op.type === 'add') {
@@ -119,11 +115,11 @@ const actions = {
     }
   },
 
-  revealRelatedTopic ({dispatch}, {relTopic, select}) {
+  renderRelatedTopic (_, relTopic) {
     // update state + view
-    const topicOp = _revealTopic(relTopic, undefined, select, dispatch)      // pos=undefined
-    const assocOp = _revealAssoc(relTopic.assoc,      false,  dispatch)      // select=false
-    // console.log('revealRelatedTopic', topicOp, assocOp)
+    const topicOp = _revealTopic(relTopic)
+    const assocOp = _revealAssoc(relTopic.assoc)
+    autoRevealAssocs(relTopic.id)
     // update server
     if (state.topicmapWritable) {
       if (assocOp.type) {
@@ -133,8 +129,6 @@ const actions = {
         dm5.restClient.addRelatedTopicToTopicmap(state.topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
       }
     }
-    //
-    autoRevealAssocs(relTopic.id)
   },
 
   /**
@@ -542,33 +536,27 @@ function autoRevealAssocs (id) {
  * @param   topic     the topic to reveal (dm5.Topic).
  * @param   pos       Optional: the topic position in model coordinates (object with "x", "y" props).
  *                    If not given it's up to the topicmap renderer to position the topic.
- * @param   select    Optional: if trueish the revealed topic is selected programmatically.
- * @param   dispatch  only needed if `select` is trueish.
  */
-function _revealTopic (topic, pos, select, dispatch) {
+function _revealTopic (topic, pos) {
   // update state
   const op = state.topicmap.revealTopic(topic, pos)
   // update view
   if (op.type === 'add' || op.type === 'show') {
     cyView.addTopic(initPos(op.viewTopic))
   }
-  select && dispatch('callTopicRoute', topic.id)     // TODO: don't dispatch into host application
   return op
 }
 
 /**
  * @param   assoc     the assoc to reveal (dm5.Assoc).
- * @param   select    Optional: if trueish the revealed assoc is selected programmatically.
- * @param   dispatch  only needed if `select` is trueish.
  */
-function _revealAssoc (assoc, select, dispatch) {
+function _revealAssoc (assoc) {
   // update state
   const op = state.topicmap.revealAssoc(assoc)
   // update view
   if (op.type === 'add' || op.type === 'show') {
     cyView.addAssoc(op.viewAssoc)
   }
-  select && dispatch('callAssocRoute', assoc.id)     // TODO: don't dispatch into host application
   return op
 }
 
