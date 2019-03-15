@@ -110,7 +110,9 @@ const actions = {
       if (op.type === 'add') {
         dm5.restClient.addAssocToTopicmap(state.topicmap.id, assoc.id, op.viewAssoc.viewProps)
       } else if (op.type === 'show') {
-        dm5.restClient.setAssocVisibility(state.topicmap.id, assoc.id, true)    // FIXME: never called?
+        // Note: actually never called by DMX webclient. The "renderAssoc" action is only called after assoc creation;
+        // In this case op.type is always "add". In most cases assocs are revealed through "renderRelatedTopic" action.
+        dm5.restClient.setAssocVisibility(state.topicmap.id, assoc.id, true)
       }
     }
   },
