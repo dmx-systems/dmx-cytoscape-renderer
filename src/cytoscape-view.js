@@ -65,9 +65,12 @@ export default class CytoscapeView {
       // removed. So we must remove the edges first.
       cy.remove('edge')
       cy.remove('node')
-      cy.pan({
-        x: topicmap.viewProps['dmx.topicmaps.pan_x'],
-        y: topicmap.viewProps['dmx.topicmaps.pan_y']
+      cy.viewport({
+        pan: {
+          x: topicmap.viewProps['dmx.topicmaps.pan_x'],
+          y: topicmap.viewProps['dmx.topicmaps.pan_y']
+        },
+        zoom: topicmap.viewProps['dmx.topicmaps.zoom']
       })
       cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))
       ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
@@ -442,10 +445,11 @@ function eventHandlers () {
     }
   }).on('dragfreeon', e => {
     topicDrag(e.target)
-  }).on('pan', () => {
-    dispatch('_syncPan', cy.pan())
-  }).on('zoom', () => {
-    dispatch('_syncZoom', cy.zoom())
+  }).on('viewport', () => {
+    dispatch('_syncViewport', {
+      pan: cy.pan(),
+      zoom: cy.zoom()
+    })
   })
 }
 

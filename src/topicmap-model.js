@@ -58,7 +58,7 @@ const state = {
                   //    pinned    Getter. Whether the detail is pinned or not (Boolean)
                   //  }
 
-  zoom: 1         // TODO: real init value
+  zoom: 1         // TODO: real init value ### drop it? Also contained in topicmap viewprops
 }
 
 const actions = {
@@ -402,21 +402,16 @@ const actions = {
     detail && adjustDetailSize(detail)
   }, 300),
 
-  _syncPan (_, pan) {
-    // console.log('_syncPan', pan)
-    updateAllDetailPos()
-    //
+  _syncViewport (_, {pan, zoom}) {
+    // console.log('_syncViewport', pan, zoom)
     // update state
-    state.topicmap.setPan(pan)
+    state.topicmap.setViewport(pan, zoom)
+    state.zoom = zoom
+    Object.values(state.details).forEach(updateDetailPos)
     // update server
     if (state.topicmapWritable) {
-      dm5.restClient.setTopicmapPan(state.topicmap.id, pan)
+      dm5.restClient.setTopicmapViewport(state.topicmap.id, pan, zoom)
     }
-  },
-
-  _syncZoom (_, zoom) {
-    // console.log('_syncZoom', zoom)
-    state.zoom = zoom
   },
 
   _setModifiers (_, _modifiers) {
@@ -978,10 +973,6 @@ function updateDetail (object) {
   if (detail) {
     detail.object = object.isType() ? object.asType() : object    // logical copy in createDetail()
   }
-}
-
-function updateAllDetailPos () {
-  Object.values(state.details).forEach(updateDetailPos)
 }
 
 function listenPosition (detail) {
