@@ -406,8 +406,12 @@ const actions = {
     // console.log('_syncPan', pan)
     updateAllDetailPos()
     //
-    state.topicmap.setPan(pan)                                // update state
-    dm5.restClient.setTopicmapPan(state.topicmap.id, pan)     // update server
+    // update state
+    state.topicmap.setPan(pan)
+    // update server
+    if (state.topicmapWritable) {
+      dm5.restClient.setTopicmapPan(state.topicmap.id, pan)
+    }
   },
 
   _syncZoom (_, zoom) {
