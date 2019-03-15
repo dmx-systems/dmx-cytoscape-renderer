@@ -110,7 +110,7 @@ const actions = {
       if (op.type === 'add') {
         dm5.restClient.addAssocToTopicmap(state.topicmap.id, assoc.id, op.viewAssoc.viewProps)
       } else if (op.type === 'show') {
-        dm5.restClient.setAssocVisibility(state.topicmap.id, assoc.id, true)
+        dm5.restClient.setAssocVisibility(state.topicmap.id, assoc.id, true)    // FIXME: never called?
       }
     }
   },
@@ -403,6 +403,9 @@ const actions = {
   _syncPan (_, pan) {
     // console.log('_syncPan', pan)
     updateAllDetailPos()
+    //
+    state.topicmap.setPan(pan)                                // update state
+    dm5.restClient.setTopicmapPan(state.topicmap.id, pan)     // update server
   },
 
   _syncZoom (_, zoom) {
