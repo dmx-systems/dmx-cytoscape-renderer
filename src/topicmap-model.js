@@ -20,9 +20,11 @@ import CytoscapeView from './cytoscape-view'
 import Vue from 'vue'
 import dm5 from 'dm5'
 
-// These 2 properties + state.selection are initialized together by "renderTopicmap" action.
+// These 2 variables + state.selection are initialized together by "renderTopicmap" action.
 let _topicmap           // the rendered topicmap (dm5.Topicmap)
-let _topicmapWritable   // true if the current user has WRITE permission for the rendered topicmap
+let _topicmapWritable   // true if the current user has WRITE permission for the rendered topicmap (boolean)
+
+let _object             // the selected object (dm5.DMXObject)
 
 let cyView              // the CytoscapeView instance, initialized by "_initCytoscape" action
 let ele                 // The single selection: a selected Cytoscape element (node or edge). Undefined if there is no
@@ -34,18 +36,18 @@ let ele                 // The single selection: a selected Cytoscape element (n
                         // displayed in-map (unless pinned).
                         // ### TODO: introduce multi-selection state in this component?
 
-let modifiers = {}  // modifier keys
+let modifiers = {}      // modifier keys
 
 const state = {
 
-  selection: undefined,           // the selection model for the rendered topicmap (a Selection object, defined in
+  selection: undefined,           // The selection model for the rendered topicmap (a Selection object, defined in
                                   // dm5-topicmaps). Initialized together with _topicmap and _topicmapWritable by
                                   // "renderTopicmap" action.
-                                  // Note: dm5-detail component style is reactive based on "selection".
-  zoom: undefined,                // Note: dm5-detail component style is reactive based on "zoom".
+                                  // Note: dm5-detail component style updates reactively.
+  zoom: undefined,                // Note: dm5-detail component style updates reactively.
 
-  object: undefined,              // the selected object (dm5.DMXObject)
-  objectWritable: undefined,      // True if the current user has WRITE permission for the selected object
+  objectWritable: undefined,      // True if the current user has WRITE permission for the selected object (boolean).
+                                  // Note: the "writable" prop of the selected object's detail record updates reactively
 
   details: {}     // In-map details. Detail records keyed by object ID (created by createDetail() and
                   // createDetailForSelection()):
@@ -385,10 +387,11 @@ const actions = {
 
   _syncObject (_, object) {
     // console.log('_syncObject', object)
-    state.object = object
+    _object = object
   },
 
   _syncWritable (_, writable) {
+    // console.log('_syncWritable', writable)
     state.objectWritable = writable
   },
 
@@ -721,14 +724,13 @@ function _unpinAssocIfPinned (id) {
  * Auto-position topic if no position is set.
  */
 function initPos (viewTopic) {
-  // console.log('initPos', viewTopic.id, viewTopic.getViewProp('dmx.topicmaps.x') !== undefined,
-  //   state.object && state.object.id)
+  // console.log('initPos', viewTopic.id, viewTopic.getViewProp('dmx.topicmaps.x') !== undefined, _object && _object.id)
   if (viewTopic.getViewProp('dmx.topicmaps.x') === undefined) {
     const pos = {}
-    if (state.object) {
+    if (_object) {
       // If there is a single selection: place lower/right to the selected topic/assoc
       // TODO: more elaborated placement, e.g. at near free position?
-      const p = _topicmap.getPosition(state.object.id)
+      const p = _topicmap.getPosition(_object.id)
       pos.x = p.x + 60
       pos.y = p.y + 120
     } else {
@@ -888,7 +890,7 @@ function createDetail (viewObject) {
  * @return  the created detail record
  */
 function createDetailForSelection () {
-  // console.log('createDetailForSelection', state.object)
+  // console.log('createDetailForSelection', state.objectWritable)
   const id = eleId(ele)
   const node = cyView.detailNode(id)
   let viewObject
@@ -900,7 +902,7 @@ function createDetailForSelection () {
   }
   const detail = {
     id,
-    object: state.object,
+    object: _object,
     pos: node.renderedPosition(),
     size: undefined,
     get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
@@ -908,6 +910,7 @@ function createDetailForSelection () {
     },
     // Note: properties would not be reactive. With getters it works.
     get writable () {
+      // console.log('get writable', state.objectWritable)
       return state.objectWritable
     },
     get pinned () {
