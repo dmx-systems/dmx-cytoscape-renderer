@@ -40,14 +40,14 @@ let modifiers = {}      // modifier keys
 
 const state = {
 
+  objectWritable: undefined,      // True if the current user has WRITE permission for the selected object (boolean).
+                                  // Note: the "writable" prop of the selected object's detail record updates
+                                  // reactively. "_object" and "objectWritable" update together, but asynchronously.
   selection: undefined,           // The selection model for the rendered topicmap (a Selection object, defined in
                                   // dm5-topicmaps). Initialized together with _topicmap and _topicmapWritable by
                                   // "renderTopicmap" action.
                                   // Note: dm5-detail component style updates reactively.
   zoom: undefined,                // Note: dm5-detail component style updates reactively.
-
-  objectWritable: undefined,      // True if the current user has WRITE permission for the selected object (boolean).
-                                  // Note: the "writable" prop of the selected object's detail record updates reactively
 
   details: {}     // In-map details. Detail records keyed by object ID (created by createDetail() and
                   // createDetailForSelection()):
@@ -59,8 +59,8 @@ const state = {
                   //    pos       The position of the detail DOM.
                   //    size      The size (in pixel) of the detail DOM (object with "width" and "height" props).
                   //              Needed to calculate "pos".
-                  //    writable  Getter. True if the current user has WRITE permission for "object" (Boolean)
-                  //    pinned    Getter. Whether the detail is pinned or not (Boolean)
+                  //    writable  Getter. True if the current user has WRITE permission for "object" (boolean)
+                  //    pinned    Getter. Whether the detail is pinned (boolean)
                   //  }
 }
 
@@ -194,9 +194,11 @@ const actions = {
     // update state + view
     _setTopicPinned(topicId, pinned)
     // update server
-    dm5.restClient.setTopicViewProps(_topicmap.id, topicId, {    // FIXME: check _topicmapWritable?
-      'dmx.topicmaps.pinned': pinned
-    })
+    if (_topicmapWritable) {
+      dm5.restClient.setTopicViewProps(_topicmap.id, topicId, {
+        'dmx.topicmaps.pinned': pinned
+      })
+    }
   },
 
   setAssocPinned (_, {assocId, pinned}) {
@@ -204,9 +206,11 @@ const actions = {
     // update state + view
     _setAssocPinned(assocId, pinned)
     // update server
-    dm5.restClient.setAssocViewProps(_topicmap.id, assocId, {    // FIXME: check _topicmapWritable?
-      'dmx.topicmaps.pinned': pinned
-    })
+    if (_topicmapWritable) {
+      dm5.restClient.setAssocViewProps(_topicmap.id, assocId, {
+        'dmx.topicmaps.pinned': pinned
+      })
+    }
   },
 
   /**
@@ -440,7 +444,7 @@ const actions = {
    *            a promise resolved once topic/assoc data has arrived (global "object" state is up-to-date).
    *            Note: the detail's size can only be measured once "object" details are rendered.
    * @param   showDetails
-   *            whether to show topic/assoc in-map details (Boolean)
+   *            whether to show topic/assoc in-map details (boolean)
    */
   renderAsSelected (_, {id, p, showDetails}) {
     // console.log('renderAsSelected', id, showDetails)

@@ -291,7 +291,7 @@ const FUN = {
 }
 
 /**
- * Creates both the topic context menu and the assoc context menu.
+ * Creates the topic/assoc context menus.
  */
 function contextMenus (contextCommands) {
   // Note 1: no context menu (undefined) for "edge handle" nodes
