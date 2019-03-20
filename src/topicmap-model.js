@@ -508,24 +508,9 @@ const actions = {
   }
 }
 
-const getters = {
-
-  visibleTopicIds (state) {
-    // Note: at startup _topicmap is undefined
-    // console.log('visibleTopicIds getter', _topicmap)
-    return _topicmap && _topicmap.topics.filter(topic => topic.isVisible()).map(topic => topic.id)
-  },
-
-  visibleAssocIds (state) {
-    // console.log('visibleAssocIds getter', _topicmap)
-    return _topicmap && _topicmap.assocs.map(assoc => assoc.id)
-  }
-}
-
 export default {
   state,
-  actions,
-  getters
+  actions
 }
 
 // === DMX Model ===
