@@ -237,16 +237,15 @@ const actions = {
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
   _hideAssoc ({dispatch}, id) {
-    const assoc = _topicmap.getAssoc(id)
-    // If the assoc is already hidden nothing is performed. This can happen while hide-multi.
-    if (!assoc.isVisible()) {
+    // If the assoc is not in the topicmap nothing is performed. This can happen while hide-multi.
+    if (!_topicmap.hasAssoc(id)) {
       return
     }
     //
     unpinAssocIfPinned(id, dispatch)
     // update state
-    _topicmap.hideAssocsWithPlayer(id)
-    assoc.setVisibility(false)
+    _topicmap.removeAssocsWithPlayer(id)
+    _topicmap.removeAssoc(id)
     // update view
     cyView.remove(id)
   },
@@ -334,12 +333,13 @@ const actions = {
   _setAssocVisibility (_, {topicmapId, assocId, visibility}) {
     // console.log('_setAssocVisibility (Cytoscape Renderer)')
     if (topicmapId === _topicmap.id) {
-      const viewAssoc = _topicmap.getAssoc(assocId)
-      viewAssoc.setVisibility(visibility)                                 // update state
       if (visibility) {
+        const viewAssoc = _topicmap.getAssoc(assocId)
+        viewAssoc.setVisibility(visibility)                               // update state
         cyView.addAssoc(viewAssoc)                                        // update view
       } else {
-        _topicmap.hideAssocsWithPlayer(assocId)                           // update state
+        _topicmap.removeAssocsWithPlayer(assocId)                         // update state
+        _topicmap.removeAssoc(assocId)                                    // update state
         cyView.remove(assocId)                                            // update view
       }
     }
