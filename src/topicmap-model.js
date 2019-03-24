@@ -618,7 +618,7 @@ function updateAssoc (assoc) {
  * Processes a DELETE_TOPIC directive.
  */
 function deleteTopic (topic) {
-  // FIXME: remove topic from *all* topicmaps
+  // FIXME: remove topic from *all* topicmaps -> must be handled by topicmaps module
   const viewTopic = _topicmap.getTopicIfExists(topic.id)
   if (viewTopic) {
     // Note: _topicmap.removeAssocsWithPlayer() is not called here (compare to _deleteTopic() action above).
@@ -628,7 +628,7 @@ function deleteTopic (topic) {
     // update state
     _topicmap.removeTopic(topic.id)
     // update view
-    if (viewTopic.isVisible()) {
+    if (viewTopic.isVisible()) {    // TODO: check needed? Why no check at deleteAssoc()?
       cyView.remove(topic.id)
     }
   }
@@ -638,7 +638,7 @@ function deleteTopic (topic) {
  * Processes a DELETE_ASSOCIATION directive.
  */
 function deleteAssoc (assoc) {
-  // FIXME: remove assoc from *all* topicmaps
+  // FIXME: remove assoc from *all* topicmaps -> must be handled by topicmaps module
   const viewAssoc = _topicmap.getAssocIfExists(assoc.id)
   if (viewAssoc) {
     // FIXME: remove assocs with player as well?
@@ -673,16 +673,19 @@ function updateTopicIcons (typeUri) {
  * Processes an UPDATE_ASSOCIATION_TYPE directive.
  */
 function updateAssocColors (typeUri) {
-  _topicmap.assocs.filter(assoc => assoc.typeUri === typeUri).forEach(assoc => {
-    // Note: no state update here. Assoc color is not part of ViewAssoc but computed based on type definition.
-    // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
-    // processes directives.
-    //
-    // update view
-    cyView.updateAssoc(assoc.id, {
-      color: assoc.color
+  _topicmap.assocs
+    .filter(assoc => assoc.typeUri === typeUri)
+    .filter(assoc => assoc.isVisible())
+    .forEach(assoc => {
+      // Note: no state update here. Assoc color is not part of ViewAssoc but computed based on type definition.
+      // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
+      // processes directives.
+      //
+      // update view
+      cyView.updateAssoc(assoc.id, {
+        color: assoc.color
+      })
     })
-  })
 }
 
 // Pinning
