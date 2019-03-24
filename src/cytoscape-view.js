@@ -88,12 +88,10 @@ export default class CytoscapeView {
 
   /**
    * Removes an element from the graph.
-   * If no such element is in the graph nothing is performed.
    */
   remove (id) {
-    _cyElement(id).remove()
-    // Note 1: the connected edges are removed automatically by Cytoscape
-    // Note 2: in case of hide-multi an edge might be removed already. remove() is a no-op then.
+    cyElement(id).remove()
+    // Note: when removing a node Cytoscape removes the connected edges automatically
   }
 
   selectById (id) {

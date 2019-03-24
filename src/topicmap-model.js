@@ -241,17 +241,15 @@ const actions = {
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
   _hideAssoc ({dispatch}, id) {
-    // If the assoc is not in the topicmap nothing is performed. This can happen while hide-multi.
-    if (!_topicmap.hasAssoc(id)) {
-      return
-    }
-    //
     unpinAssocIfPinned(id, dispatch)
     // update state
+    const assoc = _topicmap.getAssoc(id)
     _topicmap.removeAssocsWithPlayer(id)
     _topicmap.removeAssoc(id)
     // update view
-    cyView.remove(id)
+    if (assoc.isVisible()) {    // Note: while hide-multi assocs implicitly hidden through hide-topic are
+      cyView.remove(id)         // removed from view already
+    }
   },
 
   /**
