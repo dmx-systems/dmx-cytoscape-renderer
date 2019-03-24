@@ -66,6 +66,8 @@ const state = {
 
 const actions = {
 
+  // Topicmap Panel protocol
+
   fetchTopicmap (_, id) {
     // console.log('fetchTopicmap', id, '(topicmap-model)')
     return dm5.restClient.getTopicmap(id)
@@ -83,6 +85,8 @@ const actions = {
     state.details = {}
     return cyView.renderTopicmap(topicmap, selection).then(showPinnedDetails)
   },
+
+  // Topicmap type specific actions
 
   /**
    * Reveals a topic on the topicmap panel.
@@ -601,10 +605,12 @@ function updateAssoc (assoc) {
     viewAssoc.value = assoc.value
     viewAssoc.typeUri = assoc.typeUri
     // update view
-    cyView.updateAssoc(assoc.id, {
-      label: assoc.value,
-      color: assoc.color
-    })
+    if (viewAssoc.isVisible()) {
+      cyView.updateAssoc(assoc.id, {
+        label: assoc.value,
+        color: assoc.color
+      })
+    }
   }
 }
 
