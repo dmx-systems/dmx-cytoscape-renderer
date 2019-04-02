@@ -10,11 +10,11 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
     * Auto assoc revelation
     * Persistent topicmap pan/zoom state
     * Support for assoc visibility
-* Composability: don't dispatch into host app (no router calls)
 * API: add `select` param to `revealRelatedTopic()` action 
 * Fixes:
     * Positioning of rotated assoc labels
     * Pin/unpin when lacking write permission
+* Composability: don't dispatch into host app (no router calls)
 
 **0.17** -- Mar 2, 2019
 
