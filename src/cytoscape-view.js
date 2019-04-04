@@ -311,16 +311,33 @@ function contextMenus (contextCommands) {
 
   function commands (kind, id) {
     const danger = modifiers.alt
-    return contextCommands[kind + (danger ? '_danger' : '')].map(cmd => {
+    // map DMX command defs to Cytoscape commands;
+    // the "commands" array will contain commands and/or command promises
+    const commands = contextCommands[kind + (danger ? '_danger' : '')].map(cmd => {
       const arg = FUN[kind].handlerArg(id, cmd)
-      const disabled = cmd.disabled && cmd.disabled(arg)
-      return {
+      const command = {
         content: cmd.label,
         select: ele => cmd.handler(arg),
-        disabled: disabled || !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection(),
+        // disable command in face of a multi selection when the command does not support multi
+        disabled: !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection(),
         ...danger ? {fillColor: 'rgba(200, 0, 0, 0.75)'} : undefined
       }
+      // a command can be also disabled by a user-defined "disabled" callback;
+      // the "disabled" callback is expected to return a boolean or a boolean promise
+      if (!command.disabled && cmd.disabled) {
+        const disabled = cmd.disabled(arg)
+        if (disabled instanceof Promise) {
+          return disabled.then(disabled => {
+            command.disabled = disabled
+            return command
+          })
+        } else {
+          command.disabled = disabled
+        }
+      }
+      return command
     })
+    return Promise.all(commands)
   }
 }
 
