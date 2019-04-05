@@ -296,12 +296,10 @@ function contextMenus (contextCommands) {
   // Note 2: for (expanded) "aux nodes" show the *assoc* context menu
   cy.cxtmenu({
     selector: 'node',
-    commands: ele => {
-      if (isEdgeHandle(ele)) {
-        return
-      }
-      return ec.isAuxNode(ele) ? commands('assoc', edgeId(ele)) : commands('topic', id(ele))
-    },
+    commands: ele =>
+      isEdgeHandle(ele) ? [] :
+      ec.isAuxNode(ele) ? commands('assoc', edgeId(ele)) :
+                          commands('topic', id(ele)),
     atMouse: true
   })
   cy.cxtmenu({
@@ -322,7 +320,7 @@ function contextMenus (contextCommands) {
         disabled: !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection(),
         ...danger ? {fillColor: 'rgba(200, 0, 0, 0.75)'} : undefined
       }
-      // a command can be also disabled by a user-defined "disabled" callback;
+      // a command can also be disabled by a user-defined "disabled" callback;
       // the "disabled" callback is expected to return a boolean or a boolean promise
       if (!command.disabled && cmd.disabled) {
         const disabled = cmd.disabled(arg)
