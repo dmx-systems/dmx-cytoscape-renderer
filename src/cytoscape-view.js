@@ -159,6 +159,10 @@ export default class CytoscapeView {
     cy.fit(undefined, 10)
   }
 
+  reset () {
+    cy.zoom(1).center()
+  }
+
   resize () {
     cy.resize()
   }

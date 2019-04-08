@@ -508,6 +508,10 @@ const actions = {
     cyView.fit()
   },
 
+  resetTopicmapViewport () {
+    cyView.reset()
+  },
+
   resizeTopicmapRenderer () {
     // console.log('resizeTopicmapRenderer')
     cyView.resize()
