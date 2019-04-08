@@ -504,6 +504,10 @@ const actions = {
     removeSelectionDetail()
   },
 
+  fitTopicmapViewport () {
+    cyView.fit()
+  },
+
   resizeTopicmapRenderer () {
     // console.log('resizeTopicmapRenderer')
     cyView.resize()

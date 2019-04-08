@@ -155,6 +155,10 @@ export default class CytoscapeView {
     return ele.isNode() ? ele : ec.auxNode(ele)
   }
 
+  fit () {
+    cy.fit(undefined, 10)
+  }
+
   resize () {
     cy.resize()
   }
@@ -324,7 +328,7 @@ function contextMenus (contextCommands) {
       // the "disabled" callback is expected to return a boolean or a boolean promise
       if (!command.disabled && cmd.disabled) {
         const disabled = cmd.disabled(arg)
-        if (disabled instanceof Promise) {
+        if (disabled instanceof Promise) {      // TODO: async/await will remove code doubling
           return disabled.then(disabled => {
             command.disabled = disabled
             return command
