@@ -37,6 +37,7 @@ let selection           // the selection model for the rendered topicmap (a Sele
 cytoscape.warnings(false)
 
 // register extensions
+cytoscape.use(require('cytoscape-autopan-on-drag'))
 cytoscape.use(require('cytoscape-cose-bilkent'))
 cytoscape.use(require('cytoscape-cxtmenu'))
 cytoscape.use(require('cytoscape-edgehandles'))
@@ -51,6 +52,7 @@ export default class CytoscapeView {
     dispatch  = _dispatch
     cy = instantiateCy(container)
     ec = cy.edgeConnections()
+    cy.autopanOnDrag()
     contextMenus(contextCommands)
     edgeHandles()
     eventHandlers()
