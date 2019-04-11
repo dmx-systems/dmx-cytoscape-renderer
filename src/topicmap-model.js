@@ -163,12 +163,12 @@ const actions = {
    * - the view is up-to-date
    * - the server is *not* yet up-to-date
    *
-   * @param   coords    array of 3-prop objects: 'topicId', 'x', 'y'
+   * @param   topicCoords    array of 3-prop objects: 'topicId', 'x', 'y'
    */
-  setTopicPositions (_, coords) {
-    // console.log('setTopicPositions', coords)
+  setTopicPositions (_, topicCoords) {
+    // console.log('setTopicPositions', topicCoords)
     // update state
-    coords.forEach(coord =>
+    topicCoords.forEach(coord =>
       _topicmap.getTopic(coord.topicId).setPosition({
         x: coord.x,
         y: coord.y
@@ -177,7 +177,7 @@ const actions = {
     // update view (up-to-date already)
     // update server
     if (_topicmapWritable) {
-      dm5.restClient.setTopicPositions(_topicmap.id, coords)
+      dm5.restClient.setTopicPositions(_topicmap.id, topicCoords)
     }
   },
 
