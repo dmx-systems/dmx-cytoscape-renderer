@@ -308,8 +308,8 @@ function contextMenus (contextCommands) {
     selector: 'node',
     commands: ele =>
       isEdgeHandle(ele) ? [] :
-      ec.isAuxNode(ele) ? commands('assoc', edgeId(ele)) :
-                          commands('topic', id(ele)),
+      isAuxNode(ele) ? commands('assoc', edgeId(ele)) :
+                       commands('topic', id(ele)),
     atMouse: true
   })
   cy.cxtmenu({
@@ -383,7 +383,7 @@ function edgeHandles () {
   cy.edgehandles({
     preview: false,
     handlePosition (node) {
-      return !ec.isAuxNode(node) ? 'middle top' : 'middle middle'
+      return !isAuxNode(node) ? 'middle top' : 'middle middle'
     },
     complete: (sourceNode, targetNode, addedEles) => {
       // console.log('complete', sourceNode, targetNode, addedEles)
@@ -426,21 +426,23 @@ function offUnselectHandlers () {
     .off('unselect', 'edge', onUnselectEdge)
 }
 
+/**
+ * @param   suffix    'select' or 'unselect'
+ */
 function nodeHandler (suffix) {
-  // Note: a node might be an "auxiliary" node, that is a node that represents an edge.
-  // In this case the original edge ID is contained in the node's "edgeId" data.
   return e => {
     const assocId = edgeId(e.target)
     if (assocId) {
-      if (suffix === 'select') {    // aux nodes don't emit assoc-unselect events
-        parent.$emit('assoc-' + suffix, assocId)
-      }
+      parent.$emit('assoc-' + suffix, assocId)
     } else {
       parent.$emit('topic-' + suffix, id(e.target))
     }
   }
 }
 
+/**
+ * @param   suffix    'select' or 'unselect'
+ */
 function edgeHandler (suffix) {
   return e => {
     parent.$emit('assoc-' + suffix, id(e.target))
@@ -477,7 +479,7 @@ function eventHandlers () {
 }
 
 function topicDrag (node) {
-  if (!ec.isAuxNode(node)) {    // aux nodes don't emit topic-drag events
+  if (!isAuxNode(node)) {    // aux nodes don't emit topic-drag events
     if (isTopicSelected(id(node)) && isMultiSelection()) {
       // console.log('drag multi', selection.topicIds)
       emitTopicsDrag()
@@ -516,11 +518,11 @@ function playFisheyeAnimation() {
     name: 'cose-bilkent',
     fit: false,
     /* animateFilter: (node, i) => {
-      if (ec.isAuxNode(node)) {
-        console.log(node.id(), ec.isAuxNode(node), node.position(), node.renderedPosition())
+      if (isAuxNode(node)) {
+        console.log(node.id(), isAuxNode(node), node.position(), node.renderedPosition())
         // return false
       }
-      return true // !ec.isAuxNode(node)
+      return true // !isAuxNode(node)
     }, */
     randomize: false,
     nodeRepulsion: 0,
@@ -588,6 +590,10 @@ function isMultiSelection () {
 function playerId (node) {
   const _edgeId = edgeId(node)
   return !_edgeId ? {topicId: id(node)} : {assocId: _edgeId}
+}
+
+function isAuxNode (node) {
+  return ec.isAuxNode(node)
 }
 
 function edgeId (node) {
