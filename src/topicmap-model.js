@@ -432,7 +432,7 @@ const actions = {
 
   /**
    * Renders a topic/assoc as selected, and the previously selected one as unselected, if any.
-   * Shows in-map details and plays the fisheye animation.
+   * If requested: shows in-map details and plays the fisheye animation.
    *
    * Precondition:
    * - the topicmap rendering is complete
@@ -752,6 +752,9 @@ function initPos (viewTopic) {
  * Unselects the selected element, removes the corresponding detail from screen (if not pinned), and plays the restore
  * animation.
  *
+ * Note: the fisheye animation is *not* played. unselectElement() is a low-level function, possibly be be executed as
+ * part of a render-as-selected operation which is responsible for playing the fisheye animation.
+ *
  * Precondition:
  * - an element is selected
  *
@@ -784,6 +787,7 @@ function unselectElement () {
  */
 function removeSelectionDetail () {
   const detail = selectionDetail()
+  // console.log('removeSelectionDetail', detail)
   // Note: the detail record might be removed meanwhile due to async operation (TODO: why excatly?)
   if (!detail) {
     // Note: this is expected behavior if in-map detail are not shown. To avoid this condition more complex state
@@ -842,11 +846,11 @@ function _detail (id) {
 
 function showPinnedDetails () {
   _topicmap.topics
-    .filter(viewTopic => viewTopic.isPinned() && viewTopic.isVisible())
-    .forEach(viewTopic => createDetail(viewTopic).then(showDetail))
+    .filter(topic => topic.isPinned() && topic.isVisible())
+    .forEach(topic => createDetail(topic).then(showDetail))
   _topicmap.assocs
-    .filter(viewAssoc => viewAssoc.isPinned())
-    .forEach(viewAssoc => createDetail(viewAssoc).then(showDetail))
+    .filter(assoc => assoc.isPinned() && assoc.isVisible())
+    .forEach(assoc => createDetail(assoc).then(showDetail))
   return _topicmap
 }
 

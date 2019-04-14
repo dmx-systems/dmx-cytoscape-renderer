@@ -47,6 +47,8 @@ export default {
 
   computed: {
 
+    // Note: 'dmx.topicmaps.topicmap' is the URI of the Topicmap Type this topicmap renderer is able to render.
+    // The dm5-topicmap-panel module registers this topicmap renderer's store module by this URI.
     ...mapState({
       selection: state => state['dmx.topicmaps.topicmap'].selection,
       zoom:      state => state['dmx.topicmaps.topicmap'].zoom
