@@ -224,8 +224,8 @@ const actions = {
    * Note: there is no high-level action to hide a single topic.
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
-  _hideTopic ({dispatch}, id) {
-    unpinTopicIfPinned(id, dispatch)
+  _hideTopic (_, id) {
+    unpinTopicIfPinned(id)
     // update state
     _topicmap.hideAssocsWithPlayer(id)
     _topicmap.getTopic(id).setVisibility(false)
@@ -240,8 +240,8 @@ const actions = {
    * Note: there is no high-level action to hide a single assoc.
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
-  _hideAssoc ({dispatch}, id) {
-    unpinAssocIfPinned(id, dispatch)
+  _hideAssoc (_, id) {
+    unpinAssocIfPinned(id)
     // update state
     const assoc = _topicmap.getAssoc(id)
     _topicmap.removeAssocsWithPlayer(id)
@@ -260,7 +260,7 @@ const actions = {
    * Deleting is always performed as a multi-operation, that is in a single request.
    */
   _deleteTopic (_, id) {
-    _unpinTopicIfPinned(id)
+    unpinTopicIfPinned(id)
     // update state
     _topicmap.removeAssocsWithPlayer(id)
     _topicmap.removeTopic(id)
@@ -281,7 +281,7 @@ const actions = {
       return
     }
     //
-    _unpinAssocIfPinned(id)
+    unpinAssocIfPinned(id)
     // update state
     _topicmap.removeAssocsWithPlayer(id)
     _topicmap.removeAssoc(id)
@@ -567,20 +567,6 @@ function _revealAssoc (assoc) {
   return op
 }
 
-function _setTopicPinned (topicId, pinned) {
-  // update state
-  _topicmap.getTopic(topicId).setPinned(pinned)
-  // update view
-  _syncPinned(topicId, pinned)
-}
-
-function _setAssocPinned (assocId, pinned) {
-  // update state
-  _topicmap.getAssoc(assocId).setPinned(pinned)
-  // update view
-  _syncPinned(assocId, pinned)
-}
-
 // Process directives
 
 /**
@@ -696,29 +682,36 @@ function updateAssocColors (typeUri) {
 
 // Pinning
 
-function unpinTopicIfPinned (id, dispatch) {
+function unpinTopicIfPinned (id) {
   if (_topicmap.getTopic(id).isPinned()) {
-    // TODO: don't send request. Make unpin implicit to hide at server-side.
-    dispatch('setTopicPinned', {topicId: id, pinned: false})      // update state + view + server
+    _setTopicPinned(id, false)      // update state + view
   }
 }
 
-function unpinAssocIfPinned (id, dispatch) {
+function unpinAssocIfPinned (id) {
   if (_topicmap.getAssoc(id).isPinned()) {
-    // TODO: don't send request. Make unpin implicit to hide at server-side.
-    dispatch('setAssocPinned', {assocId: id, pinned: false})      // update state + view + server
+    _setAssocPinned(id, false)      // update state + view
   }
 }
 
-function _unpinTopicIfPinned (id) {
-  if (_topicmap.getTopic(id).isPinned()) {
-    _setTopicPinned(id, false)                                    // update state + view
-  }
+function _setTopicPinned (topicId, pinned) {
+  // update state
+  _topicmap.getTopic(topicId).setPinned(pinned)
+  // update view
+  _syncPinned(topicId, pinned)
 }
 
-function _unpinAssocIfPinned (id) {
-  if (_topicmap.getAssoc(id).isPinned()) {
-    _setAssocPinned(id, false)                                    // update state + view
+function _setAssocPinned (assocId, pinned) {
+  // update state
+  _topicmap.getAssoc(assocId).setPinned(pinned)
+  // update view
+  _syncPinned(assocId, pinned)
+}
+
+function _syncPinned (id, pinned) {
+  // console.log('_syncPinned', id, pinned)
+  if (!pinned && !isSelected(id)) {
+    removeDetail(detail(id)).then(playFisheyeAnimationIfDetailsOnscreen)
   }
 }
 
@@ -821,13 +814,6 @@ function playRestoreAnimation () {
     .filter(viewTopic => viewTopic.isVisible())
     .map(viewTopic => cyView.updateTopicPos(viewTopic.id, viewTopic.getPosition()))
   )
-}
-
-function _syncPinned (id, pinned) {
-  // console.log('_syncPinned', id, pinned)
-  if (!pinned && !isSelected(id)) {
-    removeDetail(detail(id)).then(playFisheyeAnimationIfDetailsOnscreen)
-  }
 }
 
 function detail (id) {
