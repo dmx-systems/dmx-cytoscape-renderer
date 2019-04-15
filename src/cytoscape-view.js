@@ -328,8 +328,7 @@ function contextMenus (contextCommands) {
         content: cmd.label,
         select: ele => cmd.handler(arg),
         // disable command in face of a multi selection when the command does not support multi
-        disabled: !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection(),
-        ...danger ? {fillColor: 'rgba(200, 0, 0, 0.75)'} : undefined
+        disabled: !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection()
       }
       // a command can also be disabled by a user-defined "disabled" callback;
       // the "disabled" callback is expected to return a boolean or a boolean promise
@@ -338,15 +337,31 @@ function contextMenus (contextCommands) {
         if (disabled instanceof Promise) {      // TODO: async/await will remove code doubling
           return disabled.then(disabled => {
             command.disabled = disabled
+            setColor(command, danger)
             return command
           })
         } else {
           command.disabled = disabled
         }
       }
+      setColor(command, danger)
       return command
     })
     return Promise.all(commands)
+  }
+
+  function setColor(command, danger) {
+    if (command.disabled) {
+      if (danger) {
+        command.fillColor = 'rgba(200, 80, 80, 0.75)'
+        command.contentStyle = {color: 'hsl(0, 50%, 80%)'}
+      } else {
+        command.fillColor = 'rgba(100, 100, 100, 0.75)'
+        command.contentStyle = {color: 'hsl(0, 0%, 70%)'}
+      }
+    } else if (danger) {
+      command.fillColor = 'rgba(200, 0, 0, 0.75)'
+    }
   }
 }
 
