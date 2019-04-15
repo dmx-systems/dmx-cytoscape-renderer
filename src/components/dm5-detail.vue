@@ -98,13 +98,8 @@ export default {
         return this.detail.pinned
       },
       set (pinned) {
-        if (this.object.isTopic()) {
-          // TODO: decoupling. Emit events instead of dispatching actions.
-          this.$store.dispatch('setTopicPinned', {topicId: this.object.id, pinned})
-        } else {
-          // TODO: decoupling. Emit events instead of dispatching actions.
-          this.$store.dispatch('setAssocPinned', {assocId: this.object.id, pinned})
-        }
+        const event = this.object.isTopic() ? 'topic-pin' : 'assoc-pin'
+        this.parent.$emit(event, {id: this.object.id, pinned})
       }
     },
 
