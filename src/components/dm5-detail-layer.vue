@@ -1,8 +1,7 @@
 <template>
   <div class="dm5-detail-layer">
     <dm5-detail v-for="detail in details" :detail="detail" :detail-renderers="detailRenderers"
-      :quill-config="quillConfig" :key="detail.node.id()" @object-submit="submitObject"
-      @child-topic-reveal="revealChildTopic">
+      :quill-config="quillConfig" :key="detail.node.id()">
     </dm5-detail>
   </div>
 </template>
@@ -25,17 +24,6 @@ export default {
         // console.log('Cytoscape renderer not available')
       }
       return topicmapModel && topicmapModel.details
-    }
-  },
-
-  methods: {
-
-    submitObject (object) {
-      this.$emit('object-submit', object)
-    },
-
-    revealChildTopic (relTopic) {
-      this.$emit('child-topic-reveal', relTopic)
     }
   },
 

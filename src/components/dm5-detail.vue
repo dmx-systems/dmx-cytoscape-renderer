@@ -41,7 +41,9 @@ export default {
 
   data () {
     return {
-      locked: true
+      locked: true,
+      // The component used as event emitter; it's the topicmap renderers parent component
+      parent: this.$parent.$parent.$parent
     }
   },
 
@@ -126,12 +128,12 @@ export default {
 
     setInlineId (id) {
       if (!id) {
-        this.$emit('object-submit', this.object)
+        this.parent.$emit('object-submit', this.object)
       }
     },
 
     revealChildTopic (relTopic) {
-      this.$emit('child-topic-reveal', relTopic)
+      this.parent.$emit('child-topic-reveal', relTopic)
     },
 
     updated () {

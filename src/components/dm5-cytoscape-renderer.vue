@@ -2,9 +2,7 @@
   <div class="dm5-cytoscape-renderer" @mousedown.capture="mousedown">
     <div class="cytoscape-container" ref="cytoscape-container"></div>
     <div class="measurement-box" ref="measurement-box"></div>
-    <dm5-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig"
-      @object-submit="submitObject" @child-topic-reveal="revealChildTopic">
-    </dm5-detail-layer>
+    <dm5-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig"></dm5-detail-layer>
   </div>
 </template>
 
@@ -22,8 +20,8 @@ export default {
     // console.log('dm5-cytoscape-renderer mounted')
     this.$store.dispatch('_initCytoscape', {
       parent:          this.$parent,
-      container:       this.$refs['cytoscape-container'],
-      box:             this.$refs['measurement-box'],
+      container:       this.$refs['cytoscape-container'],     // only known in mounted()
+      box:             this.$refs['measurement-box'],         // only known in mounted()
       contextCommands: this.contextCommands
     })
   },
@@ -58,15 +56,6 @@ export default {
   },
 
   methods: {
-
-    submitObject (object) {
-      this.$parent.$emit('object-submit', object)
-    },
-
-    revealChildTopic (relTopic) {
-      this.$parent.$emit('child-topic-reveal', relTopic)
-    },
-
     mousedown (e) {
       this.$store.dispatch('_setModifiers', {alt: e.altKey})
     }
