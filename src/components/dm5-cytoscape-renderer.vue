@@ -57,7 +57,12 @@ export default {
 
   methods: {
     mousedown (e) {
-      this.$store.dispatch('_setModifiers', {alt: e.altKey})
+      this.$store.dispatch('_setModifiers', {
+        alt: e.altKey,
+        ctrl: e.ctrlKey,
+        meta: e.metaKey,
+        shift: e.shiftKey
+      })
     }
   },
 

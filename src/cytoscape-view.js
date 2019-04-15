@@ -318,7 +318,8 @@ function contextMenus (contextCommands) {
   })
 
   function commands (kind, id) {
-    const danger = modifiers.alt
+    // any modifier key will invoke "danger zone" menu
+    const danger = modifiers.alt || modifiers.ctrl || modifiers.meta || modifiers.shift
     // map DMX command defs to Cytoscape commands;
     // the "commands" array will contain commands and/or command promises
     const commands = contextCommands[kind + (danger ? '_danger' : '')].map(cmd => {

@@ -425,7 +425,7 @@ const actions = {
   },
 
   _setModifiers (_, _modifiers) {
-    modifiers.alt = _modifiers.alt
+    Object.assign(modifiers, _modifiers)
   },
 
   // Cross-Module
