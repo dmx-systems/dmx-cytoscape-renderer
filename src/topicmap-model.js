@@ -193,10 +193,10 @@ const actions = {
     }
   },
 
-  setTopicPinned (_, {topicId, pinned}) {
-    console.log('setTopicPinned', topicId, pinned)
+  setTopicPinned (_, {topicId, pinned, showDetails}) {
+    // console.log('setTopicPinned', topicId, pinned, showDetails)
     // update state + view
-    _setTopicPinned(topicId, pinned)
+    _setTopicPinned(topicId, pinned, showDetails)
     // update server
     if (_topicmapWritable) {
       dm5.restClient.setTopicViewProps(_topicmap.id, topicId, {
@@ -205,10 +205,10 @@ const actions = {
     }
   },
 
-  setAssocPinned (_, {assocId, pinned}) {
-    console.log('setAssocPinned', assocId, pinned)
+  setAssocPinned (_, {assocId, pinned, showDetails}) {
+    // console.log('setAssocPinned', assocId, pinned, showDetails)
     // update state + view
-    _setAssocPinned(assocId, pinned)
+    _setAssocPinned(assocId, pinned, showDetails)
     // update server
     if (_topicmapWritable) {
       dm5.restClient.setAssocViewProps(_topicmap.id, assocId, {
@@ -684,33 +684,33 @@ function updateAssocColors (typeUri) {
 
 function unpinTopicIfPinned (id) {
   if (_topicmap.getTopic(id).isPinned()) {
-    _setTopicPinned(id, false)      // update state + view
+    _setTopicPinned(id, false, false)     // update state + view
   }
 }
 
 function unpinAssocIfPinned (id) {
   if (_topicmap.getAssoc(id).isPinned()) {
-    _setAssocPinned(id, false)      // update state + view
+    _setAssocPinned(id, false, false)     // update state + view
   }
 }
 
-function _setTopicPinned (topicId, pinned) {
+function _setTopicPinned (topicId, pinned, showDetails) {
   // update state
   _topicmap.getTopic(topicId).setPinned(pinned)
   // update view
-  _syncPinned(topicId, pinned)
+  removeDetailIfUnpinned(topicId, pinned, showDetails)
 }
 
-function _setAssocPinned (assocId, pinned) {
+function _setAssocPinned (assocId, pinned, showDetails) {
   // update state
   _topicmap.getAssoc(assocId).setPinned(pinned)
   // update view
-  _syncPinned(assocId, pinned)
+  removeDetailIfUnpinned(assocId, pinned, showDetails)
 }
 
-function _syncPinned (id, pinned) {
-  // console.log('_syncPinned', id, pinned)
-  if (!pinned && !isSelected(id)) {
+function removeDetailIfUnpinned (id, pinned, showDetails) {
+  // console.log('removeDetailIfUnpinned', id, pinned, showDetails, isSelected(id))
+  if (!pinned && (!isSelected(id) || !showDetails)) {
     removeDetail(detail(id)).then(playFisheyeAnimationIfDetailsOnscreen)
   }
 }
