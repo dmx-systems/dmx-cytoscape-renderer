@@ -225,10 +225,10 @@ const actions = {
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
   _hideTopic (_, id) {
-    unpinTopicIfPinned(id)
+    hideAssocsWithPlayer(id)    // update state + view
     // update state
-    _topicmap.hideAssocsWithPlayer(id)
     _topicmap.getTopic(id).setVisibility(false)
+    _removeDetailIfOnscreen(id)
     // update view
     cyView.remove(id)
   },
@@ -241,14 +241,14 @@ const actions = {
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
   _hideAssoc (_, id) {
-    unpinAssocIfPinned(id)
+    removeAssocsWithPlayer(id)    // Note: topicmap contexts of *explicitly* hidden assocs are removed
     // update state
     const assoc = _topicmap.getAssoc(id)
-    _topicmap.removeAssocsWithPlayer(id)
-    _topicmap.removeAssoc(id)
+    _topicmap.removeAssoc(id)     // Note: topicmap contexts of *explicitly* hidden assocs are removed
+    _removeDetailIfOnscreen(id)
     // update view
-    if (assoc.isVisible()) {    // Note: while hide-multi assocs implicitly hidden through hide-topic are
-      cyView.remove(id)         // removed from view already
+    if (assoc.isVisible()) {      // Note: while hide-multi assocs implicitly hidden through hide-topic are
+      cyView.remove(id)           // ... removed from view already
     }
   },
 
@@ -527,6 +527,22 @@ export default {
 
 // Update state + view
 
+function hideAssocsWithPlayer (id) {
+  _topicmap.getAssocsWithPlayer(id).forEach(assoc => {
+    assoc.setVisibility(false)
+    _removeDetailIfOnscreen(assoc.id)
+    hideAssocsWithPlayer(assoc.id)        // recursion
+  })
+}
+
+function removeAssocsWithPlayer (id) {
+  _topicmap.getAssocsWithPlayer(id).forEach(assoc => {
+    _topicmap.removeAssoc(assoc.id)
+    _removeDetailIfOnscreen(assoc.id)
+    removeAssocsWithPlayer(assoc.id)      // recursion
+  })
+}
+
 /**
  * @param   id    a topic ID or an assoc ID
  */
@@ -535,7 +551,7 @@ function autoRevealAssocs (id) {
     .filter(viewAssoc => _topicmap.getOtherPlayer(viewAssoc, id).isVisible())
     .forEach(viewAssoc => {
       _revealAssoc(viewAssoc)
-      autoRevealAssocs(viewAssoc.id)    // recursion
+      autoRevealAssocs(viewAssoc.id)      // recursion
     })
 }
 
@@ -682,12 +698,14 @@ function updateAssocColors (typeUri) {
 
 // Pinning
 
+// TODO: drop it
 function unpinTopicIfPinned (id) {
   if (_topicmap.getTopic(id).isPinned()) {
     _setTopicPinned(id, false, false)     // update state + view
   }
 }
 
+// TODO: drop it
 function unpinAssocIfPinned (id) {
   if (_topicmap.getAssoc(id).isPinned()) {
     _setAssocPinned(id, false, false)     // update state + view
@@ -769,6 +787,8 @@ function unselectElement () {
   return removeSelectionDetail()
 }
 
+// Details
+
 /**
  * Removes the detail representing the selection from screen (if not pinned), and plays the restore animation.
  * If no such detail is displayed (or if it is pinned) nothing is performed (in particular no animation is played).
@@ -816,20 +836,6 @@ function playRestoreAnimation () {
   )
 }
 
-function detail (id) {
-  const detail = _detail(id)
-  if (!detail) {
-    throw Error(`detail record ${id} not found`)
-  }
-  return detail
-}
-
-function _detail (id) {
-  return state.details[id]
-}
-
-// Details
-
 function showPinnedDetails () {
   _topicmap.topics
     .filter(topic => topic.isPinned() && topic.isVisible())
@@ -844,6 +850,8 @@ function showPinnedDetails () {
  * Creates a detail record for the given object.
  *
  * @param   viewObject    a dm5.ViewTopic or a dm5.ViewAssoc
+ *
+ * @return  a promise for the created detail record
  */
 function createDetail (viewObject) {
   const id = viewObject.id
@@ -957,13 +965,24 @@ function adjustDetailSize(detail) {
  */
 function removeDetail (detail) {
   // console.log('removeDetail', detail.id)
-  detail.node.off('position')                       // FIXME: do not unregister *all* position handlers?
   // update state
-  Vue.delete(state.details, detail.id)              // Vue.delete() triggers dm5-detail-layer rendering
+  _removeDetail(detail)
   // update view
+  detail.node.off('position')                       // FIXME: do not unregister *all* position handlers?
   detail.node.removeClass('expanded')
   detail.node.style({width: null, height: null})    // reset size
   return playRestoreAnimation()
+}
+
+// update state
+function _removeDetailIfOnscreen (id) {
+  const detail = _detail(id)
+  detail && _removeDetail(detail)
+}
+
+// update state
+function _removeDetail (detail) {
+  Vue.delete(state.details, detail.id)              // Vue.delete() triggers dm5-detail-layer rendering
 }
 
 function updateDetail (object) {
@@ -987,6 +1006,18 @@ function playFisheyeAnimationIfDetailsOnscreen () {
   if (!dm5.utils.isEmpty(state.details)) {
     cyView.playFisheyeAnimation()
   }
+}
+
+function detail (id) {
+  const detail = _detail(id)
+  if (!detail) {
+    throw Error(`detail record ${id} not found`)
+  }
+  return detail
+}
+
+function _detail (id) {
+  return state.details[id]
 }
 
 // Helper
