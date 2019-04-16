@@ -195,8 +195,10 @@ const actions = {
 
   setTopicPinned (_, {topicId, pinned, showDetails}) {
     // console.log('setTopicPinned', topicId, pinned, showDetails)
-    // update state + view
-    _setTopicPinned(topicId, pinned, showDetails)
+    // update state
+    _topicmap.getTopic(topicId).setPinned(pinned)
+    // update view
+    removeDetailIfUnpinned(topicId, pinned, showDetails)
     // update server
     if (_topicmapWritable) {
       dm5.restClient.setTopicViewProps(_topicmap.id, topicId, {
@@ -207,8 +209,10 @@ const actions = {
 
   setAssocPinned (_, {assocId, pinned, showDetails}) {
     // console.log('setAssocPinned', assocId, pinned, showDetails)
-    // update state + view
-    _setAssocPinned(assocId, pinned, showDetails)
+    // update state
+    _topicmap.getAssoc(assocId).setPinned(pinned)
+    // update view
+    removeDetailIfUnpinned(assocId, pinned, showDetails)
     // update server
     if (_topicmapWritable) {
       dm5.restClient.setAssocViewProps(_topicmap.id, assocId, {
@@ -225,8 +229,8 @@ const actions = {
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
   _hideTopic (_, id) {
-    hideAssocsWithPlayer(id)    // update state + view
     // update state
+    hideAssocsWithPlayer(id)
     _topicmap.getTopic(id).setVisibility(false)
     _removeDetailIfOnscreen(id)
     // update view
@@ -241,14 +245,14 @@ const actions = {
    * Hiding is always performed as a multi-operation, that is in a single request.
    */
   _hideAssoc (_, id) {
-    removeAssocsWithPlayer(id)    // Note: topicmap contexts of *explicitly* hidden assocs are removed
     // update state
     const assoc = _topicmap.getAssoc(id)
+    removeAssocsWithPlayer(id)    // Note: topicmap contexts of *explicitly* hidden assocs are removed
     _topicmap.removeAssoc(id)     // Note: topicmap contexts of *explicitly* hidden assocs are removed
     _removeDetailIfOnscreen(id)
     // update view
     if (assoc.isVisible()) {      // Note: while hide-multi assocs implicitly hidden through hide-topic are
-      cyView.remove(id)           // ... removed from view already
+      cyView.remove(id)           // ... removed from view already ### TODO: remove condition, idempotence
     }
   },
 
@@ -260,10 +264,10 @@ const actions = {
    * Deleting is always performed as a multi-operation, that is in a single request.
    */
   _deleteTopic (_, id) {
-    unpinTopicIfPinned(id)
     // update state
-    _topicmap.removeAssocsWithPlayer(id)
+    removeAssocsWithPlayer(id)
     _topicmap.removeTopic(id)
+    _removeDetailIfOnscreen(id)
     // update view
     cyView.remove(id)
   },
@@ -276,15 +280,14 @@ const actions = {
    * Deleting is always performed as a multi-operation, that is in a single request.
    */
   _deleteAssoc (_, id) {
-    // If the assoc is already deleted nothing is performed. This can happen while delete-multi.
+    // If the assoc is already removed nothing is performed. This can happen while delete-multi.
     if (!_topicmap.hasAssoc(id)) {
       return
     }
-    //
-    unpinAssocIfPinned(id)
     // update state
-    _topicmap.removeAssocsWithPlayer(id)
+    removeAssocsWithPlayer(id)
     _topicmap.removeAssoc(id)
+    _removeDetailIfOnscreen(id)
     // update view
     cyView.remove(id)
   },
@@ -525,7 +528,7 @@ export default {
 
 // === DMX Model ===
 
-// Update state + view
+// Update state
 
 function hideAssocsWithPlayer (id) {
   _topicmap.getAssocsWithPlayer(id).forEach(assoc => {
@@ -542,6 +545,8 @@ function removeAssocsWithPlayer (id) {
     removeAssocsWithPlayer(assoc.id)      // recursion
   })
 }
+
+// Update state + view
 
 /**
  * @param   id    a topic ID or an assoc ID
@@ -696,43 +701,6 @@ function updateAssocColors (typeUri) {
     })
 }
 
-// Pinning
-
-// TODO: drop it
-function unpinTopicIfPinned (id) {
-  if (_topicmap.getTopic(id).isPinned()) {
-    _setTopicPinned(id, false, false)     // update state + view
-  }
-}
-
-// TODO: drop it
-function unpinAssocIfPinned (id) {
-  if (_topicmap.getAssoc(id).isPinned()) {
-    _setAssocPinned(id, false, false)     // update state + view
-  }
-}
-
-function _setTopicPinned (topicId, pinned, showDetails) {
-  // update state
-  _topicmap.getTopic(topicId).setPinned(pinned)
-  // update view
-  removeDetailIfUnpinned(topicId, pinned, showDetails)
-}
-
-function _setAssocPinned (assocId, pinned, showDetails) {
-  // update state
-  _topicmap.getAssoc(assocId).setPinned(pinned)
-  // update view
-  removeDetailIfUnpinned(assocId, pinned, showDetails)
-}
-
-function removeDetailIfUnpinned (id, pinned, showDetails) {
-  // console.log('removeDetailIfUnpinned', id, pinned, showDetails, isSelected(id))
-  if (!pinned && (!isSelected(id) || !showDetails)) {
-    removeDetail(detail(id)).then(playFisheyeAnimationIfDetailsOnscreen)
-  }
-}
-
 // Helper
 
 /**
@@ -788,42 +756,6 @@ function unselectElement () {
 }
 
 // Details
-
-/**
- * Removes the detail representing the selection from screen (if not pinned), and plays the restore animation.
- * If no such detail is displayed (or if it is pinned) nothing is performed (in particular no animation is played).
- *
- * Precondition:
- * - an element is selected
- *
- * @return  if the restore animation is played: a promise resolved once the animation is complete, otherwise undefined
- */
-function removeSelectionDetail () {
-  const detail = selectionDetail()
-  // console.log('removeSelectionDetail', detail)
-  // Note: the detail record might be removed meanwhile due to async operation (TODO: why excatly?)
-  if (!detail) {
-    // Note: this is expected behavior if in-map detail are not shown. To avoid this condition more complex state
-    // management would be required (in the app's router), in particular in the event of detail panel opening/closing.
-    // console.warn(`removeDetail() when detail ${ele.id()} is undefined`)
-  }
-  return detail && !detail.pinned && removeDetail(detail)
-}
-
-/**
- * Looks up the detail record for the selection.
- *
- * Precondition:
- * - an element is selected
- *
- * @return    may undefined
- */
-function selectionDetail () {
-  if (!ele) {
-    throw Error('selectionDetail() when nothing is selected')
-  }
-  return _detail(eleId(ele))
-}
 
 /**
  * @return  a promise resolved once the animation is complete.
@@ -958,6 +890,49 @@ function adjustDetailSize(detail) {
   cyView.playFisheyeAnimation()
 }
 
+function removeDetailIfUnpinned (id, pinned, showDetails) {
+  // console.log('removeDetailIfUnpinned', id, pinned, showDetails, isSelected(id))
+  if (!pinned && (!isSelected(id) || !showDetails)) {
+    removeDetail(detail(id)).then(playFisheyeAnimationIfDetailsOnscreen)
+  }
+}
+
+/**
+ * Removes the detail representing the selection from screen (if not pinned), and plays the restore animation.
+ * If no such detail is displayed (or if it is pinned) nothing is performed (in particular no animation is played).
+ *
+ * Precondition:
+ * - an element is selected
+ *
+ * @return  if the restore animation is played: a promise resolved once the animation is complete, otherwise undefined
+ */
+function removeSelectionDetail () {
+  const detail = selectionDetail()
+  // console.log('removeSelectionDetail', detail)
+  // Note: the detail record might be removed meanwhile due to async operation (TODO: why excatly?)
+  if (!detail) {
+    // Note: this is expected behavior if in-map detail are not shown. To avoid this condition more complex state
+    // management would be required (in the app's router), in particular in the event of detail panel opening/closing.
+    // console.warn(`removeDetail() when detail ${ele.id()} is undefined`)
+  }
+  return detail && !detail.pinned && removeDetail(detail)
+}
+
+/**
+ * Looks up the detail record for the selection.
+ *
+ * Precondition:
+ * - an element is selected
+ *
+ * @return    may undefined
+ */
+function selectionDetail () {
+  if (!ele) {
+    throw Error('selectionDetail() when nothing is selected')
+  }
+  return _detail(eleId(ele))
+}
+
 /**
  * Removes the given detail from screen and plays the restore animation.
  *
@@ -974,14 +949,14 @@ function removeDetail (detail) {
   return playRestoreAnimation()
 }
 
-// update state
 function _removeDetailIfOnscreen (id) {
+  // update state
   const detail = _detail(id)
   detail && _removeDetail(detail)
 }
 
-// update state
 function _removeDetail (detail) {
+  // update state
   Vue.delete(state.details, detail.id)              // Vue.delete() triggers dm5-detail-layer rendering
 }
 
