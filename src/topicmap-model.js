@@ -243,17 +243,20 @@ const actions = {
    *
    * Note: there is no high-level action to hide a single assoc.
    * Hiding is always performed as a multi-operation, that is in a single request.
+   *
+   * Note: its the same code as _deleteAssoc().
    */
   _hideAssoc (_, id) {
+    // Note: idempotence is needed for hide-multi
+    if (!_topicmap.hasAssoc(id)) {
+      return
+    }
     // update state
-    const assoc = _topicmap.getAssoc(id)
     removeAssocsWithPlayer(id)    // Note: topicmap contexts of *explicitly* hidden assocs are removed
     _topicmap.removeAssoc(id)     // Note: topicmap contexts of *explicitly* hidden assocs are removed
     _removeDetailIfOnscreen(id)
     // update view
-    if (assoc.isVisible()) {      // Note: while hide-multi assocs implicitly hidden through hide-topic are
-      cyView.remove(id)           // ... removed from view already ### TODO: remove condition, idempotence
-    }
+    cyView.remove(id)
   },
 
   /**
@@ -278,9 +281,11 @@ const actions = {
    *
    * Note: there is no high-level action to delete a single assoc.
    * Deleting is always performed as a multi-operation, that is in a single request.
+   *
+   * Note: its the same code as _hideAssoc().
    */
   _deleteAssoc (_, id) {
-    // If the assoc is already removed nothing is performed. This can happen while delete-multi.
+    // Note: idempotence is needed for delete-multi
     if (!_topicmap.hasAssoc(id)) {
       return
     }

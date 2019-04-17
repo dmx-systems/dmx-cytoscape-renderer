@@ -90,10 +90,12 @@ export default class CytoscapeView {
 
   /**
    * Removes an element from the graph.
+   * If the element is not in the graph, nothing is performed.
    */
   remove (id) {
-    cyElement(id).remove()
-    // Note: when removing a node Cytoscape removes the connected edges automatically
+    _cyElement(id).remove()
+    // Note: when removing a node Cytoscape removes the connected edges automatically.
+    // Note: idempotence is needed for hide-multi.
   }
 
   selectById (id) {
@@ -101,11 +103,11 @@ export default class CytoscapeView {
   }
 
   unselectById (id) {
-    return this.unselect(cyElement(id))     // FIXME: might cyElement() fail?
+    return this.unselect(cyElement(id))
   }
 
   /**
-   * Selects a Cytoscape element programmatically *without* emitting a (Cytoscape) `select` event.
+   * Selects an element programmatically *without* emitting a (Cytoscape) `select` event.
    */
   select (ele) {
     offSelectHandlers()
@@ -115,7 +117,7 @@ export default class CytoscapeView {
   }
 
   /**
-   * Unselects a Cytoscape element programmatically *without* emitting a (Cytoscape) `unselect` event.
+   * Unselects an element programmatically *without* emitting a (Cytoscape) `unselect` event.
    */
   unselect (ele) {
     offUnselectHandlers()
