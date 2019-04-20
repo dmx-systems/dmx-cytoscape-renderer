@@ -9,8 +9,9 @@
       :quill-config="_quillConfig" @inline="setInlineId" @child-topic-reveal="revealChildTopic" @updated="updated">
     </dm5-object-renderer>
     <div class="button-panel">
-      <el-button :class="['lock', 'fa', lockIcon]" type="text" @click="toggleLocked"></el-button>
-      <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" @click="togglePinned">
+      <el-button :class="['lock', 'fa', lockIcon]" type="text" :title="lockTitle" @click="toggleLocked"></el-button>
+      <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" :title="pinTitle"
+        @click="togglePinned">
       </el-button>
     </div>
   </div>
@@ -93,6 +94,15 @@ export default {
       return this.locked ? 'fa-lock' : 'fa-unlock'
     },
 
+    lockTitle () {
+      return this.locked ? 'Unlock to interact with content' : 'Lock to interact with ' + this.objectKind
+    },
+
+    pinTitle () {
+      return this.pinned ? 'Unpin Details' : 'Pin Details\n\nDetails remain visible even if ' + this.objectKind +
+        ' is unselected'
+    },
+
     pinned: {
       get () {
         return this.detail.pinned
@@ -101,6 +111,10 @@ export default {
         const event = this.object.isTopic() ? 'topic-pin' : 'assoc-pin'
         this.parent.$emit(event, {id: this.object.id, pinned})
       }
+    },
+
+    objectKind () {
+      return this.object.isTopic() ? 'topic' : 'association'
     },
 
     // principle copy in dm5-info-tab.vue (dm5-detail-panel)
