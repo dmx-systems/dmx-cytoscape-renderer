@@ -4,6 +4,26 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.19** -- Apr 22, 2019
+
+* Features:
+    * 2 new topicmap buttons: "Zoom to Fit" and "Reset Zoom"
+    * Auto pan topicmap when moving topic to viewport edge
+* Improvements:
+    * "Danger Zone" menu can be invoked by *any* modifier key
+    * Disabled context menu items are visualized more clear
+    * "Lock" and "Pin" detail buttons show tooltips
+    * Send less requests on hide; unpin is implicit
+* Fixes:
+    * Implicitly hiding a pinned association does not corrupt topicmap
+    * Implicitly hiding/deleting a pinned association removes detail from screen
+    * Hide-multi for implicitly hidden associations
+    * Box-selecting an association emits no "is already in list" console error
+* API:
+    * Attribute `contextCommands`: allow `disabled` function to return a promise
+    * Composability: emit `topic-pin` and `assoc-pin` events
+* Chore: upgrade to `cytoscape-cxtmenu` 3.1.0 (async menus!)
+
 **0.18** -- Apr 1, 2019
 
 * Features:
@@ -130,4 +150,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Apr 1, 2019
+Apr 22, 2019
