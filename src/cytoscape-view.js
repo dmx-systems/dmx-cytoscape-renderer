@@ -12,6 +12,8 @@ const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
 const BACKGROUND_COLOR     = style.getPropertyValue('--background-color')
 const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
 
+const MAX_LABEL_LENGTH = 80
+
 const onSelectNode   = nodeHandler('select')
 const onSelectEdge   = edgeHandler('select')
 const onUnselectNode = nodeHandler('unselect')
@@ -261,7 +263,7 @@ function instantiateCy (container) {
 
 // TODO: memoization
 function renderNode (ele) {
-  const label = ele.data('label')
+  const label = nodeLabel(ele.data('label'))
   const iconPath = faGlyphPath(ele.data('icon'))
   const size = measureText(label)
   const width = size.width + 32
@@ -275,6 +277,10 @@ function renderNode (ele) {
     url: 'data:image/svg+xml,' + encodeURIComponent(svg),
     width, height
   }
+}
+
+function nodeLabel (label) {
+  return label.length > MAX_LABEL_LENGTH ? label.substr(0, MAX_LABEL_LENGTH) + '…' : label
 }
 
 function faGlyphPath (unicode) {
