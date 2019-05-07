@@ -535,7 +535,7 @@ function emitTopicsDrag (node) {
 
 // Animation
 
-function playFisheyeAnimation() {
+const playFisheyeAnimation = dm5.utils.debounce(() => {
   // console.log('playFisheyeAnimation')
   fisheyeAnimation && fisheyeAnimation.stop()
   fisheyeAnimation = cy.layout({
@@ -554,7 +554,7 @@ function playFisheyeAnimation() {
     edgeElasticity: 0,
     tile: false
   }).run()
-}
+}, 300)
 
 // Helper
 

@@ -409,7 +409,8 @@ const actions = {
     state.objectWritable = writable
   },
 
-  // Note: no debounce here; consecutive calls might relate to *different* details
+  // Note: no debounce here; consecutive calls might relate to *different* details,
+  // in particular when loading a topicmap with several pinned topics which have images
   _syncDetailSize (_, id) {
     // console.log('_syncDetailSize', id)
     // Note: at the time assoc parts arrive the detail size needs to be adjusted.
