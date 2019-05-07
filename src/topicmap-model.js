@@ -409,7 +409,8 @@ const actions = {
     state.objectWritable = writable
   },
 
-  _syncDetailSize: dm5.utils.debounce((_, id) => {
+  // Note: no debounce here; consecutive calls might relate to *different* details
+  _syncDetailSize (_, id) {
     // console.log('_syncDetailSize', id)
     // Note: at the time assoc parts arrive the detail size needs to be adjusted.
     // If the assoc is unselected meanwhile the detail record does not exist anymore.
@@ -418,7 +419,7 @@ const actions = {
       console.warn(`adjustDetailSize() when detail ${id} is undefined`)
     }
     detail && adjustDetailSize(detail)
-  }, 300),
+  },
 
   _syncViewport (_, {pan, zoom}) {
     // console.log('_syncViewport', pan, zoom)
