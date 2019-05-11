@@ -338,6 +338,12 @@ function contextMenus (contextCommands) {
         // disable command in face of a multi selection when the command does not support multi
         disabled: !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection()
       }
+      if (cmd.multi) {
+        const _size = size(arg)
+        if (_size > 1) {
+          command.content += ' all ' + _size
+        }
+      }
       // a command can also be disabled by a user-defined "disabled" callback;
       // the "disabled" callback is expected to return a boolean or a boolean promise
       if (!command.disabled && cmd.disabled) {
@@ -399,6 +405,10 @@ function idLists () {
     topicIds: dm5.utils.clone(selection.topicIds),
     assocIds: dm5.utils.clone(selection.assocIds)
   }
+}
+
+function size (idLists) {
+  return idLists.topicIds.length + idLists.assocIds.length
 }
 
 // Edge Handles
