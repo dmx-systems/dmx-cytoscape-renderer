@@ -678,14 +678,15 @@ function updateTopicIcons (typeUri) {
     .filter(topic => topic.typeUri === typeUri)
     .filter(topic => topic.isVisible())
     .forEach(topic => {
-      // Note: no state update here. Topic icon is not part of ViewTopic but computed based on type definition.
+      // Note: no state update here. Topic icon/color is not part of ViewTopic but computed based on type definition.
       // Type cache is up-to-date already. De-facto the Type Cache processes directives *before* Topicmap Model
       // processes directives.
       //
       // update view
       cyView.updateTopic(topic.id, {
-        icon:      topic.icon,
-        iconColor: topic.iconColor
+        icon:            topic.icon,
+        iconColor:       topic.iconColor,
+        backgroundColor: topic.backgroundColor
       })
     })
 }
