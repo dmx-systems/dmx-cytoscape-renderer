@@ -7,7 +7,6 @@ const style = window.getComputedStyle(document.body)
 const FONT_FAMILY          = style.getPropertyValue('--main-font-family')
 const MAIN_FONT_SIZE       = style.getPropertyValue('--main-font-size')
 const LABEL_FONT_SIZE      = style.getPropertyValue('--label-font-size')
-const ICON_COLOR           = style.getPropertyValue('--color-topic-icon')
 const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
 const BACKGROUND_COLOR     = style.getPropertyValue('--background-color')
 const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
@@ -265,13 +264,14 @@ function instantiateCy (container) {
 function renderNode (ele) {
   const label = nodeLabel(ele.data('label'))
   const iconPath = faGlyphPath(ele.data('icon'))
+  const iconColor = ele.data('iconColor')
   const size = measureText(label)
   const width = size.width + 32
   const height = size.height + 8
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
       <rect x="0" y="0" width="${width}" height="${height}" fill="${BACKGROUND_COLOR}"></rect>
       <text x="26" y="${height - 7}" font-family="${FONT_FAMILY}" font-size="${MAIN_FONT_SIZE}">${label}</text>
-      <path d="${iconPath}" fill="${ICON_COLOR}" transform="scale(0.009 -0.009) translate(600 -2000)"></path>
+      <path d="${iconPath}" fill="${iconColor}" transform="scale(0.009 -0.009) translate(600 -2000)"></path>
     </svg>`
   return {
     url: 'data:image/svg+xml,' + encodeURIComponent(svg),
@@ -576,9 +576,10 @@ const playFisheyeAnimation = dm5.utils.debounce(() => {
 function cyNode (viewTopic) {
   return {
     data: {
-      id:      viewTopic.id,
-      label:   viewTopic.value,
-      icon:    viewTopic.icon,
+      id:        viewTopic.id,
+      label:     viewTopic.value,
+      icon:      viewTopic.icon,
+      iconColor: viewTopic.iconColor,
       viewTopic
     },
     position: viewTopic.getPosition()
