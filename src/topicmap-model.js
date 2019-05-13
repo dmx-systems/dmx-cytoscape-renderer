@@ -684,7 +684,8 @@ function updateTopicIcons (typeUri) {
       //
       // update view
       cyView.updateTopic(topic.id, {
-        icon: topic.icon
+        icon:      topic.icon,
+        iconColor: topic.iconColor
       })
     })
 }
