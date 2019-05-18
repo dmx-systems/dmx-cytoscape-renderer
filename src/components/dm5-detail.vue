@@ -73,7 +73,8 @@ export default {
       return {
         top:  this.pos.y + 'px',
         left: this.pos.x + 'px',
-        transform: `scale(${this.zoom})`
+        transform: `scale(${this.zoom})`,
+        'background-color': this.object.backgroundColor
       }
     },
 
