@@ -4,6 +4,17 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.20** -- May 27, 2019
+
+* Improvements:
+    * Render topic icon color and background color
+    * In-map details: render with topic/assoc background color
+    * Context menus: multi-commands show number of topics/assocs affected
+    * Debounce `playFisheyeAnimation()`
+* Fixes:
+    * Truncate long node labels, in particular image binaries
+    * Don't debounce `_syncDetailSize()`
+
 **0.19** -- Apr 22, 2019
 
 * Features:
@@ -150,4 +161,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Apr 22, 2019
+May 27, 2019
