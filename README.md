@@ -4,6 +4,10 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.21** -- May 29, 2019
+
+* Fix: revealed HTML topics are rendered as source (instead empty topic)
+
 **0.20** -- May 27, 2019
 
 * Improvements:
@@ -161,4 +165,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-May 27, 2019
+May 29, 2019
