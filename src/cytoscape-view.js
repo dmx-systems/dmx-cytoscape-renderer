@@ -280,7 +280,9 @@ function renderNode (ele) {
 }
 
 function nodeLabel (label) {
-  return label.length > MAX_LABEL_LENGTH ? label.substr(0, MAX_LABEL_LENGTH) + '…' : label
+  label = label.length > MAX_LABEL_LENGTH ? label.substr(0, MAX_LABEL_LENGTH) + '…' : label
+  label = label.replace(/</g, '&lt;')
+  return label
 }
 
 function faGlyphPath (unicode) {
