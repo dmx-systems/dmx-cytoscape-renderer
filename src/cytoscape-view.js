@@ -602,8 +602,8 @@ function cyEdge (viewAssoc) {
       id:      viewAssoc.id,
       label:   viewAssoc.value,
       color:   viewAssoc.color,
-      source:  viewAssoc.role1.id,
-      target:  viewAssoc.role2.id,
+      source:  viewAssoc.player1.id,
+      target:  viewAssoc.player2.id,
       viewAssoc
     }
   }
