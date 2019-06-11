@@ -524,7 +524,6 @@ function topicDrag (node) {
       emitTopicDrag(node)
     }
   }
-  playFisheyeAnimation()        // TODO: play only if details are visible
 }
 
 function emitTopicDrag (node) {
