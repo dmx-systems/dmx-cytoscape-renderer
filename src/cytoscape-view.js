@@ -263,12 +263,24 @@ function instantiateCy (container) {
 
 // Node Rendering
 
-// TODO: memoization
+const memoCache = {}
+
 function renderNode (ele) {
   const label = nodeLabel(ele.data('label'))
-  const iconPath = faGlyphPath(ele.data('icon'))
+  const icon = ele.data('icon')
   const iconColor = ele.data('iconColor')
   const backgroundColor = ele.data('backgroundColor')
+  const memoKey = `${label}-${icon}-${iconColor}-${backgroundColor}`
+  let r = memoCache[memoKey]
+  if (!r) {
+    r = _renderNode(label, icon, iconColor, backgroundColor)
+    memoCache[memoKey] = r
+  }
+  return r
+}
+
+function _renderNode (label, icon, iconColor, backgroundColor) {
+  const iconPath = faGlyphPath(icon)
   const size = measureText(label)
   const width = size.width + 32
   const height = size.height + 8
