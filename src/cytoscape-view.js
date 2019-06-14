@@ -594,7 +594,7 @@ function cyNode (viewTopic) {
   return {
     data: {
       id:              viewTopic.id,
-      label:           viewTopic.value,
+      label:           viewTopic.value.toString(),    // convert Number/Boolean values to string
       icon:            viewTopic.icon,
       iconColor:       viewTopic.iconColor,
       backgroundColor: viewTopic.backgroundColor,
