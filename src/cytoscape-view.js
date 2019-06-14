@@ -63,6 +63,8 @@ export default class CytoscapeView {
   renderTopicmap (topicmap, _selection) {
     selection = _selection
     return svgReady.then(() => {
+      console.log('renderTopicmap', topicmap.id)
+      console.time('renderTopicmap')
       // Note: the cytoscape-edge-connections extension expects an aux node still to exist at the time its edge is
       // removed. So we must remove the edges first.
       cy.remove('edge')
@@ -76,7 +78,7 @@ export default class CytoscapeView {
       })
       cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))
       ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
-      // console.log('### Topicmap rendering complete!')
+      console.timeEnd('renderTopicmap')
     })
   }
 
