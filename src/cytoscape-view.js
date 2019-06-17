@@ -65,21 +65,21 @@ export default class CytoscapeView {
     return svgReady.then(() => {
       console.log('renderTopicmap', topicmap.id)
       console.time('renderTopicmap')
-      cy.batch(() => {
-        // Note: the cytoscape-edge-connections extension expects an aux node still to exist at the time its edge is
-        // removed. So we must remove the edges first.
-        cy.remove('edge')
-        cy.remove('node')
-        cy.viewport({
-          pan: {
-            x: topicmap.viewProps['dmx.topicmaps.pan_x'],
-            y: topicmap.viewProps['dmx.topicmaps.pan_y']
-          },
-          zoom: topicmap.viewProps['dmx.topicmaps.zoom']
-        })
-        cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))
-        ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
+      // Note 1: utilization of cy.batch() would have a detrimental effect on calculating aux node positions of parallel
+      // edges. This is because aux node positions of parallel edges are calculated several times.
+      // Note 2: the cytoscape-edge-connections extension expects an aux node still to exist at the time its edge is
+      // removed. So we must remove the edges first.
+      cy.remove('edge')
+      cy.remove('node')
+      cy.viewport({
+        pan: {
+          x: topicmap.viewProps['dmx.topicmaps.pan_x'],
+          y: topicmap.viewProps['dmx.topicmaps.pan_y']
+        },
+        zoom: topicmap.viewProps['dmx.topicmaps.zoom']
       })
+      cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))
+      ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
       console.timeEnd('renderTopicmap')
     })
   }
@@ -594,7 +594,7 @@ function cyNode (viewTopic) {
   return {
     data: {
       id:              viewTopic.id,
-      label:           viewTopic.value.toString(),    // convert Number/Boolean values to string
+      label:           viewTopic.value.toString(),   // handle Number/Boolean values as strings, expected by nodeLabel()
       icon:            viewTopic.icon,
       iconColor:       viewTopic.iconColor,
       backgroundColor: viewTopic.backgroundColor,
