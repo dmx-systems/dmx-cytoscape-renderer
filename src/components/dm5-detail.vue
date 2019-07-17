@@ -164,7 +164,7 @@ export default {
 .dm5-detail {
   position: absolute;
   border: 1px solid var(--border-color-lighter);
-  padding: 0 12px 12px 12px;
+  padding: 6px 12px 12px 12px;
   min-width: 120px;
   max-width: 360px;
 }
@@ -184,16 +184,17 @@ export default {
 
 .dm5-detail > button {
   position: absolute;
-  top: 1px;
   font-size: 16px !important;
   padding: 0 !important;
 }
 
 .dm5-detail > button.handle {
-  right: 4px;
+  top: 0px;
+  right: 2px;
 }
 
 .dm5-detail > button.pin {
+  top: 1px;
   right: 25px;
   pointer-events: initial;
 }
