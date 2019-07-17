@@ -205,6 +205,13 @@ function instantiateCy (container) {
         }
       },
       {
+        selector: 'node.aux-node.expanded',
+        style: {
+          'shape': 'rectangle',
+          'background-opacity': 0
+        }
+      },
+      {
         selector: 'node.eh-handle',
         style: {
           'background-color': HIGHLIGHT_COLOR,
