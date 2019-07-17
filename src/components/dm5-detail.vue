@@ -1,19 +1,24 @@
 <template>
-  <div :class="['dm5-detail', {selected}, {locked}]" :data-detail-id="detail.id" :style="style">
+  <div :class="['dm5-detail', {selected}, {insideHandle}]" :data-detail-id="detail.id" :style="style">
     <!--
       Note: apparently "object" (a required "object" prop in child comp) can go away in an earlier update cycle
       than "detailNode" (the visibility predicate in parent comp). So we have to put v-if="object" here.
       TODO: approve this hypothesis. ### FIXDOC
     -->
+    <!-- Handle -->
+    <el-button class="handle fa fa-bars" type="text" @mouseenter.native="enterHandle"></el-button>
+    <!-- Pin Button -->
+    <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" :title="pinTitle"
+      @click="togglePinned">
+    </el-button>
+    <!--
+      Note: having the buttons before the object renderer reduces flickering when hovering the handle.
+      Flickering results from partial overlapping of handle and object renderer. ### FIXME
+    -->
     <dm5-object-renderer v-if="object" :object="object" :writable="writable" mode="info" :renderers="detailRenderers"
-      :quill-config="_quillConfig" @inline="setInlineId" @child-topic-reveal="revealChildTopic" @updated="updated">
+      :quill-config="_quillConfig" @inline="setInlineId" @child-topic-reveal="revealChildTopic" @updated="updated"
+      @mouseenter.native="leaveHandle">
     </dm5-object-renderer>
-    <div class="button-panel">
-      <el-button :class="['lock', 'fa', lockIcon]" type="text" :title="lockTitle" @click="toggleLocked"></el-button>
-      <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" :title="pinTitle"
-        @click="togglePinned">
-      </el-button>
-    </div>
   </div>
 </template>
 
@@ -42,7 +47,7 @@ export default {
 
   data () {
     return {
-      locked: true,
+      insideHandle: false,
       // The component used as event emitter; it's the topicmap renderers parent component
       parent: this.$parent.$parent.$parent
     }
@@ -91,14 +96,6 @@ export default {
       return pos
     },
 
-    lockIcon () {
-      return this.locked ? 'fa-lock' : 'fa-unlock'
-    },
-
-    lockTitle () {
-      return this.locked ? 'Unlock to interact with content' : 'Lock to interact with ' + this.objectKind
-    },
-
     pinTitle () {
       return this.pinned ? 'Unpin Details' : 'Pin Details\n\nDetails remain visible even if ' + this.objectKind +
         ' is unselected'
@@ -128,8 +125,14 @@ export default {
 
   methods: {
 
-    toggleLocked () {
-      this.locked = !this.locked
+    enterHandle () {
+      console.log('enterHandle')
+      this.insideHandle = true
+    },
+
+    leaveHandle () {
+      console.log('leaveHandle')
+      this.insideHandle = false
     },
 
     togglePinned () {
@@ -170,44 +173,32 @@ export default {
   border-color: var(--highlight-color);
 }
 
-.dm5-detail.locked {
+.dm5-detail.insideHandle {
   pointer-events: none;
 }
 
 .dm5-detail .dm5-object-renderer {
   margin-top: 12px;
-}
-
-.dm5-detail .button-panel {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 46px;
-  height: 24px;
   pointer-events: initial;
 }
 
-.dm5-detail .button-panel button {
-  visibility: hidden;
+.dm5-detail > button {
   position: absolute;
   top: 1px;
   font-size: 16px !important;
   padding: 0 !important;
 }
 
-.dm5-detail .button-panel:hover button {
-  visibility: visible;
-}
-
-.dm5-detail .button-panel button.lock {
+.dm5-detail > button.handle {
   right: 4px;
 }
 
-.dm5-detail .button-panel button.pin {
+.dm5-detail > button.pin {
   right: 25px;
+  pointer-events: initial;
 }
 
-.dm5-detail .button-panel button.pin.unpinned {
+.dm5-detail > button.pin.unpinned {
   color: transparent;
   font-size: 15px !important;
   -webkit-text-stroke: 1px var(--highlight-color);
