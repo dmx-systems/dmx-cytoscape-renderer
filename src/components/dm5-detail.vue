@@ -178,6 +178,10 @@ export default {
   margin-top: 12px;
 }
 
+.dm5-detail a {
+  pointer-events: initial;
+}
+
 .dm5-detail .button-panel {
   position: absolute;
   top: 0;
