@@ -1,6 +1,6 @@
 <template>
   <div class="dm5-cytoscape-renderer" @mousedown.capture="mousedown">
-    <div class="cytoscape-container" ref="cytoscape-container" @contextmenu.capture.prevent="contextmenu"></div>
+    <div class="cytoscape-container" ref="cytoscape-container"></div>
     <div class="measurement-box" ref="measurement-box"></div>
     <dm5-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig"></dm5-detail-layer>
   </div>
@@ -56,7 +56,6 @@ export default {
   },
 
   methods: {
-
     mousedown (e) {
       this.$store.dispatch('_setModifiers', {
         alt: e.altKey,
@@ -64,13 +63,6 @@ export default {
         meta: e.metaKey,
         shift: e.shiftKey
       })
-    },
-
-    contextmenu (e) {
-      console.log('contextmenu')
-      e.preventDefault()            // TODO: needed?
-      e.stopImmediatePropagation()  // TODO: needed?
-      return false                  // TODO: needed?
     }
   },
 
