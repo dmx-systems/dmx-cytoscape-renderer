@@ -178,7 +178,7 @@ export default {
   margin-top: 12px;
 }
 
-.dm5-detail a {
+.dm5-detail .dm5-object-renderer a {
   pointer-events: initial;
 }
 
