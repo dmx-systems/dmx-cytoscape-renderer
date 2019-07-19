@@ -527,10 +527,6 @@ function eventHandlers () {
         render: e.renderedPosition
       })
     }
-  }).on('contextmenu', e => {
-    console.log('cy contextmenu', e)
-    e.preventDefault()  // TODO: needed?
-    return false        // TODO: needed?
   }).on('dragfreeon', e => {
     topicDrag(e.target)
   }).on('viewport', () => {

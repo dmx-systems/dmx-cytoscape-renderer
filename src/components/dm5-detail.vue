@@ -182,6 +182,19 @@ export default {
   pointer-events: initial;
 }
 
+.dm5-detail.locked .dm5-value-renderer .field {
+  background-color: unset !important;                       /* fields of locked details never get white background */
+}
+
+.dm5-detail.locked .dm5-value-renderer button.edit,         /* locked details never show the "Edit" button */
+.dm5-detail.locked .dm5-value-renderer .hover-button {      /* locked details never show the "Reveal" button */
+  visibility: hidden;
+}
+
+.dm5-detail.locked .dm5-value-renderer .dm5-child-topic {   /* child topics of locked details never get blue border */
+  border-color: transparent;
+}
+
 .dm5-detail .button-panel {
   position: absolute;
   top: 0;
