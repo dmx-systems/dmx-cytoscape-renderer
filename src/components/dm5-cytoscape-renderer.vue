@@ -66,8 +66,11 @@ export default {
       })
     },
 
-    contextmenu () {
+    contextmenu (e) {
       console.log('contextmenu')
+      e.preventDefault()            // TODO: needed?
+      e.stopImmediatePropagation()  // TODO: needed?
+      return false                  // TODO: needed?
     }
   },
 
