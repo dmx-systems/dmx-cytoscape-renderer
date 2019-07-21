@@ -186,8 +186,8 @@ export default {
   background-color: unset !important;                       /* fields of locked details never get white background */
 }
 
-.dm5-detail.locked .dm5-value-renderer button.edit,         /* locked details never show the "Edit" button */
-.dm5-detail.locked .dm5-value-renderer .hover-button {      /* locked details never show the "Reveal" button */
+.dm5-detail.locked .dm5-value-renderer button.reveal,       /* locked details never show the "Reveal" button */
+.dm5-detail.locked .dm5-value-renderer button.edit {        /* locked details never show the "Edit" button */
   visibility: hidden;
 }
 
