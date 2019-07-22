@@ -4,6 +4,20 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.22** -- Jul 22, 2019
+
+* Improvements:
+    * HTML links are still clickable when detail is locked
+    * Enable browser/system context menus
+    * No auto-layout after user moves topic
+    * Optimization: `renderNode()` memoization
+* Fixes:
+    * Revealing Number and Boolean topics
+    * Style of expanded aux nodes
+* Chore:
+    * Adapt to `dm5` library ("player" renaming)
+    * Change license to `AGPL-3.0`
+
 **0.21** -- May 29, 2019
 
 * Fix: revealed HTML topics are rendered as source (instead empty topic)
@@ -165,4 +179,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-May 29, 2019
+Jul 22, 2019
