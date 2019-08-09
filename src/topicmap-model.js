@@ -638,36 +638,20 @@ function updateAssoc (assoc) {
  * Processes a DELETE_TOPIC directive.
  */
 function deleteTopic (topic) {
-  // FIXME: remove topic from *all* topicmaps -> must be handled by topicmaps module
-  const viewTopic = _topicmap.getTopicIfExists(topic.id)
-  if (viewTopic) {
-    // Note: _topicmap.removeAssocsWithPlayer() is not called here (compare to _deleteTopic() action above).
-    // The assocs will be removed while processing the DELETE_ASSOCIATION directives as received along with
-    // the DELETE_TOPIC directive.
-    //
-    // update state
-    _topicmap.removeTopic(topic.id)
-    // update view
-    if (viewTopic.isVisible()) {    // TODO: check needed? Why no check at deleteAssoc()?
-      cyView.remove(topic.id)
-    }
-  }
+  // Note: state is already updated by dm5-topicmap-panel
+  //
+  // update view
+  cyView.remove(topic.id)
 }
 
 /**
  * Processes a DELETE_ASSOCIATION directive.
  */
 function deleteAssoc (assoc) {
-  // FIXME: remove assoc from *all* topicmaps -> must be handled by topicmaps module
-  const viewAssoc = _topicmap.getAssocIfExists(assoc.id)
-  if (viewAssoc) {
-    // FIXME: remove assocs with player as well?
-    //
-    // update state
-    _topicmap.removeAssoc(assoc.id)
-    // update view
-    cyView.remove(assoc.id)
-  }
+  // Note: state is already updated by dm5-topicmap-panel
+  //
+  // update view
+  cyView.remove(assoc.id)
 }
 
 /**
