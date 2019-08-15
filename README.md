@@ -4,6 +4,11 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.23** -- Aug 15, 2019
+
+* Fixes:
+    * Leave state update on delete topic/assoc to `dm5-topicmap-panel` component
+
 **0.22** -- Jul 22, 2019
 
 * Improvements:
@@ -179,4 +184,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Jul 22, 2019
+Aug 15, 2019
