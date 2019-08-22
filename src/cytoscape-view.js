@@ -366,7 +366,7 @@ function contextMenus (contextCommands) {
       if (cmd.multi) {
         const _size = size(arg)
         if (_size > 1) {
-          command.content += ' all ' + _size
+          command.content += ` ${_size} items`
         }
       }
       // a command can also be disabled by a user-defined "disabled" callback;
@@ -432,6 +432,8 @@ function idLists () {
   }
 }
 
+// copy in webclient.js (module dmx-webclient)
+// TODO: unify selection models (see selection.js in dmx-topicmaps module)
 function size (idLists) {
   return idLists.topicIds.length + idLists.assocIds.length
 }
