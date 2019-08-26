@@ -4,6 +4,11 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.24** -- Aug 26, 2019
+
+* Improvements:
+    * Adjust multi-command labels
+
 **0.23** -- Aug 15, 2019
 
 * Fixes:
@@ -184,4 +189,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Aug 15, 2019
+Aug 26, 2019
