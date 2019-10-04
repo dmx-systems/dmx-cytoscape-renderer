@@ -359,7 +359,11 @@ function contextMenus (contextCommands) {
       const arg = FUN[kind].handlerArg(id, cmd)
       const command = {
         content: cmd.label,
-        select: ele => cmd.handler(arg),
+        select: ele => {
+          console.log('commands', event)
+          event && event.preventDefault()
+          cmd.handler(arg)
+        },
         // disable command in face of a multi selection when the command does not support multi
         disabled: !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection()
       }
