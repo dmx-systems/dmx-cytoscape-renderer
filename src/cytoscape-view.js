@@ -25,6 +25,7 @@ const svgReady = dm5.restClient.getXML(fa).then(svg => {
 
 let cy                  // Cytoscape instance
 let ec                  // cytoscape-edge-connections API object
+let eh                  // cytoscape-edgehandles API object
 let parent              // the dm5-topicmap-panel (a Vue instance); used as event emitter
 let box                 // the measurement box
 let modifiers           // modifier keys
@@ -52,15 +53,16 @@ export default class CytoscapeView {
     dispatch  = _dispatch
     cy = instantiateCy(container)
     ec = cy.edgeConnections()
+    eh = edgeHandles()
     cy.autopanOnDrag()
     contextMenus(contextCommands)
-    edgeHandles()
     eventHandlers()
   }
 
   // -------------------------------------------------------------------------------------------------------- Public API
 
-  renderTopicmap (topicmap, _selection) {
+  renderTopicmap (topicmap, writable, _selection) {
+    writable ? eh.enable() : eh.disable()
     selection = _selection
     return svgReady.then(() => {
       console.log('renderTopicmap', topicmap.id)
@@ -441,7 +443,7 @@ function size (idLists) {
 // Edge Handles
 
 function edgeHandles () {
-  cy.edgehandles({
+  return cy.edgehandles({
     preview: false,
     handlePosition (node) {
       return !isAuxNode(node) ? 'middle top' : 'middle middle'

@@ -26,7 +26,10 @@ let _topicmapWritable   // true if the current user has WRITE permission for the
 
 let _object             // the selected object (dm5.DMXObject)
 
-let cyView              // the CytoscapeView instance, initialized by "_initCytoscape" action
+let cyView              // The CytoscapeView instance, initialized by "_initCytoscape" action.
+                        // The instance lives as long as the Cytoscape Renderer is active. That is when switching
+                        // between topicmaps the same instance is (re)used. Only when switching from the Geomap Renderer
+                        // to the Cytoscape Renderer a new instance is created.
 let ele                 // The single selection: a selected Cytoscape element (node or edge). Undefined if there is no
                         // single selection.
                         // The selected element's details are displayed in-map. On unselect the details disappear
@@ -83,7 +86,7 @@ const actions = {
     ele = undefined
     state.selection = selection
     state.details = {}
-    return cyView.renderTopicmap(topicmap, selection).then(showPinnedDetails)
+    return cyView.renderTopicmap(topicmap, writable, selection).then(showPinnedDetails)
   },
 
   // Topicmap type specific actions
