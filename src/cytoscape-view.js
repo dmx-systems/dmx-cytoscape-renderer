@@ -306,7 +306,7 @@ function _renderNode (label, icon, iconColor, backgroundColor) {
 
 function nodeLabel (label) {
   label = label.length > MAX_LABEL_LENGTH ? label.substr(0, MAX_LABEL_LENGTH) + '…' : label
-  label = label.replace(/</g, '&lt;')
+  label = label.replace(/&/g, '&amp;').replace(/</g, '&lt;')    // TODO: move to utils?
   return label
 }
 
