@@ -473,7 +473,11 @@ const actions = {
     const p2 = ele && unselectElement()
     // Note: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
     // available. The actual order of these 2 occasions doesn't matter.
-    showDetails && Promise.all([p, p2]).then(createAndShowSelectionDetail)
+    if (showDetails) {
+      Promise.all([p, p2]).then(createAndShowSelectionDetail)
+    } else {
+      cyView.autoPan(_ele)
+    }
     //
     ele = _ele
   },
