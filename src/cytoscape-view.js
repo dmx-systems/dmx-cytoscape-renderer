@@ -151,8 +151,11 @@ export default class CytoscapeView {
     }).play().promise()
   }
 
-  playFisheyeAnimation () {
-    playFisheyeAnimation()
+  /**
+   * @param   callback  called once animation is complete
+   */
+  playFisheyeAnimation (callback) {
+    playFisheyeAnimation(callback)
   }
 
   autoPan (node) {
@@ -600,11 +603,13 @@ function emitTopicsDrag (node) {
 
 // Animation
 
-const playFisheyeAnimation = dm5.utils.debounce(() => {
+// Note: instead of returning a promise we take a callback, because debounced functions can't return anything
+const playFisheyeAnimation = dm5.utils.debounce(callback => {
   // console.log('playFisheyeAnimation')
   fisheyeAnimation && fisheyeAnimation.stop()
   fisheyeAnimation = cy.layout({
     name: 'cose-bilkent',
+    stop: callback,
     fit: false,
     /* animateFilter: (node, i) => {
       if (isAuxNode(node)) {

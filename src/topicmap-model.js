@@ -474,7 +474,11 @@ const actions = {
     // Note: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
     // available. The actual order of these 2 occasions doesn't matter.
     if (showDetails) {
-      Promise.all([p, p2]).then(createAndShowSelectionDetail)
+      Promise.all([p, p2])
+        .then(createAndShowSelectionDetail)
+        .then(() => {
+          cyView.autoPan(_ele)
+        })
     } else {
       cyView.autoPan(_ele)
     }
@@ -855,17 +859,26 @@ function createDetailForSelection () {
   return detail
 }
 
+/**
+ * @return  a promise resolved once the fisheye animation is complete
+ */
+function createAndShowSelectionDetail () {
+  if (!ele) {
+    console.warn('createDetailForSelection() when "ele" is undefined')
+    return
+  }
+  return showDetail(createDetailForSelection())
+}
+
+/**
+ * @return  a promise resolved once the fisheye animation is complete
+ */
 function showDetail (detail) {
   detail.node.addClass('expanded')
   Vue.set(state.details, detail.id, detail)       // Vue.set() triggers dm5-detail-layer rendering
-  Vue.nextTick(() => {
-    adjustDetailSize(detail)
-  })
-}
-
-function createAndShowSelectionDetail () {
-  !ele && console.warn('createDetailForSelection() when "ele" is undefined')
-  ele && showDetail(createDetailForSelection())
+  return Vue.nextTick().then(
+    () => adjustDetailSize(detail)
+  )
 }
 
 /**
@@ -875,6 +888,8 @@ function createAndShowSelectionDetail () {
  * - the DOM is updated already.
  *
  * @param   detail    a detail record
+ *
+ * @return  a promise resolved once the fisheye animation is complete
  */
 function adjustDetailSize(detail) {
   const detailDOM = document.querySelector(`.dm5-detail-layer .dm5-detail[data-detail-id="${detail.id}"]`)
@@ -887,7 +902,9 @@ function adjustDetailSize(detail) {
   }
   // console.log('adjustDetailSize', detail.node.id(), detail.size.width, detail.size.height)
   detail.node.style(detail.size)
-  cyView.playFisheyeAnimation()
+  return new Promise(resolve => {
+    cyView.playFisheyeAnimation(resolve)
+  })
 }
 
 function removeDetailIfUnpinned (id, pinned, showDetails) {
