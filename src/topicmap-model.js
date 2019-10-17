@@ -98,9 +98,9 @@ const actions = {
    * @param   pos     Optional: the topic position in model coordinates (object with "x", "y" props).
    *                  If not given it's up to the topicmap renderer to position the topic.
    */
-  renderTopic (_, {topic, pos}) {
+  renderTopic (_, {topic, pos, autoPan}) {
     // update state + view
-    const op = _revealTopic(topic, pos)
+    const op = _revealTopic(topic, pos, autoPan)
     autoRevealAssocs(topic.id)
     // update server
     if (_topicmapWritable) {
@@ -127,9 +127,10 @@ const actions = {
     }
   },
 
-  renderRelatedTopic (_, relTopic) {
+  renderRelatedTopic (_, {relTopic, autoPan}) {
+    console.log('renderRelatedTopic', relTopic, autoPan)
     // update state + view
-    const topicOp = _revealTopic(relTopic)
+    const topicOp = _revealTopic(relTopic, undefined, autoPan)    // pos=undefined
     const assocOp = _revealAssoc(relTopic.assoc)
     autoRevealAssocs(relTopic.id)
     // update server
@@ -471,9 +472,10 @@ const actions = {
     // Cytoscape removes the current selection before. In contrast if *programmatically* selecting a node Cytoscape does
     // *not* remove the current selection.
     const p2 = ele && unselectElement()
-    // Note: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
-    // available. The actual order of these 2 occasions doesn't matter.
+    //
     if (showDetails) {
+      // Note: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
+      // available. The actual order of these 2 occasions doesn't matter.
       Promise.all([p, p2])
         .then(createAndShowSelectionDetail)
         .then(() => {
@@ -582,13 +584,17 @@ function autoRevealAssocs (id) {
  * @param   topic     the topic to reveal (dm5.Topic).
  * @param   pos       Optional: the topic position in model coordinates (object with "x", "y" props).
  *                    If not given it's up to the topicmap renderer to position the topic.
+ * @param   autoPan   Optional: if trueish the topicmap is panned so that the topic is within viewport.
  */
-function _revealTopic (topic, pos) {
+function _revealTopic (topic, pos, autoPan) {
   // update state
   const op = _topicmap.revealTopic(topic, pos)
   // update view
   if (op.type === 'add' || op.type === 'show') {
     cyView.addTopic(initPos(op.viewTopic))
+  }
+  if (autoPan) {
+    cyView.autoPanById(topic.id)
   }
   return op
 }

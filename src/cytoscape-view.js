@@ -158,6 +158,10 @@ export default class CytoscapeView {
     playFisheyeAnimation(callback)
   }
 
+  autoPanById (id) {
+    return this.autoPan(cyElement(id))
+  }
+
   autoPan (node) {
     const w = cy.width()
     const h = cy.height()
