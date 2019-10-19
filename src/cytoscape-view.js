@@ -76,15 +76,12 @@ export default class CytoscapeView {
       // removed. So we must remove the edges first.
       cy.remove('edge')
       cy.remove('node')
-      cy.viewport({
-        pan: {
-          x: topicmap.viewProps['dmx.topicmaps.pan_x'],
-          y: topicmap.viewProps['dmx.topicmaps.pan_y']
-        },
-        zoom: topicmap.viewProps['dmx.topicmaps.zoom']
-      })
       cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))
       ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
+      setViewport({
+        x: topicmap.viewProps['dmx.topicmaps.pan_x'],
+        y: topicmap.viewProps['dmx.topicmaps.pan_y']
+      }, topicmap.viewProps['dmx.topicmaps.zoom'])
       console.timeEnd('renderTopicmap')
     })
   }
@@ -119,9 +116,9 @@ export default class CytoscapeView {
    * Selects an element programmatically *without* emitting a (Cytoscape) `select` event.
    */
   select (ele) {
-    offSelectHandlers()
+    unregisterSelectHandlers()
     ele.select()
-    onSelectHandlers()
+    registerSelectHandlers()
     return ele
   }
 
@@ -129,9 +126,9 @@ export default class CytoscapeView {
    * Unselects an element programmatically *without* emitting a (Cytoscape) `unselect` event.
    */
   unselect (ele) {
-    offUnselectHandlers()
+    unregisterUnselectHandlers()
     ele.unselect()
-    onUnselectHandlers()
+    registerUnselectHandlers()
     return ele
   }
 
@@ -506,22 +503,22 @@ function isEdgeHandle (ele) {
 
 // Event Handling
 
-function onSelectHandlers () {
+function registerSelectHandlers () {
   cy.on('select', 'node', onSelectNode)
     .on('select', 'edge', onSelectEdge)
 }
 
-function offSelectHandlers () {
+function unregisterSelectHandlers () {
   cy.off('select', 'node', onSelectNode)
     .off('select', 'edge', onSelectEdge)
 }
 
-function onUnselectHandlers () {
+function registerUnselectHandlers () {
   cy.on('unselect', 'node', onUnselectNode)
     .on('unselect', 'edge', onUnselectEdge)
 }
 
-function offUnselectHandlers () {
+function unregisterUnselectHandlers () {
   cy.off('unselect', 'node', onUnselectNode)
     .off('unselect', 'edge', onUnselectEdge)
 }
@@ -553,8 +550,8 @@ function edgeHandler (suffix) {
  * Registers Cytoscape event handlers.
  */
 function eventHandlers () {
-  onSelectHandlers()
-  onUnselectHandlers()
+  registerSelectHandlers()
+  registerUnselectHandlers()
   cy.on('tap', 'node', e => {
     const clicks = e.originalEvent.detail
     // console.log('tap node', id(e.target), e.originalEvent, clicks)
@@ -570,11 +567,6 @@ function eventHandlers () {
     }
   }).on('dragfreeon', e => {
     topicDrag(e.target)
-  }).on('viewport', () => {
-    dispatch('_syncViewport', {
-      pan: cy.pan(),
-      zoom: cy.zoom()
-    })
   })
 }
 
@@ -606,6 +598,24 @@ function emitTopicsDrag (node) {
       y: pos.y
     }
   }))
+}
+
+// Viewport
+
+/**
+ * Sets the viewport programmatically *without* emitting a (Cytoscape) `viewport` event.
+ */
+function setViewport (pan, zoom) {
+  cy.off('viewport', onViewport)
+  cy.viewport({pan, zoom})
+  cy.on('viewport', onViewport)
+}
+
+function onViewport () {
+  dispatch('_syncViewport', {
+    pan: cy.pan(),
+    zoom: cy.zoom()
+  })
 }
 
 // Animation
