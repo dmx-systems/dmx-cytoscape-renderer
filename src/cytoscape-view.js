@@ -165,27 +165,28 @@ export default class CytoscapeView {
   autoPan (node) {
     const w = cy.width()
     const h = cy.height()
-    console.log('autoPan', id(node), w, h)
+    // console.log('autoPan', id(node), w, h)
     const {x1, y1, x2, y2} = node.renderedBoundingBox()
     let x, y
     if (x1 < 0) {
-      console.log('left', -x1)
+      // console.log('left', -x1)
       x = -x1 + PAN_PADDING
     } else if (x2 > w) {
-      console.log('right', w - x2)
+      // console.log('right', w - x2)
       x = w - x2 - PAN_PADDING
     }
     if (y1 < 0) {
-      console.log('top', -y1)
+      // console.log('top', -y1)
       y = -y1 + PAN_PADDING_TOP
     } else if (y2 > h) {
-      console.log('bottom', h - y2)
+      // console.log('bottom', h - y2)
       y = h - y2 - PAN_PADDING
     }
     if (x || y) {
-      //setTimeout(() => {
-        cy.panBy({x, y})
-      //}, 4000)
+      cy.animate({
+        panBy: {x, y},
+        easing: 'ease-in-out-cubic'
+      })
     }
   }
 

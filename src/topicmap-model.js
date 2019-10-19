@@ -128,7 +128,7 @@ const actions = {
   },
 
   renderRelatedTopic (_, {relTopic, autoPan}) {
-    console.log('renderRelatedTopic', relTopic, autoPan)
+    // console.log('renderRelatedTopic', relTopic, autoPan)
     // update state + view
     const topicOp = _revealTopic(relTopic, undefined, autoPan)    // pos=undefined
     const assocOp = _revealAssoc(relTopic.assoc)
