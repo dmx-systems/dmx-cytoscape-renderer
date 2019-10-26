@@ -20,6 +20,8 @@ import CytoscapeView from './cytoscape-view'
 import Vue from 'vue'
 import dm5 from 'dm5'
 
+const AUTO_LAYOUT = false
+
 // These 2 variables + state.selection are initialized together by "renderTopicmap" action.
 let _topicmap           // the rendered topicmap (dm5.Topicmap)
 let _topicmapWritable   // true if the current user has WRITE permission for the rendered topicmap (boolean)
@@ -772,10 +774,12 @@ function unselectElement () {
  */
 function playRestoreAnimation () {
   // console.log('starting restore animation')
-  return Promise.all(_topicmap.topics
-    .filter(viewTopic => viewTopic.isVisible())
-    .map(viewTopic => cyView.updateTopicPos(viewTopic.id, viewTopic.getPosition()))
-  )
+  return AUTO_LAYOUT ?
+    Promise.all(_topicmap.topics
+      .filter(viewTopic => viewTopic.isVisible())
+      .map(viewTopic => cyView.updateTopicPos(viewTopic.id, viewTopic.getPosition()))
+    )
+    : Promise.resolve()
 }
 
 function showPinnedDetails () {
@@ -909,7 +913,11 @@ function adjustDetailSize(detail) {
   // console.log('adjustDetailSize', detail.node.id(), detail.size.width, detail.size.height)
   detail.node.style(detail.size)
   return new Promise(resolve => {
-    cyView.playFisheyeAnimation(resolve)
+    if (AUTO_LAYOUT) {
+      cyView.playFisheyeAnimation(resolve)
+    } else {
+      resolve()
+    }
   })
 }
 
@@ -1001,7 +1009,7 @@ function updateDetailPos (detail) {
 }
 
 function playFisheyeAnimationIfDetailsOnscreen () {
-  if (!dm5.utils.isEmpty(state.details)) {
+  if (AUTO_LAYOUT && !dm5.utils.isEmpty(state.details)) {
     cyView.playFisheyeAnimation()
   }
 }
