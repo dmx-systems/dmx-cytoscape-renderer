@@ -42,8 +42,8 @@ cytoscape.warnings(false)
 
 // register extensions
 cytoscape.use(require('cytoscape-autopan-on-drag'))
-cytoscape.use(require('cytoscape-cose-bilkent'))
-cytoscape.use(require('cytoscape-cxtmenu'))
+// cytoscape.use(require('cytoscape-cose-bilkent'))   // layout is currently swicthed off; see AUTO_LAYOUT in
+cytoscape.use(require('cytoscape-cxtmenu'))           //                                   topicmap-model.js
 cytoscape.use(require('cytoscape-edgehandles'))
 cytoscape.use(require('cytoscape-edge-connections'))
 
