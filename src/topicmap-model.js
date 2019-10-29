@@ -977,6 +977,7 @@ function removeDetail (detail) {
   detail.node.off('position')                       // FIXME: do not unregister *all* position handlers?
   detail.node.removeClass('expanded')
   detail.node.style({width: null, height: null})    // reset size
+  cyView.hideEdgeHandle()
   return playRestoreAnimation()
 }
 

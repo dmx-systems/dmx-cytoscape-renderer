@@ -211,6 +211,10 @@ export default class CytoscapeView {
   resize () {
     cy.resize()
   }
+
+  hideEdgeHandle () {
+    eh.hide()
+  }
 }
 
 // ----------------------------------------------------------------------------------------------------- Private Methods
