@@ -32,6 +32,7 @@ let cyView              // The CytoscapeView instance, initialized by "_initCyto
                         // The instance lives as long as the Cytoscape Renderer is active. That is when switching
                         // between topicmaps the same instance is (re)used. Only when switching from the Geomap Renderer
                         // to the Cytoscape Renderer a new instance is created.
+
 let ele                 // The single selection: a selected Cytoscape element (node or edge). Undefined if there is no
                         // single selection.
                         // The selected element's details are displayed in-map. On unselect the details disappear
@@ -754,7 +755,14 @@ function initPos (viewTopic) {
 function unselectElement () {
   // console.log('unselectElement', ele && eleId(ele))
   if (!ele) {
-    throw Error('unselectElement() when no element is selected')
+    // Note: normally "ele" is expected to be defined when entering this function.
+    // Normally the route is the source of truth, and changing app state is the *effect* of a route change. But there is
+    // one situation where cause/effect is reversed, which is login/logout. On login/logout the topipcmap is reloaded,
+    // and only then is checked whether the selection must be stripped from route. If so the selection is removed
+    // already when entering this function and "ele" is undefined.
+    // The proper solution would be to check e.g. *before* logout if the selected workspace and the selected object
+    // would still be readable after logout. This would get rather complicate.
+    return
   }
   // console.log('unselectElement', eleId(ele), cyView.cy.elements(":selected").size())
   // Note 1: when the user clicks on the background Cytoscape unselects the selected element on its own.
