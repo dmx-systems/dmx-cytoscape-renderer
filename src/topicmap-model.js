@@ -500,21 +500,23 @@ const actions = {
 
   /**
    * Renders an element as selected without displaying the element's details.
-   * Called by host application to visualize a multi selection.
    *
-   * @throws  if this component is in single selection state.
+   * Called by host application to visualize a multi selection, or to visually restore the former selection when a
+   * navigation was aborted (by closing a "Unsaved Changes" warning).
    */
   _renderAsSelected (_, id) {
     // console.log('_renderAsSelected', id)
-    if (ele) {
-      throw Error(`_renderAsSelected(${id}) when "ele" is set (${eleId(ele)})`)
-    }
+    // Note: when a navigation was aborted (by closing a "Unsaved Changes" warning) Cytoscape has removed the visual
+    // selection from the former object already and the app calls "_renderAsSelected" in order to visually restore the
+    // former selection. In this case calling "_renderAsSelected" when ele is defined already is not an error.
     cyView.selectById(id)
   },
 
   /**
    * Renders an element as unselected without removing the element's details (and without playing the restore
-   * animation). Called by host application to visually remove a multi selection (e.g. after a route switch).
+   * animation).
+   *
+   * Called by host application to visually remove a multi selection (e.g. after a route switch).
    *
    * @throws  if this component is not in single selection state.
    */
@@ -768,8 +770,8 @@ function unselectElement () {
   // Note 1: when the user clicks on the background Cytoscape unselects the selected element on its own.
   // Calling cy.elements(":selected") afterwards would return an empty collection.
   // This is why we maintain an explicit "ele" state.
-  // Note 2: unselect() removes the element's selection style when manually stripping topic/assoc from
-  // browser URL. In this situation cy.elements(":selected") would return a non-empty collection.
+  // Note 2: unselect() removes the element's selection style when manually stripping selection from route.
+  // In this situation cy.elements(":selected") would return a non-empty collection.
   cyView.unselect(ele)
   //
   return removeSelectionDetail()
