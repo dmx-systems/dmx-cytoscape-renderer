@@ -201,11 +201,18 @@ export default class CytoscapeView {
   }
 
   fit () {
-    cy.fit(undefined, 10)
+    cy.animate({
+      fit: {padding: 10},
+      easing: 'ease-in-out-cubic'
+    })
   }
 
   reset () {
-    cy.zoom(1).center()
+    cy.animate({
+      zoom: 1,
+      center: {},
+      easing: 'ease-in-out-cubic'
+    })
   }
 
   resize () {
