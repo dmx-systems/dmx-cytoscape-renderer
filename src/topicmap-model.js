@@ -988,6 +988,11 @@ function removeDetail (detail) {
   detail.node.removeClass('expanded')
   detail.node.style({width: null, height: null})    // reset size
   cyView.hideEdgeHandle()
+  //
+  // vanishing edges workaround (https://github.com/cytoscape/cytoscape.js/issues/2566)
+  setTimeout(() => detail.node.shift('x',  1), 40)
+  setTimeout(() => detail.node.shift('x', -1), 80)
+  //
   return playRestoreAnimation()
 }
 
