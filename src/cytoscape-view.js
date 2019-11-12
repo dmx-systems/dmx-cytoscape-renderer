@@ -335,14 +335,16 @@ function renderNode (ele) {
 }
 
 function _renderNode (label, icon, iconColor, backgroundColor) {
-  const iconPath = faGlyphPath(icon)
+  const glyph = faGlyph(icon)
+  const iconWidth = 0.009 * glyph.width
   const size = measureText(label)
-  const width = size.width + 32
+  const width = size.width + iconWidth + 18
   const height = size.height + 8
+  const x = iconWidth + 12
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
       <rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"></rect>
-      <text x="26" y="${height - 7}" font-family="${FONT_FAMILY}" font-size="${MAIN_FONT_SIZE}">${label}</text>
-      <path d="${iconPath}" fill="${iconColor}" transform="scale(0.009 -0.009) translate(600 -2000)"></path>
+      <text x="${x}" y="${height - 7}" font-family="${FONT_FAMILY}" font-size="${MAIN_FONT_SIZE}">${label}</text>
+      <path d="${glyph.path}" fill="${iconColor}" transform="scale(0.009 -0.009) translate(600 -2000)"></path>
     </svg>`
   return {
     url: 'data:image/svg+xml,' + encodeURIComponent(svg),
@@ -356,9 +358,13 @@ function nodeLabel (label) {
   return label
 }
 
-function faGlyphPath (unicode) {
+function faGlyph (unicode) {
   try {
-    return faFont.querySelector(`glyph[unicode="${unicode}"]`).getAttribute('d')
+    const glyph = faFont.querySelector(`glyph[unicode="${unicode}"]`)
+    return {
+      path: glyph.getAttribute('d'),
+      width: Number(glyph.getAttribute('horiz-adv-x')) || 1536    // default 1536 see <font> element in .svg
+    }
   } catch (e) {
     throw Error(`Font Awesome glyph "${unicode}" not available (${e})`)
   }
