@@ -24,6 +24,7 @@ const onUnselectEdge = edgeHandler('unselect')
 const svgReady = dm5.restClient.getXML(fa).then(svg => {
   // console.log('### SVG ready!')
   faFont = svg.querySelector('font')
+  faDefaultWidth = faFont.getAttribute('horiz-adv-x')
 })
 
 let cy                  // Cytoscape instance
@@ -34,6 +35,7 @@ let box                 // the measurement box
 let modifiers           // modifier keys
 let dispatch
 let faFont              // Font Awesome SVG <font> element
+let faDefaultWidth      // Default icon width
 let fisheyeAnimation
 let selection           // the selection model for the rendered topicmap (a Selection object, defined in dm5-topicmaps),
                         // initialized by renderTopicmap() method
@@ -344,7 +346,7 @@ function _renderNode (label, icon, iconColor, backgroundColor) {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
       <rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"></rect>
       <text x="${x}" y="${height - 7}" font-family="${FONT_FAMILY}" font-size="${MAIN_FONT_SIZE}">${label}</text>
-      <path d="${glyph.path}" fill="${iconColor}" transform="scale(0.009 -0.009) translate(600 -2000)"></path>
+      <path d="${glyph.path}" fill="${iconColor}" transform="scale(0.009 -0.009) translate(600 -2080)"></path>
     </svg>`
   return {
     url: 'data:image/svg+xml,' + encodeURIComponent(svg),
@@ -363,7 +365,7 @@ function faGlyph (unicode) {
     const glyph = faFont.querySelector(`glyph[unicode="${unicode}"]`)
     return {
       path: glyph.getAttribute('d'),
-      width: Number(glyph.getAttribute('horiz-adv-x')) || 1536    // default 1536 see <font> element in .svg
+      width: glyph.getAttribute('horiz-adv-x') || faDefaultWidth
     }
   } catch (e) {
     throw Error(`Font Awesome glyph "${unicode}" not available (${e})`)
