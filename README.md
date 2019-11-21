@@ -4,6 +4,19 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.25** -- Nov 21, 2019
+
+* Improvements:
+    * Disable topicmap auto-layout/animation
+    * Topicmap pans automatically when a topic is revealed outside viewport
+    * Topicmap rendering respects individual icon widths
+    * "Zoom to Fit" and "Reset Zoom" operations are animated
+* Fixes:
+    * State management when selected topic/assoc is not visible/readable anymore after login/logout
+    * Disable draw-assoc gesture when user lacks WRITE permission
+    * Topics whose label contains an ampersand are properly rendered
+    * Initial topicmap rendering does not emit an unwanted `viewport` event
+
 **0.24** -- Aug 26, 2019
 
 * Improvements:
@@ -189,4 +202,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Aug 26, 2019
+Nov 21, 2019
