@@ -9,7 +9,7 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 * Improvements:
     * Disable topicmap auto-layout/animation
     * Topicmap pans automatically when a topic is revealed outside viewport
-    * Topicmap rendering respects individual icon widths
+    * Topicmap rendering respects individual topic icon widths
     * "Zoom to Fit" and "Reset Zoom" operations are animated
 * Fixes:
     * State management when selected topic/assoc is not visible/readable anymore after login/logout
