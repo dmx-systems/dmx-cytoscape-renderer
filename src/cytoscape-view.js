@@ -383,8 +383,8 @@ function measureText (text) {
 // Context Menus
 
 const FUN = {
-  topic: {handlerArg: topicHandlerArg, isSelected: isTopicSelected},
-  assoc: {handlerArg: assocHandlerArg, isSelected: isAssocSelected}
+  topic: {handlerArg: topicHandlerArg, isSelected: isTopicSelected, view: 'viewTopic'},
+  assoc: {handlerArg: assocHandlerArg, isSelected: isAssocSelected, view: 'viewAssoc'}
 }
 
 /**
@@ -411,7 +411,9 @@ function contextMenus (contextCommands) {
     const danger = modifiers.alt || modifiers.ctrl || modifiers.meta || modifiers.shift
     // map DMX command defs to Cytoscape commands;
     // the "commands" array will contain commands and/or command promises
-    const commands = contextCommands[kind + (danger ? '_danger' : '')].map(cmd => {
+    const commands = contextCommands[kind + (danger ? '_danger' : '')]
+    .flatMap(cmd => typeof cmd === 'function' ? cmd(cyElement(id).data(FUN[kind].view)) || [] : cmd)
+    .map(cmd => {
       const arg = FUN[kind].handlerArg(id, cmd)
       const command = {
         content: cmd.label,
