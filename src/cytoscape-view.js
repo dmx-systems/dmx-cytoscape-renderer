@@ -580,7 +580,7 @@ function eventHandlers () {
     if (clicks === 2) {
       parent.$emit('topic-double-click', e.target.data('viewTopic'))
     }
-  }).on('cxttapstart taphold', e => {
+  }).on('cxttap taphold', e => {
     if (e.target === cy) {
       parent.$emit('topicmap-contextmenu', {
         model:  e.position,
