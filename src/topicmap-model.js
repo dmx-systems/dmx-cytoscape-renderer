@@ -88,6 +88,7 @@ const actions = {
     _topicmapWritable = writable
     ele = undefined
     state.selection = selection
+    state.zoom = topicmap.viewProps['dmx.topicmaps.zoom']
     state.details = {}
     return cyView.renderTopicmap(topicmap, writable, selection).then(showPinnedDetails)
   },
