@@ -4,6 +4,18 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**0.26** -- Mar 30, 2020
+
+* Features:
+    * Context commands can be calculated dynamically
+* Improvements:
+    * Mobile friendly: fires `topicmap-contextmenu` on `taphold` as well
+* Fixes:
+    * Pinned details respect zoom value at initial rendering
+* Chore:
+    * Update to Cytoscape 3.14.1
+    * Remove `cytoscape-cose-bilkent` dependency
+
 **0.25** -- Nov 21, 2019
 
 * Improvements:
@@ -202,4 +214,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Nov 21, 2019
+Mar 30, 2020
