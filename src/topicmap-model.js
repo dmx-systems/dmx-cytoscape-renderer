@@ -325,10 +325,13 @@ const actions = {
 
   _setTopicPosition (_, {topicmapId, topicId, pos}) {
     if (topicmapId === _topicmap.id) {
-      const viewTopic = _topicmap.getTopic(topicId)
-      viewTopic.setPosition(pos)                                          // update state
-      if (viewTopic.isVisible()) {
-        cyView.updateTopicPos(topicId, pos)                               // update view
+      // Note: the topic might not be in this topicmap because not readable by current user
+      const viewTopic = _topicmap.getTopicIfExists(topicId)
+      if (viewTopic) {
+        viewTopic.setPosition(pos)                                        // update state
+        if (viewTopic.isVisible()) {
+          cyView.updateTopicPos(topicId, pos)                             // update view
+        }
       }
     }
   },

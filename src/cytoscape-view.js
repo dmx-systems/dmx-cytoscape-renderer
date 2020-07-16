@@ -70,8 +70,8 @@ export default class CytoscapeView {
     writable ? eh.enable() : eh.disable()
     selection = _selection
     return svgReady.then(() => {
-      console.log('renderTopicmap', topicmap.id)
-      console.time('renderTopicmap')
+      // console.log('renderTopicmap', topicmap.id)
+      // console.time('renderTopicmap')
       // Note 1: utilization of cy.batch() would have a detrimental effect on calculating aux node positions of parallel
       // edges. This is because aux node positions of parallel edges are calculated several times.
       // Note 2: the cytoscape-edge-connections extension expects an aux node still to exist at the time its edge is
@@ -84,7 +84,7 @@ export default class CytoscapeView {
         x: topicmap.viewProps['dmx.topicmaps.pan_x'],
         y: topicmap.viewProps['dmx.topicmaps.pan_y']
       }, topicmap.viewProps['dmx.topicmaps.zoom'])
-      console.timeEnd('renderTopicmap')
+      // console.timeEnd('renderTopicmap')
     })
   }
 
