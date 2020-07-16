@@ -339,14 +339,16 @@ const actions = {
   _setTopicVisibility (_, {topicmapId, topicId, visibility}) {
     // console.log('_setTopicVisibility (Cytoscape Renderer)')
     if (topicmapId === _topicmap.id) {
-      const viewTopic = _topicmap.getTopic(topicId)
-      viewTopic.setVisibility(visibility)                                 // update state
-      if (visibility) {
-        cyView.addTopic(viewTopic)                                        // update view
-        autoRevealAssocs(topicId)
-      } else {
-        _topicmap.hideAssocsWithPlayer(topicId)                           // update state
-        cyView.remove(topicId)                                            // update view
+      const viewTopic = _topicmap.getTopicIfExists(topicId)
+      if (viewTopic) {
+        viewTopic.setVisibility(visibility)                               // update state
+        if (visibility) {
+          cyView.addTopic(viewTopic)                                      // update view
+          autoRevealAssocs(topicId)
+        } else {
+          _topicmap.hideAssocsWithPlayer(topicId)                         // update state
+          cyView.remove(topicId)                                          // update view
+        }
       }
     }
   },
@@ -354,14 +356,16 @@ const actions = {
   _setAssocVisibility (_, {topicmapId, assocId, visibility}) {
     // console.log('_setAssocVisibility (Cytoscape Renderer)')
     if (topicmapId === _topicmap.id) {
-      if (visibility) {
-        const viewAssoc = _topicmap.getAssoc(assocId)
-        viewAssoc.setVisibility(visibility)                               // update state
-        cyView.addAssoc(viewAssoc)                                        // update view
-      } else {
-        _topicmap.removeAssocsWithPlayer(assocId)                         // update state
-        _topicmap.removeAssoc(assocId)                                    // update state
-        cyView.remove(assocId)                                            // update view
+      const viewAssoc = _topicmap.getAssocIfExists(assocId)
+      if (viewAssoc) {
+        if (visibility) {
+          viewAssoc.setVisibility(visibility)                             // update state
+          cyView.addAssoc(viewAssoc)                                      // update view
+        } else {
+          _topicmap.removeAssocsWithPlayer(assocId)                       // update state
+          _topicmap.removeAssoc(assocId)                                  // update state
+          cyView.remove(assocId)                                          // update view
+        }
       }
     }
   },
