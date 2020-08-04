@@ -1,8 +1,15 @@
-# DeepaMehta 5 Cytoscape Renderer
+# DMX 5 Cytoscape Renderer
 
-A DeepaMehta 5 topicmap renderer as a composable GUI component.
+A DMX 5 topicmap renderer as a composable GUI component.
 
 ## Version History
+
+**1.0** -- Aug 4, 2020
+
+* Fixes:
+    * Client-sync when a public topicmap has private/confidential portions
+* Chore:
+    * Update to Cytoscape 3.15.2
 
 **0.26** -- Mar 30, 2020
 
@@ -214,4 +221,4 @@ A DeepaMehta 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Mar 30, 2020
+Aug 4, 2020
