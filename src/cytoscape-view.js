@@ -44,7 +44,7 @@ cytoscape.warnings(false)
 
 // register extensions
 cytoscape.use(require('cytoscape-autopan-on-drag'))
-// cytoscape.use(require('cytoscape-cose-bilkent'))   // layout is currently swicthed off; see AUTO_LAYOUT in
+// cytoscape.use(require('cytoscape-cose-bilkent'))   // layout is currently switched off; see AUTO_LAYOUT in
 cytoscape.use(require('cytoscape-cxtmenu'))           //                                   topicmap-model.js
 cytoscape.use(require('cytoscape-edgehandles'))
 cytoscape.use(require('cytoscape-edge-connections'))
@@ -676,7 +676,7 @@ function cyNode (viewTopic) {
   return {
     data: {
       id:              viewTopic.id,
-      label:           viewTopic.value.toString(),   // handle Number/Boolean values as strings, expected by nodeLabel()
+      label:           viewTopic.value.toString(),    // treat Number/Boolean values as strings, expected by nodeLabel()
       icon:            viewTopic.icon,
       iconColor:       viewTopic.iconColor,
       backgroundColor: viewTopic.backgroundColor,
