@@ -1,6 +1,6 @@
 import cytoscape from 'cytoscape'
 import fa from 'font-awesome/fonts/fontawesome-webfont.svg'
-import dm5 from 'dm5'
+import dm5 from 'dmx-api'
 
 // get style from CSS variables
 const style = window.getComputedStyle(document.body)

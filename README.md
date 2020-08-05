@@ -9,6 +9,7 @@ A DMX 5 topicmap renderer as a composable GUI component.
 * Fixes:
     * Client-sync when a public topicmap has private/confidential portions
 * Chore:
+    * Rename this package `dm5-cytoscape-renderer` -> `dmx-cytoscape-renderer`
     * Update to Cytoscape 3.15.2
 
 **0.26** -- Mar 30, 2020

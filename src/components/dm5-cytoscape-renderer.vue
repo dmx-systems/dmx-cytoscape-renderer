@@ -7,17 +7,17 @@
 </template>
 
 <script>
-import dm5 from 'dm5'
+import dm5 from 'dmx-api'
 
 export default {
 
   created () {
-    // console.log('dm5-cytoscape-renderer created')
+    // console.log('dmx-cytoscape-renderer created')
   },
 
   // create Cytoscape instance once DOM is ready
   mounted () {
-    // console.log('dm5-cytoscape-renderer mounted')
+    // console.log('dmx-cytoscape-renderer mounted')
     this.$store.dispatch('_initCytoscape', {
       parent:          this.$parent,
       container:       this.$refs['cytoscape-container'],     // only known in mounted()
@@ -27,7 +27,7 @@ export default {
   },
 
   destroyed () {
-    console.log('dm5-cytoscape-renderer destroyed')
+    console.log('dmx-cytoscape-renderer destroyed')
     // Note: at this time the store modules are switched already
   },
 
@@ -45,12 +45,12 @@ export default {
   watch: {
 
     object () {
-      // console.log('object watcher dm5-cytoscape-renderer', this.object)
+      // console.log('object watcher dmx-cytoscape-renderer', this.object)
       this.$store.dispatch('_syncObject', this.object)
     },
 
     writable () {
-      // console.log('writable watcher dm5-cytoscape-renderer', this.writable)
+      // console.log('writable watcher dmx-cytoscape-renderer', this.writable)
       this.$store.dispatch('_syncWritable', this.writable)
     }
   },

@@ -18,7 +18,7 @@
 
 import CytoscapeView from './cytoscape-view'
 import Vue from 'vue'
-import dm5 from 'dm5'
+import dm5 from 'dmx-api'
 
 const AUTO_LAYOUT = false
 
@@ -402,7 +402,7 @@ const actions = {
 
   // === Cytoscape View ===
 
-  // Module internal actions (dispatched from dm5-cytoscape-renderer components or cytoscape-view.js)
+  // Module internal actions (dispatched from dmx-cytoscape-renderer components or cytoscape-view.js)
 
   /**
    * @param   container   the container DOM element for the Cytoscape instance
