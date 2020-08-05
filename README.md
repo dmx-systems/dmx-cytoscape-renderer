@@ -4,6 +4,11 @@ A DMX 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**1.0.1** -- Aug 5, 2020
+
+* Chore:
+    * Bump `dmx-object-renderer` dependency
+
 **1.0** -- Aug 4, 2020
 
 * Fixes:
@@ -222,4 +227,4 @@ A DMX 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Aug 4, 2020
+Aug 5, 2020
