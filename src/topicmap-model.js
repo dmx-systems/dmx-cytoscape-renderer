@@ -1,7 +1,7 @@
 /*
   TODO: architecture; separate topicmap model from renderer
     1. Topicmap controller
-      - holds topicmap, e.g. dm5.Topicmap or dm5.Geomap (model)
+      - holds topicmap, e.g. dm5.Topicmap or Geomap (model)
       - provides update facility; updates all 3 aspects together
         - client state
         - server state
@@ -119,6 +119,7 @@ const actions = {
   renderAssoc (_, assoc) {
     // update state + view
     const op = _revealAssoc(assoc)
+    // FIXME: auto-assoc-reveal for assocs?
     // update server
     if (_topicmapWritable) {
       if (op.type === 'add') {
@@ -131,10 +132,10 @@ const actions = {
     }
   },
 
-  renderRelatedTopic (_, {relTopic, autoPan}) {
+  renderRelatedTopic (_, {relTopic, pos, autoPan}) {
     // console.log('renderRelatedTopic', relTopic, autoPan)
     // update state + view
-    const topicOp = _revealTopic(relTopic, undefined, autoPan)    // pos=undefined
+    const topicOp = _revealTopic(relTopic, pos, autoPan)
     const assocOp = _revealAssoc(relTopic.assoc)
     autoRevealAssocs(relTopic.id)
     // update server
