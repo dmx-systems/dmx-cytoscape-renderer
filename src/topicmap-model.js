@@ -269,11 +269,11 @@ const actions = {
   },
 
   /**
-   * Low-level action that updates client state and view.
-   * Server state is *not* updated as done by deleteMulti() high-level action (see dm4-webclient/webclient.js).
+   * Low-level action that updates client state and view when a topic is about to be deleted.
+   * The caller is responsible for updating the server state.
    *
-   * Note: there is no high-level action to delete a single topic.
-   * Deleting is always performed as a multi-operation, that is in a single request.
+   * Note: there is no universal high-level action to delete a single topic.
+   * This is to realize a delete-multi operation as a single request.
    */
   _deleteTopic (_, id) {
     // update state
@@ -286,7 +286,8 @@ const actions = {
 
   /**
    * Low-level action that updates client state and view.
-   * Server state is *not* updated as done by deleteMulti() high-level action (see dm4-webclient/webclient.js).
+   * Server state is *not* updated as done by deleteMulti() high-level action (see webclient.js of module
+   * dmx-webclient).
    *
    * Note: there is no high-level action to delete a single assoc.
    * Deleting is always performed as a multi-operation, that is in a single request.
