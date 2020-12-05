@@ -1,5 +1,4 @@
 import cytoscape from 'cytoscape'
-import fa from 'font-awesome/fonts/fontawesome-webfont.svg'
 import dm5 from 'dmx-api'
 
 // get style from CSS variables
@@ -20,13 +19,6 @@ const onSelectEdge   = edgeHandler('select')
 const onUnselectNode = nodeHandler('unselect')
 const onUnselectEdge = edgeHandler('unselect')
 
-// a promise resolved once the Font Awesome SVG is loaded
-const svgReady = dm5.restClient.getXML(fa).then(svg => {
-  // console.log('### SVG ready!')
-  faFont = svg.querySelector('font')
-  faDefaultWidth = faFont.getAttribute('horiz-adv-x')
-})
-
 let cy                  // Cytoscape instance
 let ec                  // cytoscape-edge-connections API object
 let eh                  // cytoscape-edgehandles API object
@@ -34,8 +26,6 @@ let parent              // the dm5-topicmap-panel (a Vue instance); used as even
 let box                 // the measurement box
 let modifiers           // modifier keys
 let dispatch
-let faFont              // Font Awesome SVG <font> element
-let faDefaultWidth      // Default icon width
 let fisheyeAnimation
 let selection           // the selection model for the rendered topicmap (a Selection object, defined in dm5-topicmaps),
                         // initialized by renderTopicmap() method
@@ -69,7 +59,7 @@ export default class CytoscapeView {
   renderTopicmap (topicmap, writable, _selection) {
     writable ? eh.enable() : eh.disable()
     selection = _selection
-    return svgReady.then(() => {
+    return dm5.icons.ready.then(() => {
       // console.log('renderTopicmap', topicmap.id)
       // console.time('renderTopicmap')
       // Note 1: utilization of cy.batch() would have a detrimental effect on calculating aux node positions of parallel
@@ -337,7 +327,7 @@ function renderNode (ele) {
 }
 
 function _renderNode (label, icon, iconColor, backgroundColor) {
-  const glyph = faGlyph(icon)
+  const glyph = dm5.icons.faGlyph(icon)
   const iconWidth = 0.009 * glyph.width
   const size = measureText(label)
   const width = size.width + iconWidth + 18
@@ -358,18 +348,6 @@ function nodeLabel (label) {
   label = label.length > MAX_LABEL_LENGTH ? label.substr(0, MAX_LABEL_LENGTH) + '…' : label
   label = label.replace(/&/g, '&amp;').replace(/</g, '&lt;')    // TODO: move to utils?
   return label
-}
-
-function faGlyph (unicode) {
-  try {
-    const glyph = faFont.querySelector(`glyph[unicode="${unicode}"]`)
-    return {
-      path: glyph.getAttribute('d'),
-      width: glyph.getAttribute('horiz-adv-x') || faDefaultWidth
-    }
-  } catch (e) {
-    throw Error(`Font Awesome glyph "${unicode}" not available (${e})`)
-  }
 }
 
 function measureText (text) {
