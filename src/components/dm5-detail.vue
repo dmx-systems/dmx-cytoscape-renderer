@@ -109,13 +109,13 @@ export default {
         return this.detail.pinned
       },
       set (pinned) {
-        const event = this.object.isTopic() ? 'topic-pin' : 'assoc-pin'
+        const event = this.object.isTopic ? 'topic-pin' : 'assoc-pin'
         this.parent.$emit(event, {id: this.object.id, pinned})
       }
     },
 
     objectKind () {
-      return this.object.isTopic() ? 'topic' : 'association'
+      return this.object.isTopic ? 'topic' : 'association'
     },
 
     // principle copy in dm5-info-tab.vue (dm5-detail-panel)

@@ -839,7 +839,7 @@ function createDetail (viewObject) {
   listenPosition(detail)
   return new Promise(resolve => {
     viewObject.fetchObject().then(object => {
-      detail.object = object.isType() ? object.asType() : object    // logical copy in updateDetail()
+      detail.object = object.isType ? object.asType() : object    // logical copy in updateDetail()
       resolve(detail)
     })
     viewObject.isWritable().then(writable => {
@@ -1015,7 +1015,7 @@ function _removeDetail (detail) {
 function updateDetail (object) {
   const detail = Object.values(state.details).find(detail => detail.id === object.id)
   if (detail) {
-    detail.object = object.isType() ? object.asType() : object    // logical copy in createDetail()
+    detail.object = object.isType ? object.asType() : object    // logical copy in createDetail()
   }
 }
 
