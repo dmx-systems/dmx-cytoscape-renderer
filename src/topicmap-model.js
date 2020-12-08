@@ -76,7 +76,7 @@ const actions = {
 
   fetchTopicmap (_, id) {
     // console.log('fetchTopicmap', id, '(topicmap-model)')
-    return dm5.restClient.getTopicmap(id)
+    return dm5.rpc.getTopicmap(id)
   },
 
   /**
@@ -109,9 +109,9 @@ const actions = {
     // update server
     if (_topicmapWritable) {
       if (op.type === 'add') {
-        dm5.restClient.addTopicToTopicmap(_topicmap.id, topic.id, op.viewTopic.viewProps)
+        dm5.rpc.addTopicToTopicmap(_topicmap.id, topic.id, op.viewTopic.viewProps)
       } else if (op.type === 'show') {
-        dm5.restClient.setTopicVisibility(_topicmap.id, topic.id, true)
+        dm5.rpc.setTopicVisibility(_topicmap.id, topic.id, true)
       }
     }
   },
@@ -123,11 +123,11 @@ const actions = {
     // update server
     if (_topicmapWritable) {
       if (op.type === 'add') {
-        dm5.restClient.addAssocToTopicmap(_topicmap.id, assoc.id, op.viewAssoc.viewProps)
+        dm5.rpc.addAssocToTopicmap(_topicmap.id, assoc.id, op.viewAssoc.viewProps)
       } else if (op.type === 'show') {
         // Note: actually never called by DMX webclient. The "renderAssoc" action is only called after assoc creation;
         // In this case op.type is always "add". In most cases assocs are revealed through "renderRelatedTopic" action.
-        dm5.restClient.setAssocVisibility(_topicmap.id, assoc.id, true)
+        dm5.rpc.setAssocVisibility(_topicmap.id, assoc.id, true)
       }
     }
   },
@@ -144,7 +144,7 @@ const actions = {
         // Note: the case the topic is revealed but not the assoc can't happen
         // Note: if the topic is not revealed (but the assoc is) topicOp.viewTopic is undefined
         const viewProps = topicOp.viewTopic && topicOp.viewTopic.viewProps
-        dm5.restClient.addRelatedTopicToTopicmap(_topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
+        dm5.rpc.addRelatedTopicToTopicmap(_topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
       }
     }
   },
@@ -162,7 +162,7 @@ const actions = {
     // update view (up-to-date already)
     // update server
     if (_topicmapWritable) {
-      dm5.restClient.setTopicPosition(_topicmap.id, id, pos)
+      dm5.rpc.setTopicPosition(_topicmap.id, id, pos)
     }
   },
 
@@ -186,7 +186,7 @@ const actions = {
     // update view (up-to-date already)
     // update server
     if (_topicmapWritable) {
-      dm5.restClient.setTopicPositions(_topicmap.id, topicCoords)
+      dm5.rpc.setTopicPositions(_topicmap.id, topicCoords)
     }
   },
 
@@ -198,7 +198,7 @@ const actions = {
     idLists.assocIds.forEach(id => dispatch('_hideAssoc', id))
     // update server
     if (_topicmapWritable) {
-      dm5.restClient.hideMulti(_topicmap.id, idLists)
+      dm5.rpc.hideMulti(_topicmap.id, idLists)
     }
   },
 
@@ -210,7 +210,7 @@ const actions = {
     removeDetailIfUnpinned(topicId, pinned, showDetails)
     // update server
     if (_topicmapWritable) {
-      dm5.restClient.setTopicViewProps(_topicmap.id, topicId, {
+      dm5.rpc.setTopicViewProps(_topicmap.id, topicId, {
         'dmx.topicmaps.pinned': pinned
       })
     }
@@ -224,7 +224,7 @@ const actions = {
     removeDetailIfUnpinned(assocId, pinned, showDetails)
     // update server
     if (_topicmapWritable) {
-      dm5.restClient.setAssocViewProps(_topicmap.id, assocId, {
+      dm5.rpc.setAssocViewProps(_topicmap.id, assocId, {
         'dmx.topicmaps.pinned': pinned
       })
     }
@@ -447,7 +447,7 @@ const actions = {
     Object.values(state.details).forEach(updateDetailPos)
     // update server
     if (_topicmapWritable) {
-      dm5.restClient.setTopicmapViewport(_topicmap.id, pan, zoom)
+      dm5.rpc.setTopicmapViewport(_topicmap.id, pan, zoom)
     }
   },
 
