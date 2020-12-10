@@ -1,7 +1,7 @@
 /*
   TODO: architecture; separate topicmap model from renderer
     1. Topicmap controller
-      - holds topicmap, e.g. dm5.Topicmap or Geomap (model)
+      - holds topicmap, e.g. dmx.Topicmap or Geomap (model)
       - provides update facility; updates all 3 aspects together
         - client state
         - server state
@@ -18,15 +18,15 @@
 
 import CytoscapeView from './cytoscape-view'
 import Vue from 'vue'
-import dm5 from 'dmx-api'
+import dmx from 'dmx-api'
 
 const AUTO_LAYOUT = false
 
 // These 2 variables + state.selection are initialized together by "renderTopicmap" action.
-let _topicmap           // the rendered topicmap (dm5.Topicmap)
+let _topicmap           // the rendered topicmap (dmx.Topicmap)
 let _topicmapWritable   // true if the current user has WRITE permission for the rendered topicmap (boolean)
 
-let _object             // the selected object (dm5.DMXObject)
+let _object             // the selected object (dmx.DMXObject)
 
 let cyView              // The CytoscapeView instance, initialized by "_initCytoscape" action.
                         // The instance lives as long as the Cytoscape Renderer is active. That is when switching
@@ -59,7 +59,7 @@ const state = {
                   // createDetailForSelection()):
                   //  {
                   //    id        ID of "object" (Number). May be set before "object" is actually available.
-                  //    object    The object to render (dm5.Topic, dm5.Assoc)
+                  //    object    The object to render (dmx.Topic, dmx.Assoc)
                   //    node      Getter. The "detail node" (a Cytoscape node). Either "ele" (if "ele" is a node),
                   //              or the "aux node" (if "ele" is an edge). This node is visually styled (border, size).
                   //    pos       The position of the detail DOM.
@@ -76,7 +76,7 @@ const actions = {
 
   fetchTopicmap (_, id) {
     // console.log('fetchTopicmap', id, '(topicmap-model)')
-    return dm5.rpc.getTopicmap(id)
+    return dmx.rpc.getTopicmap(id)
   },
 
   /**
@@ -98,7 +98,7 @@ const actions = {
   /**
    * Reveals a topic on the topicmap panel.
    *
-   * @param   topic   the topic to reveal (dm5.Topic).
+   * @param   topic   the topic to reveal (dmx.Topic).
    * @param   pos     Optional: the topic position in model coordinates (object with "x", "y" props).
    *                  If not given it's up to the topicmap renderer to position the topic.
    */
@@ -109,9 +109,9 @@ const actions = {
     // update server
     if (_topicmapWritable) {
       if (op.type === 'add') {
-        dm5.rpc.addTopicToTopicmap(_topicmap.id, topic.id, op.viewTopic.viewProps)
+        dmx.rpc.addTopicToTopicmap(_topicmap.id, topic.id, op.viewTopic.viewProps)
       } else if (op.type === 'show') {
-        dm5.rpc.setTopicVisibility(_topicmap.id, topic.id, true)
+        dmx.rpc.setTopicVisibility(_topicmap.id, topic.id, true)
       }
     }
   },
@@ -123,11 +123,11 @@ const actions = {
     // update server
     if (_topicmapWritable) {
       if (op.type === 'add') {
-        dm5.rpc.addAssocToTopicmap(_topicmap.id, assoc.id, op.viewAssoc.viewProps)
+        dmx.rpc.addAssocToTopicmap(_topicmap.id, assoc.id, op.viewAssoc.viewProps)
       } else if (op.type === 'show') {
         // Note: actually never called by DMX webclient. The "renderAssoc" action is only called after assoc creation;
         // In this case op.type is always "add". In most cases assocs are revealed through "renderRelatedTopic" action.
-        dm5.rpc.setAssocVisibility(_topicmap.id, assoc.id, true)
+        dmx.rpc.setAssocVisibility(_topicmap.id, assoc.id, true)
       }
     }
   },
@@ -144,7 +144,7 @@ const actions = {
         // Note: the case the topic is revealed but not the assoc can't happen
         // Note: if the topic is not revealed (but the assoc is) topicOp.viewTopic is undefined
         const viewProps = topicOp.viewTopic && topicOp.viewTopic.viewProps
-        dm5.rpc.addRelatedTopicToTopicmap(_topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
+        dmx.rpc.addRelatedTopicToTopicmap(_topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
       }
     }
   },
@@ -162,7 +162,7 @@ const actions = {
     // update view (up-to-date already)
     // update server
     if (_topicmapWritable) {
-      dm5.rpc.setTopicPosition(_topicmap.id, id, pos)
+      dmx.rpc.setTopicPosition(_topicmap.id, id, pos)
     }
   },
 
@@ -186,7 +186,7 @@ const actions = {
     // update view (up-to-date already)
     // update server
     if (_topicmapWritable) {
-      dm5.rpc.setTopicPositions(_topicmap.id, topicCoords)
+      dmx.rpc.setTopicPositions(_topicmap.id, topicCoords)
     }
   },
 
@@ -198,7 +198,7 @@ const actions = {
     idLists.assocIds.forEach(id => dispatch('_hideAssoc', id))
     // update server
     if (_topicmapWritable) {
-      dm5.rpc.hideMulti(_topicmap.id, idLists)
+      dmx.rpc.hideMulti(_topicmap.id, idLists)
     }
   },
 
@@ -210,7 +210,7 @@ const actions = {
     removeDetailIfUnpinned(topicId, pinned, showDetails)
     // update server
     if (_topicmapWritable) {
-      dm5.rpc.setTopicViewProps(_topicmap.id, topicId, {
+      dmx.rpc.setTopicViewProps(_topicmap.id, topicId, {
         'dmx.topicmaps.pinned': pinned
       })
     }
@@ -224,7 +224,7 @@ const actions = {
     removeDetailIfUnpinned(assocId, pinned, showDetails)
     // update server
     if (_topicmapWritable) {
-      dm5.rpc.setAssocViewProps(_topicmap.id, assocId, {
+      dmx.rpc.setAssocViewProps(_topicmap.id, assocId, {
         'dmx.topicmaps.pinned': pinned
       })
     }
@@ -311,7 +311,7 @@ const actions = {
 
   _addTopicToTopicmap (_, {topicmapId, viewTopic}) {
     if (topicmapId === _topicmap.id) {
-      const _viewTopic = new dm5.ViewTopic(viewTopic)
+      const _viewTopic = new dmx.ViewTopic(viewTopic)
       _topicmap.addTopic(_viewTopic)                                      // update state
       cyView.addTopic(_viewTopic)                                         // update view
     }
@@ -319,7 +319,7 @@ const actions = {
 
   _addAssocToTopicmap (_, {topicmapId, viewAssoc}) {
     if (topicmapId === _topicmap.id) {
-      const _viewAssoc = new dm5.ViewAssoc(viewAssoc)
+      const _viewAssoc = new dmx.ViewAssoc(viewAssoc)
       _topicmap.addAssoc(_viewAssoc)                                      // update state
       cyView.addAssoc(_viewAssoc)                                         // update view
     }
@@ -377,7 +377,7 @@ const actions = {
     directives.forEach(dir => {
       switch (dir.type) {
       case "UPDATE_TOPIC":
-        const topic = new dm5.Topic(dir.arg)
+        const topic = new dmx.Topic(dir.arg)
         updateTopic(topic)
         updateDetail(topic)
         break
@@ -385,7 +385,7 @@ const actions = {
         deleteTopic(dir.arg)
         break
       case "UPDATE_ASSOCIATION":
-        const assoc = new dm5.Assoc(dir.arg)
+        const assoc = new dmx.Assoc(dir.arg)
         updateAssoc(assoc)
         updateDetail(assoc)
         break
@@ -447,7 +447,7 @@ const actions = {
     Object.values(state.details).forEach(updateDetailPos)
     // update server
     if (_topicmapWritable) {
-      dm5.rpc.setTopicmapViewport(_topicmap.id, pan, zoom)
+      dmx.rpc.setTopicmapViewport(_topicmap.id, pan, zoom)
     }
   },
 
@@ -596,7 +596,7 @@ function autoRevealAssocs (id) {
 }
 
 /**
- * @param   topic     the topic to reveal (dm5.Topic).
+ * @param   topic     the topic to reveal (dmx.Topic).
  * @param   pos       Optional: the topic position in model coordinates (object with "x", "y" props).
  *                    If not given it's up to the topicmap renderer to position the topic.
  * @param   autoPan   Optional: if trueish the topicmap is panned so that the topic is within viewport.
@@ -615,7 +615,7 @@ function _revealTopic (topic, pos, autoPan) {
 }
 
 /**
- * @param   assoc     the assoc to reveal (dm5.Assoc).
+ * @param   assoc     the assoc to reveal (dmx.Assoc).
  */
 function _revealAssoc (assoc) {
   // update state
@@ -815,7 +815,7 @@ function showPinnedDetails () {
 /**
  * Creates a detail record for the given object.
  *
- * @param   viewObject    a dm5.ViewTopic or a dm5.ViewAssoc
+ * @param   viewObject    a dmx.ViewTopic or a dmx.ViewAssoc
  *
  * @return  a promise for the created detail record
  */
@@ -1030,7 +1030,7 @@ function updateDetailPos (detail) {
 }
 
 function playFisheyeAnimationIfDetailsOnscreen () {
-  if (AUTO_LAYOUT && !dm5.utils.isEmpty(state.details)) {
+  if (AUTO_LAYOUT && !dmx.utils.isEmpty(state.details)) {
     cyView.playFisheyeAnimation()
   }
 }

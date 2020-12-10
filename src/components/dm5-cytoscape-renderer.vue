@@ -7,7 +7,7 @@
 </template>
 
 <script>
-import dm5 from 'dmx-api'
+import dmx from 'dmx-api'
 
 export default {
 
@@ -36,7 +36,7 @@ export default {
   ],
 
   props: {
-    object: dm5.DMXObject,
+    object: dmx.DMXObject,
     writable: Boolean,
     contextCommands: Object,
     quillConfig: Object

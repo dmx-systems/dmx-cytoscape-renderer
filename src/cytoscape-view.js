@@ -1,5 +1,5 @@
 import cytoscape from 'cytoscape'
-import dm5 from 'dmx-api'
+import dmx from 'dmx-api'
 
 // get style from CSS variables
 const style = window.getComputedStyle(document.body)
@@ -59,7 +59,7 @@ export default class CytoscapeView {
   renderTopicmap (topicmap, writable, _selection) {
     writable ? eh.enable() : eh.disable()
     selection = _selection
-    return dm5.icons.ready.then(() => {
+    return dmx.icons.ready.then(() => {
       // console.log('renderTopicmap', topicmap.id)
       // console.time('renderTopicmap')
       // Note 1: utilization of cy.batch() would have a detrimental effect on calculating aux node positions of parallel
@@ -327,7 +327,7 @@ function renderNode (ele) {
 }
 
 function _renderNode (label, icon, iconColor, backgroundColor) {
-  const glyph = dm5.icons.faGlyph(icon)
+  const glyph = dmx.icons.faGlyph(icon)
   const iconWidth = 0.009 * glyph.width
   const size = measureText(label)
   const width = size.width + iconWidth + 18
@@ -463,8 +463,8 @@ function assocHandlerArg (id, cmd) {
  */
 function idLists () {
   return {
-    topicIds: dm5.utils.clone(selection.topicIds),
-    assocIds: dm5.utils.clone(selection.assocIds)
+    topicIds: dmx.utils.clone(selection.topicIds),
+    assocIds: dmx.utils.clone(selection.assocIds)
   }
 }
 
@@ -621,7 +621,7 @@ function onViewport () {
 // Animation
 
 // Note: instead of returning a promise we take a callback, because debounced functions can't return anything
-const playFisheyeAnimation = dm5.utils.debounce(callback => {
+const playFisheyeAnimation = dmx.utils.debounce(callback => {
   // console.log('playFisheyeAnimation')
   fisheyeAnimation && fisheyeAnimation.stop()
   fisheyeAnimation = cy.layout({
@@ -646,9 +646,9 @@ const playFisheyeAnimation = dm5.utils.debounce(callback => {
 // Helper
 
 /**
- * Builds a Cytoscape node from a dm5.ViewTopic
+ * Builds a Cytoscape node from a dmx.ViewTopic
  *
- * @param   viewTopic   A dm5.ViewTopic
+ * @param   viewTopic   A dmx.ViewTopic
  */
 function cyNode (viewTopic) {
   return {
@@ -665,11 +665,11 @@ function cyNode (viewTopic) {
 }
 
 /**
- * Builds a Cytoscape edge from a dm5.ViewAssoc
+ * Builds a Cytoscape edge from a dmx.ViewAssoc
  *
  * Prerequisite: viewAssoc has 2 topic players specified by-ID. ### FIXDOC (assoc players are supported as well)
  *
- * @param   viewAssoc   A dm5.ViewAssoc
+ * @param   viewAssoc   A dmx.ViewAssoc
  */
 function cyEdge (viewAssoc) {
   return {

@@ -19,7 +19,7 @@
 
 <script>
 import { mapState } from 'vuex'
-import dm5 from 'dmx-api'
+import dmx from 'dmx-api'
 
 export default {
 
@@ -120,7 +120,7 @@ export default {
 
     // principle copy in dm5-info-tab.vue (dm5-detail-panel)
     _quillConfig () {
-      const _quillConfig = dm5.utils.clone(this.quillConfig)
+      const _quillConfig = dmx.utils.clone(this.quillConfig)
       _quillConfig.options.bounds = '.dm5-topicmap-panel'
       return _quillConfig
     }
