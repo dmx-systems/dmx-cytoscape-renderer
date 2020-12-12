@@ -1,8 +1,8 @@
 <template>
   <div class="dm5-detail-layer">
-    <dm5-detail v-for="detail in details" :detail="detail" :detail-renderers="detailRenderers"
+    <dmx-detail v-for="detail in details" :detail="detail" :detail-renderers="detailRenderers"
       :quill-config="quillConfig" :key="detail.node.id()">
-    </dm5-detail>
+    </dmx-detail>
   </div>
 </template>
 
@@ -28,7 +28,7 @@ export default {
   },
 
   components: {
-    'dm5-detail': require('./dm5-detail').default
+    'dmx-detail': require('./dmx-detail').default
   }
 }
 

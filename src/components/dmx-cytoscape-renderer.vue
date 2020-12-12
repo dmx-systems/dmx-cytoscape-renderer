@@ -2,7 +2,7 @@
   <div class="dm5-cytoscape-renderer" @mousedown.capture="mousedown">
     <div class="cytoscape-container" ref="cytoscape-container"></div>
     <div class="measurement-box" ref="measurement-box"></div>
-    <dm5-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig"></dm5-detail-layer>
+    <dmx-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig"></dmx-detail-layer>
   </div>
 </template>
 
@@ -67,7 +67,7 @@ export default {
   },
 
   components: {
-    'dm5-detail-layer': require('./dm5-detail-layer').default
+    'dmx-detail-layer': require('./dmx-detail-layer').default
   }
 }
 </script>
