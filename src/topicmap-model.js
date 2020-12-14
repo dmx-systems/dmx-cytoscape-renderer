@@ -50,10 +50,10 @@ const state = {
                                   // Note: the "writable" prop of the selected object's detail record updates
                                   // reactively. "_object" and "objectWritable" update together, but asynchronously.
   selection: undefined,           // The selection model for the rendered topicmap (a Selection object, defined in
-                                  // dm5-topicmaps). Initialized together with _topicmap and _topicmapWritable by
+                                  // dmx-topicmaps). Initialized together with _topicmap and _topicmapWritable by
                                   // "renderTopicmap" action.
-                                  // Note: dm5-detail component style updates reactively.
-  zoom: undefined,                // Note: dm5-detail component style updates reactively.
+                                  // Note: dmx-detail component style updates reactively.
+  zoom: undefined,                // Note: dmx-detail component style updates reactively.
 
   details: {}     // In-map details. Detail records keyed by object ID (created by createDetail() and
                   // createDetailForSelection()):
@@ -408,7 +408,7 @@ const actions = {
 
   /**
    * @param   container   the container DOM element for the Cytoscape instance
-   * @param   parent      the dm5-topicmap-panel (a Vue instance)
+   * @param   parent      the dmx-topicmap-panel (a Vue instance)
    * @param   box         the DOM element used for measurement
    */
   _initCytoscape ({dispatch}, {container, contextCommands, parent, box}) {
@@ -670,7 +670,7 @@ function updateAssoc (assoc) {
  * Processes a DELETE_TOPIC directive.
  */
 function deleteTopic (topic) {
-  // Note: state is already updated by dm5-topicmap-panel
+  // Note: state is already updated by dmx-topicmap-panel
   //
   // update view
   cyView.remove(topic.id)
@@ -680,7 +680,7 @@ function deleteTopic (topic) {
  * Processes a DELETE_ASSOCIATION directive.
  */
 function deleteAssoc (assoc) {
-  // Note: state is already updated by dm5-topicmap-panel
+  // Note: state is already updated by dmx-topicmap-panel
   //
   // update view
   cyView.remove(assoc.id)
@@ -905,7 +905,7 @@ function createAndShowSelectionDetail () {
  */
 function showDetail (detail) {
   detail.node.addClass('expanded')
-  Vue.set(state.details, detail.id, detail)       // Vue.set() triggers dm5-detail-layer rendering
+  Vue.set(state.details, detail.id, detail)       // Vue.set() triggers dmx-detail-layer rendering
   return Vue.nextTick().then(
     () => adjustDetailSize(detail)
   )
@@ -1009,7 +1009,7 @@ function _removeDetailIfOnscreen (id) {
 
 function _removeDetail (detail) {
   // update state
-  Vue.delete(state.details, detail.id)              // Vue.delete() triggers dm5-detail-layer rendering
+  Vue.delete(state.details, detail.id)              // Vue.delete() triggers dmx-detail-layer rendering
 }
 
 function updateDetail (object) {
@@ -1053,8 +1053,8 @@ function isSelected (objectId) {
   return ele && eleId(ele) === objectId
 }
 
-// copy in dm5-cytoscape-renderer.vue
-// copy in dm5-detail-layer.vue
+// copy in dmx-cytoscape-renderer.vue
+// copy in dmx-detail-layer.vue
 // copy in cytoscape-edge-connections (index.js)
 function eleId (ele) {
   // Note: Cytoscape element IDs are strings

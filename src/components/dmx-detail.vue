@@ -24,11 +24,11 @@ import dmx from 'dmx-api'
 export default {
 
   created () {
-    // console.log('dm5-detail created')
+    // console.log('dmx-detail created')
   },
 
   mounted () {
-    // console.log('dm5-detail mounted')
+    // console.log('dmx-detail mounted')
   },
 
   mixins: [
@@ -51,7 +51,7 @@ export default {
   computed: {
 
     // Note: 'dmx.topicmaps.topicmap' is the URI of the Topicmap Type this topicmap renderer is able to render.
-    // The dm5-topicmap-panel module registers this topicmap renderer's store module by this URI.
+    // The dmx-topicmap-panel module registers this topicmap renderer's store module by this URI.
     ...mapState({
       selection: state => state['dmx.topicmaps.topicmap'].selection,
       zoom:      state => state['dmx.topicmaps.topicmap'].zoom
@@ -118,7 +118,7 @@ export default {
       return this.object.isTopic ? 'topic' : 'association'
     },
 
-    // principle copy in dm5-info-tab.vue (dm5-detail-panel)
+    // principle copy in dmx-info-tab.vue (dmx-detail-panel)
     _quillConfig () {
       const _quillConfig = dmx.utils.clone(this.quillConfig)
       _quillConfig.options.bounds = '.dmx-topicmap-panel'
@@ -152,7 +152,7 @@ export default {
   },
 
   components: {
-    'dm5-object-renderer': require('dmx-object-renderer').default
+    'dm5-object-renderer': require('dmx-object-renderer').default  // TODO: use globally registered dmx-object-renderer?
   }
 }
 </script>

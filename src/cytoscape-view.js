@@ -22,12 +22,12 @@ const onUnselectEdge = edgeHandler('unselect')
 let cy                  // Cytoscape instance
 let ec                  // cytoscape-edge-connections API object
 let eh                  // cytoscape-edgehandles API object
-let parent              // the dm5-topicmap-panel (a Vue instance); used as event emitter
+let parent              // the dmx-topicmap-panel (a Vue instance); used as event emitter
 let box                 // the measurement box
 let modifiers           // modifier keys
 let dispatch
 let fisheyeAnimation
-let selection           // the selection model for the rendered topicmap (a Selection object, defined in dm5-topicmaps),
+let selection           // the selection model for the rendered topicmap (a Selection object, defined in dmx-topicmaps),
                         // initialized by renderTopicmap() method
 
 cytoscape.warnings(false)
@@ -713,7 +713,7 @@ function edgeId (node) {
   return Number(ec.edgeId(node))
 }
 
-// copy in dm5-detail-layer.vue
+// copy in dmx-detail-layer.vue
 function id (ele) {
   // Note: cytoscape element IDs are strings
   return Number(ele.id())
