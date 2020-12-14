@@ -5,9 +5,9 @@
       than "detailNode" (the visibility predicate in parent comp). So we have to put v-if="object" here.
       TODO: approve this hypothesis. ### FIXDOC
     -->
-    <dm5-object-renderer v-if="object" :object="object" :writable="writable" mode="info" :renderers="detailRenderers"
+    <dmx-object-renderer v-if="object" :object="object" :writable="writable" mode="info" :renderers="detailRenderers"
       :quill-config="_quillConfig" @inline="setInlineId" @child-topic-reveal="revealChildTopic" @updated="updated">
-    </dm5-object-renderer>
+    </dmx-object-renderer>
     <div class="button-panel">
       <el-button :class="['lock', 'fa', lockIcon]" type="text" :title="lockTitle" @click="toggleLocked"></el-button>
       <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" :title="pinTitle"
@@ -152,7 +152,7 @@ export default {
   },
 
   components: {
-    'dm5-object-renderer': require('dmx-object-renderer').default  // TODO: use globally registered dmx-object-renderer?
+    'dmx-object-renderer': require('dmx-object-renderer').default
   }
 }
 </script>
