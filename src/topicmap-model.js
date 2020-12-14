@@ -922,7 +922,7 @@ function showDetail (detail) {
  * @return  a promise resolved once the fisheye animation is complete
  */
 function adjustDetailSize(detail) {
-  const detailDOM = document.querySelector(`.dm5-detail-layer .dm5-detail[data-detail-id="${detail.id}"]`)
+  const detailDOM = document.querySelector(`.dmx-detail-layer .dmx-detail[data-detail-id="${detail.id}"]`)
   if (!detailDOM) {
     throw Error(`detail DOM ${detail.id} not found`)
   }

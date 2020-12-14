@@ -1,5 +1,5 @@
 <template>
-  <div class="dm5-detail-layer">
+  <div class="dmx-detail-layer">
     <dmx-detail v-for="detail in details" :detail="detail" :detail-renderers="detailRenderers"
       :quill-config="quillConfig" :key="detail.node.id()">
     </dmx-detail>
@@ -35,7 +35,7 @@ export default {
 </script>
 
 <style>
-.dm5-detail-layer {
+.dmx-detail-layer {
   position: absolute;
   width: 10000px;     /* avoid early line wrapping */
   top: 0;

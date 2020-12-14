@@ -1,5 +1,5 @@
 <template>
-  <div :class="['dm5-detail', {selected}, {locked}]" :data-detail-id="detail.id" :style="style">
+  <div :class="['dmx-detail', {selected}, {locked}]" :data-detail-id="detail.id" :style="style">
     <!--
       Note: apparently "object" (a required "object" prop in child comp) can go away in an earlier update cycle
       than "detailNode" (the visibility predicate in parent comp). So we have to put v-if="object" here.
@@ -121,7 +121,7 @@ export default {
     // principle copy in dm5-info-tab.vue (dm5-detail-panel)
     _quillConfig () {
       const _quillConfig = dmx.utils.clone(this.quillConfig)
-      _quillConfig.options.bounds = '.dm5-topicmap-panel'
+      _quillConfig.options.bounds = '.dmx-topicmap-panel'
       return _quillConfig
     }
   },
@@ -158,7 +158,7 @@ export default {
 </script>
 
 <style>
-.dm5-detail {
+.dmx-detail {
   position: absolute;
   border: 1px solid var(--border-color-lighter);
   padding: 0 12px 12px 12px;
@@ -166,36 +166,36 @@ export default {
   max-width: 360px;
 }
 
-.dm5-detail.selected {
+.dmx-detail.selected {
   border-color: var(--highlight-color);
 }
 
-.dm5-detail.locked {
+.dmx-detail.locked {
   pointer-events: none;
 }
 
-.dm5-detail .dm5-object-renderer {
+.dmx-detail .dmx-object-renderer {
   margin-top: 12px;
 }
 
-.dm5-detail .dm5-object-renderer a {
+.dmx-detail .dmx-object-renderer a {
   pointer-events: initial;
 }
 
-.dm5-detail.locked .dm5-value-renderer .field {
+.dmx-detail.locked .dmx-value-renderer .field {
   background-color: unset !important;                       /* fields of locked details never get white background */
 }
 
-.dm5-detail.locked .dm5-value-renderer button.reveal,       /* locked details never show the "Reveal" button */
-.dm5-detail.locked .dm5-value-renderer button.edit {        /* locked details never show the "Edit" button */
+.dmx-detail.locked .dmx-value-renderer button.reveal,       /* locked details never show the "Reveal" button */
+.dmx-detail.locked .dmx-value-renderer button.edit {        /* locked details never show the "Edit" button */
   visibility: hidden;
 }
 
-.dm5-detail.locked .dm5-value-renderer .dm5-child-topic {   /* child topics of locked details never get blue border */
+.dmx-detail.locked .dmx-value-renderer .dmx-child-topic {   /* child topics of locked details never get blue border */
   border-color: transparent;
 }
 
-.dm5-detail .button-panel {
+.dmx-detail .button-panel {
   position: absolute;
   top: 0;
   right: 0;
@@ -204,7 +204,7 @@ export default {
   pointer-events: initial;
 }
 
-.dm5-detail .button-panel button {
+.dmx-detail .button-panel button {
   visibility: hidden;
   position: absolute;
   top: 1px;
@@ -212,19 +212,19 @@ export default {
   padding: 0 !important;
 }
 
-.dm5-detail .button-panel:hover button {
+.dmx-detail .button-panel:hover button {
   visibility: visible;
 }
 
-.dm5-detail .button-panel button.lock {
+.dmx-detail .button-panel button.lock {
   right: 4px;
 }
 
-.dm5-detail .button-panel button.pin {
+.dmx-detail .button-panel button.pin {
   right: 25px;
 }
 
-.dm5-detail .button-panel button.pin.unpinned {
+.dmx-detail .button-panel button.pin.unpinned {
   color: transparent;
   font-size: 15px !important;
   -webkit-text-stroke: 1px var(--highlight-color);

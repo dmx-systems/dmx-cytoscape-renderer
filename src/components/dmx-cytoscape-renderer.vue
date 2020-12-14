@@ -1,5 +1,5 @@
 <template>
-  <div class="dm5-cytoscape-renderer" @mousedown.capture="mousedown">
+  <div class="dmx-cytoscape-renderer" @mousedown.capture="mousedown">
     <div class="cytoscape-container" ref="cytoscape-container"></div>
     <div class="measurement-box" ref="measurement-box"></div>
     <dmx-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig"></dmx-detail-layer>
@@ -73,15 +73,15 @@ export default {
 </script>
 
 <style>
-.dm5-cytoscape-renderer {
+.dmx-cytoscape-renderer {
   height: 100%;
 }
 
-.dm5-cytoscape-renderer .cytoscape-container {
+.dmx-cytoscape-renderer .cytoscape-container {
   height: 100%;
 }
 
-.dm5-cytoscape-renderer .measurement-box {
+.dmx-cytoscape-renderer .measurement-box {
   position: absolute;
   visibility: hidden;
 }
