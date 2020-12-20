@@ -392,37 +392,48 @@ function contextMenus (contextCommands) {
     const commands = contextCommands[kind + (danger ? '_danger' : '')]
     .flatMap(cmd => typeof cmd === 'function' ? cmd(cyElement(id).data(FUN[kind].view)) || [] : cmd)
     .map(cmd => {
-      const arg = FUN[kind].handlerArg(id, cmd)
-      const command = {
-        content: cmd.label,
-        select: ele => cmd.handler(arg),
-        // disable command in face of a multi selection when the command does not support multi
-        disabled: !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection()
+      if (cmd instanceof Promise) {     // TODO: async/await will remove code doubling
+        return cmd.then(cmd => createCytoscapeCommand(kind, id, cmd, danger))
+      } else {
+        return createCytoscapeCommand(kind, id, cmd, danger)
       }
-      if (cmd.multi) {
-        const _size = size(arg)
-        if (_size > 1) {
-          command.content += ` ${_size} items`
-        }
-      }
-      // a command can also be disabled by a user-defined "disabled" callback;
-      // the "disabled" callback is expected to return a boolean or a boolean promise
-      if (!command.disabled && cmd.disabled) {
-        const disabled = cmd.disabled(arg)
-        if (disabled instanceof Promise) {      // TODO: async/await will remove code doubling
-          return disabled.then(disabled => {
-            command.disabled = disabled
-            setColor(command, danger)
-            return command
-          })
-        } else {
-          command.disabled = disabled
-        }
-      }
-      setColor(command, danger)
-      return command
     })
     return Promise.all(commands)
+  }
+
+  /**
+   * Creates a Cytoscape command from a DMX command def.
+   */
+  function createCytoscapeCommand (kind, id, cmd, danger) {
+    const arg = FUN[kind].handlerArg(id, cmd)
+    const command = {
+      content: cmd.label,
+      select: ele => cmd.handler(arg),
+      // disable command in face of a multi selection when the command does not support multi
+      disabled: !cmd.multi && FUN[kind].isSelected(id) && isMultiSelection()
+    }
+    if (cmd.multi) {
+      const _size = size(arg)
+      if (_size > 1) {
+        command.content += ` ${_size} items`
+      }
+    }
+    // a command can also be disabled by a user-defined "disabled" callback;
+    // the "disabled" callback is expected to return a boolean or a boolean promise
+    if (!command.disabled && cmd.disabled) {
+      const disabled = cmd.disabled(arg)
+      if (disabled instanceof Promise) {      // TODO: async/await will remove code doubling
+        return disabled.then(disabled => {
+          command.disabled = disabled
+          setColor(command, danger)
+          return command
+        })
+      } else {
+        command.disabled = disabled
+      }
+    }
+    setColor(command, danger)
+    return command
   }
 
   function setColor(command, danger) {
