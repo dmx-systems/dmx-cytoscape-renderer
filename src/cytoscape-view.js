@@ -42,7 +42,7 @@ cytoscape.use(require('cytoscape-edge-connections'))
 export default class CytoscapeView {
 
   constructor (container, contextCommands, _parent, _box, _modifiers, _dispatch) {
-    parent    = _parent,
+    parent    = _parent
     box       = _box
     modifiers = _modifiers
     dispatch  = _dispatch
@@ -68,7 +68,7 @@ export default class CytoscapeView {
       // removed. So we must remove the edges first.
       cy.remove('edge')
       cy.remove('node')
-      cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))
+      cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))    /* eslint space-in-parens: "off" */
       ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
       setViewport({
         x: topicmap.viewProps['dmx.topicmaps.pan_x'],
@@ -227,11 +227,11 @@ function instantiateCy (container) {
       {
         selector: 'node[icon]',
         style: {
-          'shape': 'rectangle',
+          shape: 'rectangle',
           'background-image': ele => renderNode(ele).url,
           'background-opacity': 0,
-          'width':  ele => renderNode(ele).width,
-          'height': ele => renderNode(ele).height,
+          width:  ele => renderNode(ele).width,
+          height: ele => renderNode(ele).height,
           'border-width': 1,
           'border-color': BORDER_COLOR_LIGHTER,
           'border-opacity': 1
@@ -240,14 +240,14 @@ function instantiateCy (container) {
       {
         selector: 'node.aux-node',
         style: {
-          'width': 6,
-          'height': 6
+          width: 6,
+          height: 6
         }
       },
       {
         selector: 'node.aux-node.expanded',
         style: {
-          'shape': 'rectangle',
+          shape: 'rectangle',
           'background-opacity': 0
         }
       },
@@ -255,8 +255,8 @@ function instantiateCy (container) {
         selector: 'node.eh-handle',
         style: {
           'background-color': HIGHLIGHT_COLOR,
-          'width': 12,
-          'height': 12
+          width: 12,
+          height: 12
         }
       },
       {
@@ -270,11 +270,11 @@ function instantiateCy (container) {
       {
         selector: 'edge[color]',
         style: {
-          'width': 3,
+          width: 3,
           'line-color': 'data(color)',
           'curve-style': 'bezier',
           // See label positioning trick: https://github.com/cytoscape/cytoscape.js/issues/2329
-          'label': ele => ele.data('label') + '\n\n\u2060',
+          label: ele => ele.data('label') + '\n\n\u2060',
           'font-family': FONT_FAMILY,
           'font-size': LABEL_FONT_SIZE,
           'text-rotation': 'autorotate',
@@ -291,7 +291,7 @@ function instantiateCy (container) {
       {
         selector: 'edge:selected',
         style: {
-          'width': 6
+          width: 6
         }
       },
       {
@@ -340,7 +340,8 @@ function _renderNode (label, icon, iconColor, backgroundColor) {
     </svg>`
   return {
     url: 'data:image/svg+xml,' + encodeURIComponent(svg),
-    width, height
+    width,
+    height
   }
 }
 
@@ -375,7 +376,7 @@ function contextMenus (contextCommands) {
     selector: 'node',
     commands: ele =>
       isEdgeHandle(ele) ? [] :
-      isAuxNode(ele) ? commands('assoc', edgeId(ele)) :
+      isAuxNode(ele) ? commands('assoc', edgeId(ele)) :                                       /* eslint indent: "off" */
                        commands('topic', id(ele)),
     atMouse: true
   })
@@ -436,7 +437,7 @@ function contextMenus (contextCommands) {
     return command
   }
 
-  function setColor(command, danger) {
+  function setColor (command, danger) {
     if (command.disabled) {
       if (danger) {
         command.fillColor = 'rgba(200, 80, 80, 0.75)'

@@ -42,7 +42,7 @@ let ele                 // The single selection: a selected Cytoscape element (n
                         // displayed in-map (unless pinned).
                         // ### TODO: introduce multi-selection state in this component?
 
-let modifiers = {}      // modifier keys
+const modifiers = {}    // modifier keys
 
 const state = {
 
@@ -376,26 +376,28 @@ const actions = {
     // console.log(`Cytoscape Renderer: processing ${directives.length} directives`)
     directives.forEach(dir => {
       switch (dir.type) {
-      case "UPDATE_TOPIC":
+      case 'UPDATE_TOPIC': {
         const topic = new dmx.Topic(dir.arg)
         updateTopic(topic)
         updateDetail(topic)
         break
-      case "DELETE_TOPIC":
+      }
+      case 'DELETE_TOPIC':
         deleteTopic(dir.arg)
         break
-      case "UPDATE_ASSOCIATION":
+      case 'UPDATE_ASSOCIATION': {
         const assoc = new dmx.Assoc(dir.arg)
         updateAssoc(assoc)
         updateDetail(assoc)
         break
-      case "DELETE_ASSOCIATION":
+      }
+      case 'DELETE_ASSOCIATION':
         deleteAssoc(dir.arg)
         break
-      case "UPDATE_TOPIC_TYPE":
+      case 'UPDATE_TOPIC_TYPE':
         updateTopicIcons(dir.arg.uri)
         break
-      case "UPDATE_ASSOCIATION_TYPE":
+      case 'UPDATE_ASSOCIATION_TYPE':
         updateAssocColors(dir.arg.uri)
         break
       }
@@ -794,7 +796,7 @@ function unselectElement () {
  */
 function playRestoreAnimation () {
   // console.log('starting restore animation')
-  return AUTO_LAYOUT ?
+  return AUTO_LAYOUT ?                                                            /* eslint operator-linebreak: "off" */
     Promise.all(_topicmap.topics
       .filter(viewTopic => viewTopic.isVisible())
       .map(viewTopic => cyView.updateTopicPos(viewTopic.id, viewTopic.getPosition()))
@@ -921,7 +923,7 @@ function showDetail (detail) {
  *
  * @return  a promise resolved once the fisheye animation is complete
  */
-function adjustDetailSize(detail) {
+function adjustDetailSize (detail) {
   const detailDOM = document.querySelector(`.dmx-detail-layer .dmx-detail[data-detail-id="${detail.id}"]`)
   if (!detailDOM) {
     throw Error(`detail DOM ${detail.id} not found`)
