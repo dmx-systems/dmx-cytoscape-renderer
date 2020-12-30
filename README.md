@@ -4,6 +4,19 @@ A DMX 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**2.0** -- Dec 30, 2020
+
+* BREAKING CHANGES
+    * Make use of `dmx-api` 2.0
+    * Various `dm5` -> `dmx` renamings
+* Improvements:
+    * API: action `renderRelatedTopic` accepts `pos` option
+* Fixes:
+    * Providing context commands asynchronously
+* Chore:
+    * Adapt URLs to `github.com/dmx-systems`
+    * Code run through `eslint`
+
 **1.0.2** -- Aug 6, 2020
 
 * Chore: bump `dmx-object-renderer` dependency
@@ -230,4 +243,4 @@ A DMX 5 topicmap renderer as a composable GUI component.
 
 ------------
 Jörg Richter  
-Aug 6, 2020
+Dec 30, 2020
