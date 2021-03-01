@@ -378,11 +378,13 @@ function contextMenus (contextCommands) {
       isEdgeHandle(ele) ? [] :
       isAuxNode(ele) ? commands('assoc', edgeId(ele)) :                                       /* eslint indent: "off" */
                        commands('topic', id(ele)),
+    outsideMenuCancel: 10,
     atMouse: true
   })
   cy.cxtmenu({
     selector: 'edge',
-    commands: ele => commands('assoc', id(ele))
+    commands: ele => commands('assoc', id(ele)),
+    outsideMenuCancel: 10
   })
 
   function commands (kind, id) {
