@@ -1,18 +1,20 @@
 <template>
   <div :class="['dmx-detail', {selected}, {locked}]" :data-detail-id="detail.id" :style="style">
-    <!--
-      Note: apparently "object" (a required "object" prop in child comp) can go away in an earlier update cycle
-      than "detailNode" (the visibility predicate in parent comp). So we have to put v-if="object" here.
-      TODO: approve this hypothesis. ### FIXDOC
-    -->
-    <dmx-object-renderer v-if="object" :object="object" :writable="writable" mode="info" :renderers="detailRenderers"
-      :quill-config="_quillConfig" @inline="setInlineId" @child-topic-reveal="revealChildTopic" @updated="updated">
-    </dmx-object-renderer>
     <div class="button-panel">
       <el-button :class="['lock', 'fa', lockIcon]" type="text" :title="lockTitle" @click="toggleLocked"></el-button>
       <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" :title="pinTitle"
         @click="togglePinned">
       </el-button>
+    </div>
+    <div class="scroll-container">
+      <!--
+        Note: apparently "object" (a required "object" prop in child comp) can go away in an earlier update cycle
+        than "detailNode" (the visibility predicate in parent comp). So we have to put v-if="object" here.
+        TODO: approve this hypothesis. ### FIXDOC
+      -->
+      <dmx-object-renderer v-if="object" :object="object" :writable="writable" mode="info" :renderers="detailRenderers"
+        :quill-config="_quillConfig" @inline="setInlineId" @child-topic-reveal="revealChildTopic" @updated="updated">
+      </dmx-object-renderer>
     </div>
   </div>
 </template>
@@ -161,9 +163,6 @@ export default {
 .dmx-detail {
   position: absolute;
   border: 1px solid var(--border-color-lighter);
-  padding: 0 12px 12px 12px;
-  min-width: 120px;
-  max-width: 360px;
 }
 
 .dmx-detail.selected {
@@ -172,6 +171,14 @@ export default {
 
 .dmx-detail.locked {
   pointer-events: none;
+}
+
+.dmx-detail .scroll-container {
+  min-width: 120px;
+  max-width: 360px;
+  max-height: 560px;
+  padding: 0 12px 12px 12px;
+  overflow: auto;
 }
 
 .dmx-detail .dmx-object-renderer {
@@ -198,7 +205,7 @@ export default {
 .dmx-detail .button-panel {
   position: absolute;
   top: 0;
-  right: 0;
+  right: 16px;
   width: 46px;
   height: 24px;
   pointer-events: initial;
