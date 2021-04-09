@@ -207,8 +207,9 @@ export default class CytoscapeView {
     })
   }
 
+  // TODO: drop it? Apparently Cytoscape does the resizing on its own meanwhile.
   resize () {
-    cy.resize()
+    // cy.resize()
   }
 
   hideEdgeHandle () {

@@ -552,9 +552,10 @@ const actions = {
     cyView.reset()
   },
 
+  // TODO: drop action?
   resizeTopicmapRenderer () {
     // console.log('resizeTopicmapRenderer')
-    cyView.resize()
+    // cyView.resize()
   }
 }
 
