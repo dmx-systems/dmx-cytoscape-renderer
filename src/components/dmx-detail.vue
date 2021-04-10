@@ -71,25 +71,13 @@ export default {
     },
 
     style () {
+      const bb = this.detail.bb
       return {
-        top:  this.pos.y + 'px',
-        left: this.pos.x + 'px',
+        top:  `${bb.y1 + 25}px`,    // 25=node height, see _renderNode() in cytoscape-view.js
+        left: `${bb.x1}px`,
         transform: `scale(${this.zoom})`,
         'background-color': this.object.backgroundColor
       }
-    },
-
-    pos () {
-      const p = this.detail.pos
-      const pos = {x: p.x, y: p.y}
-      const size = this.detail.size
-      if (size) {
-        pos.x -= size.width  / 2
-        pos.y -= size.height / 2
-      } else {
-        // console.warn('detail size not yet known', this.detail.node.id())
-      }
-      return pos
     },
 
     lockIcon () {

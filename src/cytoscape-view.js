@@ -207,7 +207,7 @@ export default class CytoscapeView {
     })
   }
 
-  // TODO: drop it? Apparently Cytoscape does the resizing on its own meanwhile.
+  // TODO: drop it? Apparently resizing is automatic in Cytoscape meanwhile.
   resize () {
     // cy.resize()
   }

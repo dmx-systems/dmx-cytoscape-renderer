@@ -552,7 +552,7 @@ const actions = {
     cyView.reset()
   },
 
-  // TODO: drop action?
+  // TODO: drop action completely?
   resizeTopicmapRenderer () {
     // console.log('resizeTopicmapRenderer')
     // cyView.resize()
@@ -828,8 +828,7 @@ function createDetail (viewObject) {
   const detail = {
     id,
     object: undefined,
-    pos: node.renderedPosition(),
-    size: undefined,
+    bb: node.renderedBoundingBox(),
     writable: undefined,
     get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
       return node           // By using a getter (instead a prop) the object is not made reactive.
@@ -874,8 +873,7 @@ function createDetailForSelection () {
   const detail = {
     id,
     object: _object,
-    pos: node.renderedPosition(),
-    size: undefined,
+    bb: node.renderedBoundingBox(),
     get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
       return node           // By using a getter (instead a prop) the object is not made reactive.
     },
@@ -915,7 +913,7 @@ function showDetail (detail) {
 }
 
 /**
- * Measures the size of the given detail, resizes the detail node accordingly, and plays the fisheye animation.
+ * Plays the fisheye animation.
  *
  * Precondition:
  * - the DOM is updated already.
@@ -929,12 +927,9 @@ function adjustDetailSize (detail) {
   if (!detailDOM) {
     throw Error(`detail DOM ${detail.id} not found`)
   }
-  detail.size = {   // FIXME: use Vue.set()?
-    width:  detailDOM.clientWidth,
-    height: detailDOM.clientHeight
-  }
-  // console.log('adjustDetailSize', detail.node.id(), detail.size.width, detail.size.height)
-  detail.node.style(detail.size)
+  //
+  // Note: actually a NO-OP meanwhile.
+  //
   return new Promise(resolve => {
     if (AUTO_LAYOUT) {
       cyView.playFisheyeAnimation(resolve)
@@ -1029,7 +1024,7 @@ function listenPosition (detail) {
 }
 
 function updateDetailPos (detail) {
-  detail.pos = detail.node.renderedPosition()
+  detail.bb = detail.node.renderedBoundingBox({includeOverlays: false})
 }
 
 function playFisheyeAnimationIfDetailsOnscreen () {
