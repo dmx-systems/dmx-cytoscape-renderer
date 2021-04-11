@@ -1,7 +1,6 @@
 <template>
-  <div :class="['dmx-detail', {selected}, {locked}]" :data-detail-id="detail.id" :style="style">
+  <div :class="['dmx-detail', {selected}]" :data-detail-id="detail.id" :style="style">
     <div class="button-panel">
-      <el-button :class="['lock', 'fa', lockIcon]" type="text" :title="lockTitle" @click="toggleLocked"></el-button>
       <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" :title="pinTitle"
         @click="togglePinned">
       </el-button>
@@ -43,7 +42,6 @@ export default {
 
   data () {
     return {
-      locked: true,
       // The component used as event emitter; it's the topicmap renderers parent component
       parent: this.$parent.$parent.$parent
     }
@@ -71,20 +69,11 @@ export default {
 
     style () {
       const bb  = this.detail.bb
-      const pos = {x: bb.x1, y: bb.y2}
       return {
-        top:  `${pos.y}px`,
-        left: `${pos.x}px`,
+        top:  `${bb.y2}px`,
+        left: `${bb.x1}px`,
         'background-color': this.object.backgroundColor
       }
-    },
-
-    lockIcon () {
-      return this.locked ? 'fa-lock' : 'fa-unlock'
-    },
-
-    lockTitle () {
-      return this.locked ? 'Unlock to interact with content' : 'Lock to interact with ' + this.objectKind
     },
 
     pinTitle () {
@@ -115,10 +104,6 @@ export default {
   },
 
   methods: {
-
-    toggleLocked () {
-      this.locked = !this.locked
-    },
 
     togglePinned () {
       this.pinned = !this.pinned
@@ -155,10 +140,6 @@ export default {
   border-color: var(--highlight-color);
 }
 
-.dmx-detail.locked {
-  pointer-events: none;
-}
-
 .dmx-detail .scroll-container {
   min-width: 120px;
   max-width: 360px;
@@ -171,30 +152,12 @@ export default {
   margin-top: 12px;
 }
 
-.dmx-detail .dmx-object-renderer a {
-  pointer-events: initial;
-}
-
-.dmx-detail.locked .dmx-value-renderer .field {
-  background-color: unset !important;                       /* fields of locked details never get white background */
-}
-
-.dmx-detail.locked .dmx-value-renderer button.reveal,       /* locked details never show the "Reveal" button */
-.dmx-detail.locked .dmx-value-renderer button.edit {        /* locked details never show the "Edit" button */
-  visibility: hidden;
-}
-
-.dmx-detail.locked .dmx-value-renderer .dmx-child-topic {   /* child topics of locked details never get blue border */
-  border-color: transparent;
-}
-
 .dmx-detail .button-panel {
   position: absolute;
   top: 0;
   right: 16px;
   width: 46px;
   height: 24px;
-  pointer-events: initial;
 }
 
 .dmx-detail .button-panel button {
@@ -209,12 +172,8 @@ export default {
   visibility: visible;
 }
 
-.dmx-detail .button-panel button.lock {
-  right: 4px;
-}
-
 .dmx-detail .button-panel button.pin {
-  right: 25px;
+  right: 2px;
 }
 
 .dmx-detail .button-panel button.pin.unpinned {
