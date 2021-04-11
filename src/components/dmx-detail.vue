@@ -53,10 +53,9 @@ export default {
 
     // Note: 'dmx.topicmaps.topicmap' is the URI of the Topicmap Type this topicmap renderer is able to render.
     // The dmx-topicmap-panel module registers this topicmap renderer's store module by this URI.
-    ...mapState({
-      selection: state => state['dmx.topicmaps.topicmap'].selection,
-      zoom:      state => state['dmx.topicmaps.topicmap'].zoom
-    }),
+    selection () {
+      return this.$store.state['dmx.topicmaps.topicmap'].selection
+    },
 
     object () {
       return this.detail.object
@@ -71,11 +70,11 @@ export default {
     },
 
     style () {
-      const bb = this.detail.bb
+      const bb  = this.detail.bb
+      const pos = {x: bb.x1, y: bb.y2}
       return {
-        top:  `${bb.y1 + 25}px`,    // 25=node height, see _renderNode() in cytoscape-view.js
-        left: `${bb.x1}px`,
-        transform: `scale(${this.zoom})`,
+        top:  `${pos.y}px`,
+        left: `${pos.x}px`,
         'background-color': this.object.backgroundColor
       }
     },

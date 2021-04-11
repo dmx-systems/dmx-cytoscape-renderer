@@ -52,8 +52,9 @@ const state = {
   selection: undefined,           // The selection model for the rendered topicmap (a Selection object, defined in
                                   // dmx-topicmaps). Initialized together with _topicmap and _topicmapWritable by
                                   // "renderTopicmap" action.
-                                  // Note: dmx-detail component style updates reactively.
-  zoom: undefined,                // Note: dmx-detail component style updates reactively.
+                                  // Note: dmx-detail-layer component style updates reactively.
+  pan: undefined,                 // Note: dmx-detail-layer component style updates reactively.
+  zoom: undefined,                // Note: dmx-detail-layer component style updates reactively.
 
   details: {}     // In-map details. Detail records keyed by object ID (created by createDetail() and
                   // createDetailForSelection()):
@@ -83,11 +84,15 @@ const actions = {
    * @returns   a promise resolved once topicmap rendering is complete.
    */
   renderTopicmap (_, {topicmap, writable, selection}) {
-    // console.log('renderTopicmap', topicmap.id)
+    // console.log('renderTopicmap', topicmap.id, topicmap.viewProps)
     _topicmap = topicmap
     _topicmapWritable = writable
     ele = undefined
     state.selection = selection
+    state.pan = {
+      x: topicmap.viewProps['dmx.topicmaps.pan_x'],
+      y: topicmap.viewProps['dmx.topicmaps.pan_y']
+    }
     state.zoom = topicmap.viewProps['dmx.topicmaps.zoom']
     state.details = {}
     return cyView.renderTopicmap(topicmap, writable, selection).then(showPinnedDetails)
@@ -442,11 +447,11 @@ const actions = {
   },
 
   _syncViewport (_, {pan, zoom}) {
-    // console.log('_syncViewport', pan, zoom)
+    // console.log('_syncViewport', pan.x, pan.y, zoom)
     // update state
     _topicmap.setViewport(pan, zoom)
+    state.pan = pan
     state.zoom = zoom
-    Object.values(state.details).forEach(updateDetailPos)
     // update server
     if (_topicmapWritable) {
       dmx.rpc.setTopicmapViewport(_topicmap.id, pan, zoom)
@@ -828,7 +833,7 @@ function createDetail (viewObject) {
   const detail = {
     id,
     object: undefined,
-    bb: node.renderedBoundingBox(),
+    bb: node.boundingBox(),
     writable: undefined,
     get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
       return node           // By using a getter (instead a prop) the object is not made reactive.
@@ -873,7 +878,7 @@ function createDetailForSelection () {
   const detail = {
     id,
     object: _object,
-    bb: node.renderedBoundingBox(),
+    bb: node.boundingBox(),
     get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
       return node           // By using a getter (instead a prop) the object is not made reactive.
     },
@@ -1019,12 +1024,8 @@ function updateDetail (object) {
 
 function listenPosition (detail) {
   detail.node.on('position', () => {
-    updateDetailPos(detail)
+    detail.bb = detail.node.boundingBox({includeOverlays: false})
   })
-}
-
-function updateDetailPos (detail) {
-  detail.bb = detail.node.renderedBoundingBox({includeOverlays: false})
 }
 
 function playFisheyeAnimationIfDetailsOnscreen () {
