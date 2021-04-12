@@ -11,7 +11,7 @@
       TODO: approve this hypothesis. ### FIXDOC
     -->
     <dmx-object-renderer class="scroll-container" v-if="object" :object="object" :writable="writable" mode="info"
-      :renderers="detailRenderers" :quill-config="_quillConfig"
+      :no-heading="true" :renderers="detailRenderers" :quill-config="_quillConfig"
       @inline="setInlineId" @child-topic-reveal="revealChildTopic" @updated="updated">
     </dmx-object-renderer>
   </div>
