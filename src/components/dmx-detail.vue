@@ -68,12 +68,17 @@ export default {
     },
 
     style () {
-      const bb  = this.detail.bb
+      const bbr = this.detail.bbr
       return {
-        top:  `${bb.y2}px`,
-        left: `${bb.x1}px`,
+        top:  `${bbr.y2}px`,
+        left: `${bbr.x1}px`,
+        // transform: `scale(${this.zoom})`,
         'background-color': this.object.backgroundColor
       }
+    },
+
+    zoom () {
+      return this.$store.state['dmx.topicmaps.topicmap'].zoom
     },
 
     pinTitle () {
