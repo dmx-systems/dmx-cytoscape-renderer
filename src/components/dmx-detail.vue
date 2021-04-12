@@ -55,6 +55,10 @@ export default {
       return this.$store.state['dmx.topicmaps.topicmap'].selection
     },
 
+    zoom () {
+      return this.$store.state['dmx.topicmaps.topicmap'].zoom
+    },
+
     object () {
       return this.detail.object
     },
@@ -68,17 +72,21 @@ export default {
     },
 
     style () {
+      const o = {x: 0, y: 0}
+      const size = this.detail.size
+      if (size) {
+        // distance between top/left and scaled top/left; Note: "transform scale" grows/shrinks element from center
+        o.x = (size.width - size.width * this.zoom) / 2
+        o.y = (size.height - size.height * this.zoom) / 2
+      }
       const bbr = this.detail.bbr
       return {
-        top:  `${bbr.y2}px`,
-        left: `${bbr.x1}px`,
-        // transform: `scale(${this.zoom})`,
+        // align detail DOM's top with detail node's bottom
+        top:  `${bbr.y2 - o.y}px`,
+        left: `${bbr.x1 - o.x}px`,
+        transform: `scale(${this.zoom})`,
         'background-color': this.object.backgroundColor
       }
-    },
-
-    zoom () {
-      return this.$store.state['dmx.topicmaps.topicmap'].zoom
     },
 
     pinTitle () {
