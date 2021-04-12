@@ -136,10 +136,6 @@ export default {
   border: 1px solid var(--border-color-lighter);
 }
 
-.dmx-detail.selected {
-  border-color: var(--highlight-color);
-}
-
 .dmx-detail .scroll-container {
   min-width: 120px;
   max-width: 360px;

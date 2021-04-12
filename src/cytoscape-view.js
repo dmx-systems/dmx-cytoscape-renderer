@@ -294,12 +294,6 @@ function instantiateCy (container) {
         style: {
           width: 6
         }
-      },
-      {
-        selector: 'node.expanded',
-        style: {
-          'border-opacity': 0
-        }
       }
     ],
     layout: {
