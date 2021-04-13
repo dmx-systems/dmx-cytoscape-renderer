@@ -150,7 +150,7 @@ export default {
 .dmx-detail .dmx-object-renderer {
   min-width: 120px;
   max-width: 360px;
-  max-height: 560px;
+  max-height: 100vh;
   margin-top: 20px;
   padding: 0 18px 12px 12px;
   overflow: auto;
