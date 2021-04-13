@@ -8,7 +8,7 @@
       than "detailNode" (the visibility predicate in parent comp). So we have to put v-if="object" here.
       TODO: approve this hypothesis. ### FIXDOC
     -->
-    <dmx-object-renderer class="scroll-container" v-if="object" :object="object" :writable="writable" mode="info"
+    <dmx-object-renderer v-if="object" :object="object" :writable="writable" mode="info"
       :no-heading="true" :renderers="detailRenderers" :quill-config="_quillConfig"
       @inline="setInlineId" @child-topic-reveal="revealChildTopic" @updated="updated">
     </dmx-object-renderer>
@@ -147,16 +147,13 @@ export default {
   border: 1px solid var(--border-color-lighter);
 }
 
-.dmx-detail .scroll-container {
+.dmx-detail .dmx-object-renderer {
   min-width: 120px;
   max-width: 360px;
   max-height: 560px;
-  padding: 0 12px 12px 12px;
+  margin-top: 20px;
+  padding: 0 18px 12px 12px;
   overflow: auto;
-}
-
-.dmx-detail .dmx-object-renderer {
-  margin-top: 16px;
 }
 
 .dmx-detail button.pin {
