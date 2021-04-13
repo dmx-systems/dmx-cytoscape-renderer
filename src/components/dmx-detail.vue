@@ -1,10 +1,8 @@
 <template>
   <div :class="['dmx-detail', {selected}]" :data-detail-id="detail.id" :style="style">
-    <div class="button-panel">
-      <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" :title="pinTitle"
-        @click="togglePinned">
-      </el-button>
-    </div>
+    <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" :title="pinTitle"
+      @click="togglePinned">
+    </el-button>
     <!--
       Note: apparently "object" (a required "object" prop in child comp) can go away in an earlier update cycle
       than "detailNode" (the visibility predicate in parent comp). So we have to put v-if="object" here.
@@ -158,34 +156,21 @@ export default {
 }
 
 .dmx-detail .dmx-object-renderer {
-  margin-top: 12px;
+  margin-top: 16px;
 }
 
-.dmx-detail .button-panel {
-  position: absolute;
-  top: 0;
-  right: 16px;
-  width: 46px;
-  height: 24px;
-}
-
-.dmx-detail .button-panel button {
-  visibility: hidden;
+.dmx-detail button {
   position: absolute;
   top: 1px;
   font-size: 16px !important;
   padding: 0 !important;
 }
 
-.dmx-detail .button-panel:hover button {
-  visibility: visible;
-}
-
-.dmx-detail .button-panel button.pin {
+.dmx-detail button.pin {
   right: 2px;
 }
 
-.dmx-detail .button-panel button.pin.unpinned {
+.dmx-detail  button.pin.unpinned {
   color: transparent;
   font-size: 15px !important;
   -webkit-text-stroke: 1px var(--highlight-color);
