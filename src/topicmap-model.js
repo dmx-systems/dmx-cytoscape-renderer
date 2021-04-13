@@ -83,7 +83,7 @@ const actions = {
    * @returns   a promise resolved once topicmap rendering is complete.
    */
   renderTopicmap (_, {topicmap, writable, selection}) {
-    // console.log('renderTopicmap', topicmap.id)
+    // console.log('renderTopicmap', topicmap.id, topicmap.viewProps)
     _topicmap = topicmap
     _topicmapWritable = writable
     ele = undefined
@@ -442,7 +442,7 @@ const actions = {
   },
 
   _syncViewport (_, {pan, zoom}) {
-    // console.log('_syncViewport', pan, zoom)
+    // console.log('_syncViewport', zoom)
     // update state
     _topicmap.setViewport(pan, zoom)
     state.zoom = zoom
@@ -552,7 +552,7 @@ const actions = {
     cyView.reset()
   },
 
-  // TODO: drop action?
+  // TODO: drop action completely?
   resizeTopicmapRenderer () {
     // console.log('resizeTopicmapRenderer')
     // cyView.resize()
@@ -828,7 +828,7 @@ function createDetail (viewObject) {
   const detail = {
     id,
     object: undefined,
-    pos: node.renderedPosition(),
+    bbr: node.renderedBoundingBox(),
     size: undefined,
     writable: undefined,
     get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
@@ -874,7 +874,7 @@ function createDetailForSelection () {
   const detail = {
     id,
     object: _object,
-    pos: node.renderedPosition(),
+    bbr: node.renderedBoundingBox(),
     size: undefined,
     get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
       return node           // By using a getter (instead a prop) the object is not made reactive.
@@ -915,7 +915,7 @@ function showDetail (detail) {
 }
 
 /**
- * Measures the size of the given detail, resizes the detail node accordingly, and plays the fisheye animation.
+ * Measures the size of the given detail, and plays the fisheye animation.
  *
  * Precondition:
  * - the DOM is updated already.
@@ -933,8 +933,6 @@ function adjustDetailSize (detail) {
     width:  detailDOM.clientWidth,
     height: detailDOM.clientHeight
   }
-  // console.log('adjustDetailSize', detail.node.id(), detail.size.width, detail.size.height)
-  detail.node.style(detail.size)
   return new Promise(resolve => {
     if (AUTO_LAYOUT) {
       cyView.playFisheyeAnimation(resolve)
@@ -1029,7 +1027,7 @@ function listenPosition (detail) {
 }
 
 function updateDetailPos (detail) {
-  detail.pos = detail.node.renderedPosition()
+  detail.bbr = detail.node.renderedBoundingBox({includeOverlays: false})
 }
 
 function playFisheyeAnimationIfDetailsOnscreen () {

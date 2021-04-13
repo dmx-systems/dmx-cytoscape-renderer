@@ -1,7 +1,6 @@
 <template>
-  <div :class="['dmx-detail', {selected}, {locked}]" :data-detail-id="detail.id" :style="style">
+  <div :class="['dmx-detail', {selected}]" :data-detail-id="detail.id" :style="style">
     <div class="button-panel">
-      <el-button :class="['lock', 'fa', lockIcon]" type="text" :title="lockTitle" @click="toggleLocked"></el-button>
       <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" :title="pinTitle"
         @click="togglePinned">
       </el-button>
@@ -12,7 +11,7 @@
       TODO: approve this hypothesis. ### FIXDOC
     -->
     <dmx-object-renderer class="scroll-container" v-if="object" :object="object" :writable="writable" mode="info"
-      :renderers="detailRenderers" :quill-config="_quillConfig"
+      :no-heading="true" :renderers="detailRenderers" :quill-config="_quillConfig"
       @inline="setInlineId" @child-topic-reveal="revealChildTopic" @updated="updated">
     </dmx-object-renderer>
   </div>
@@ -43,7 +42,6 @@ export default {
 
   data () {
     return {
-      locked: true,
       // The component used as event emitter; it's the topicmap renderers parent component
       parent: this.$parent.$parent.$parent
     }
@@ -53,10 +51,13 @@ export default {
 
     // Note: 'dmx.topicmaps.topicmap' is the URI of the Topicmap Type this topicmap renderer is able to render.
     // The dmx-topicmap-panel module registers this topicmap renderer's store module by this URI.
-    ...mapState({
-      selection: state => state['dmx.topicmaps.topicmap'].selection,
-      zoom:      state => state['dmx.topicmaps.topicmap'].zoom
-    }),
+    selection () {
+      return this.$store.state['dmx.topicmaps.topicmap'].selection
+    },
+
+    zoom () {
+      return this.$store.state['dmx.topicmaps.topicmap'].zoom
+    },
 
     object () {
       return this.detail.object
@@ -71,33 +72,21 @@ export default {
     },
 
     style () {
+      const o = {x: 0, y: 0}
+      const size = this.detail.size
+      if (size) {
+        // distance between top/left and scaled top/left; Note: "transform scale" grows/shrinks element from center
+        o.x = (size.width - size.width * this.zoom) / 2
+        o.y = (size.height - size.height * this.zoom) / 2
+      }
+      const bbr = this.detail.bbr
       return {
-        top:  this.pos.y + 'px',
-        left: this.pos.x + 'px',
+        // align detail DOM's top with detail node's bottom
+        top:  `${bbr.y2 - o.y}px`,
+        left: `${bbr.x1 - o.x}px`,
         transform: `scale(${this.zoom})`,
         'background-color': this.object.backgroundColor
       }
-    },
-
-    pos () {
-      const p = this.detail.pos
-      const pos = {x: p.x, y: p.y}
-      const size = this.detail.size
-      if (size) {
-        pos.x -= size.width  / 2
-        pos.y -= size.height / 2
-      } else {
-        // console.warn('detail size not yet known', this.detail.node.id())
-      }
-      return pos
-    },
-
-    lockIcon () {
-      return this.locked ? 'fa-lock' : 'fa-unlock'
-    },
-
-    lockTitle () {
-      return this.locked ? 'Unlock to interact with content' : 'Lock to interact with ' + this.objectKind
     },
 
     pinTitle () {
@@ -128,10 +117,6 @@ export default {
   },
 
   methods: {
-
-    toggleLocked () {
-      this.locked = !this.locked
-    },
 
     togglePinned () {
       this.pinned = !this.pinned
@@ -164,14 +149,6 @@ export default {
   border: 1px solid var(--border-color-lighter);
 }
 
-.dmx-detail.selected {
-  border-color: var(--highlight-color);
-}
-
-.dmx-detail.locked {
-  pointer-events: none;
-}
-
 .dmx-detail .scroll-container {
   min-width: 120px;
   max-width: 360px;
@@ -184,30 +161,12 @@ export default {
   margin-top: 12px;
 }
 
-.dmx-detail .dmx-object-renderer a {
-  pointer-events: initial;
-}
-
-.dmx-detail.locked .dmx-value-renderer .field {
-  background-color: unset !important;                       /* fields of locked details never get white background */
-}
-
-.dmx-detail.locked .dmx-value-renderer button.reveal,       /* locked details never show the "Reveal" button */
-.dmx-detail.locked .dmx-value-renderer button.edit {        /* locked details never show the "Edit" button */
-  visibility: hidden;
-}
-
-.dmx-detail.locked .dmx-value-renderer .dmx-child-topic {   /* child topics of locked details never get blue border */
-  border-color: transparent;
-}
-
 .dmx-detail .button-panel {
   position: absolute;
   top: 0;
   right: 16px;
   width: 46px;
   height: 24px;
-  pointer-events: initial;
 }
 
 .dmx-detail .button-panel button {
@@ -222,12 +181,8 @@ export default {
   visibility: visible;
 }
 
-.dmx-detail .button-panel button.lock {
-  right: 4px;
-}
-
 .dmx-detail .button-panel button.pin {
-  right: 25px;
+  right: 2px;
 }
 
 .dmx-detail .button-panel button.pin.unpinned {
