@@ -159,15 +159,12 @@ export default {
   margin-top: 16px;
 }
 
-.dmx-detail button {
+.dmx-detail button.pin {
   position: absolute;
   top: 1px;
+  right: 2px;
   font-size: 16px !important;
   padding: 0 !important;
-}
-
-.dmx-detail button.pin {
-  right: 2px;
 }
 
 .dmx-detail  button.pin.unpinned {
