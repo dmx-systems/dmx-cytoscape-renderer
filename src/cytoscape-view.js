@@ -9,10 +9,11 @@ const LABEL_FONT_SIZE      = style.getPropertyValue('--label-font-size')
 const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
 const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
 
-const PAN_PADDING = 50
-const PAN_PADDING_TOP = 82
+const PAN_PADDING = 64          // in pixel
+const PAN_PADDING_TOP = 64      // in pixel
+const PAN_PADDING_BOTTOM = 24   // in pixel
 
-const MAX_LABEL_LENGTH = 80
+const MAX_LABEL_LENGTH = 80     // in chars
 
 const onSelectNode   = nodeHandler('select')
 const onSelectEdge   = edgeHandler('select')
@@ -166,19 +167,19 @@ export default class CytoscapeView {
     const w = cy.width()
     const h = cy.height()
     let x, y
-    if (x1 < 0) {
+    if (x1 < 0 || x2 - x1 > w) {
       // console.log('left', -x1)
       x = -x1 + PAN_PADDING
     } else if (x2 > w) {
       // console.log('right', w - x2)
       x = w - x2 - PAN_PADDING
     }
-    if (y1 < 0) {
+    if (y1 < 0 || y2 - y1 > h) {
       // console.log('top', -y1)
       y = -y1 + PAN_PADDING_TOP
     } else if (y2 > h) {
       // console.log('bottom', h - y2)
-      y = h - y2 - PAN_PADDING
+      y = h - y2 - PAN_PADDING_BOTTOM
     }
     if (x || y) {
       cy.animate({
