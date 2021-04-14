@@ -56,7 +56,7 @@ const state = {
   zoom: undefined,                // Note: dmx-detail component style updates reactively.
 
   details: {}     // In-map details. Detail records keyed by object ID (created by createDetail() and
-                  // createDetailForSelection()):
+                  // createDetailForSelection()):     ### FIXDOC
                   //  {
                   //    id        ID of "object" (Number). May be set before "object" is actually available.
                   //    object    The object to render (dmx.Topic, dmx.Assoc)
@@ -494,10 +494,10 @@ const actions = {
       Promise.all([p, p2])
         .then(createAndShowSelectionDetail)
         .then(() => {
-          cyView.autoPan(_ele)
+          cyView.autoPan(detail(id).renderedBoundingBox)
         })
     } else {
-      cyView.autoPan(_ele)
+      cyView.autoPanForNode(_ele)
     }
     //
     ele = _ele
@@ -829,6 +829,7 @@ function createDetail (viewObject) {
     id,
     object: undefined,
     bbr: node.renderedBoundingBox(),
+    pos: undefined,
     size: undefined,
     writable: undefined,
     get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
@@ -837,6 +838,14 @@ function createDetail (viewObject) {
     // Note: a property would not be reactive. With a getter it works.
     get pinned () {
       return viewObject.isPinned()
+    },
+    get renderedBoundingBox () {
+      return {
+        x1: this.pos.x,
+        y1: this.pos.y,
+        x2: this.pos.x + (this.size.width * state.zoom),
+        y2: this.pos.y + (this.size.height * state.zoom)
+      }
     }
   }
   listenPosition(detail)
@@ -875,6 +884,7 @@ function createDetailForSelection () {
     id,
     object: _object,
     bbr: node.renderedBoundingBox(),
+    pos: undefined,
     size: undefined,
     get node () {           // Note: Cytoscape objects must not be used as Vue.js state.
       return node           // By using a getter (instead a prop) the object is not made reactive.
@@ -886,6 +896,14 @@ function createDetailForSelection () {
     },
     get pinned () {
       return viewObject.isPinned()
+    },
+    get renderedBoundingBox () {
+      return {
+        x1: this.pos.x,
+        y1: this.pos.y,
+        x2: this.pos.x + (this.size.width * state.zoom),
+        y2: this.pos.y + (this.size.height * state.zoom)
+      }
     }
   }
   listenPosition(detail)
@@ -893,7 +911,8 @@ function createDetailForSelection () {
 }
 
 /**
- * @return  a promise resolved once the fisheye animation is complete
+ * @return  a promise resolved once the fisheye animation is complete.
+ *          At this moment "detail.pos" and "detail.size" are up-to-date (via side effect).
  */
 function createAndShowSelectionDetail () {
   if (!ele) {
@@ -929,7 +948,11 @@ function adjustDetailSize (detail) {
   if (!detailDOM) {
     throw Error(`detail DOM ${detail.id} not found`)
   }
-  detail.size = {   // FIXME: use Vue.set()?
+  detail.pos = {
+    x: detailDOM.offsetLeft,
+    y: detailDOM.offsetTop,
+  }
+  detail.size = {
     width:  detailDOM.clientWidth,
     height: detailDOM.clientHeight
   }

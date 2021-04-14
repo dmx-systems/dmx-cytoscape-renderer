@@ -151,14 +151,20 @@ export default class CytoscapeView {
   }
 
   autoPanById (id) {
-    return this.autoPan(cyElement(id))
+    return this.autoPanForNode(cyElement(id))
   }
 
-  autoPan (node) {
+  autoPanForNode (node) {
+    this.autoPan(node.renderedBoundingBox())
+  }
+
+  /**
+   * @param   bbr   bounding box (x1, y1, x2, y2) in render coordinates
+   */
+  autoPan (bbr) {
+    const {x1, y1, x2, y2} = bbr
     const w = cy.width()
     const h = cy.height()
-    // console.log('autoPan', id(node), w, h)
-    const {x1, y1, x2, y2} = node.renderedBoundingBox()
     let x, y
     if (x1 < 0) {
       // console.log('left', -x1)
