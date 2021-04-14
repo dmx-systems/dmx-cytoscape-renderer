@@ -1,5 +1,6 @@
 <template>
   <div :class="['dmx-detail', {selected}]" :data-detail-id="detail.id" :style="style">
+    <!-- Pin button -->
     <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" :title="pinTitle"
       @click="togglePinned">
     </el-button>
@@ -151,15 +152,15 @@ export default {
   min-width: 120px;
   max-width: 360px;
   max-height: 100vh;
-  margin-top: 20px;
+  margin-top: 18px;
   padding: 0 18px 12px 12px;
   overflow: auto;
 }
 
 .dmx-detail button.pin {
+  visibility: hidden;
   position: absolute;
-  top: 1px;
-  right: 2px;
+  right: 3px;
   font-size: 16px !important;
   padding: 0 !important;
 }
@@ -168,5 +169,9 @@ export default {
   color: transparent;
   font-size: 15px !important;
   -webkit-text-stroke: 1px var(--highlight-color);
+}
+
+.dmx-detail:hover button.pin {
+  visibility: visible;
 }
 </style>
