@@ -10,7 +10,7 @@
       TODO: approve this hypothesis. ### FIXDOC
     -->
     <dmx-object-renderer v-if="object" :object="object" :writable="writable" mode="info"
-      :no-heading="true" :renderers="detailRenderers" :quill-config="_quillConfig"
+      :no-heading="true" :renderers="detailRenderers" :quill-config="_quillConfig" :style="maxHeight"
       @inline="setInlineId" @child-topic-reveal="revealChildTopic" @updated="updated">
     </dmx-object-renderer>
   </div>
@@ -20,14 +20,21 @@
 import {mapState} from 'vuex'
 import dmx from 'dmx-api'
 
+const PAN_PADDING_TOP = 32      // in pixel     // copy in cytoscape-view.js    // experimental
+const PAN_PADDING_BOTTOM = 24   // in pixel     // copy in cytoscape-view.js as PAN_PADDING
+
 export default {
 
   created () {
-    // console.log('dmx-detail created')
+    // 18 = object renderer margin top, 12 = object renderer bottom padding
+    const h = (window.innerHeight - PAN_PADDING_TOP - PAN_PADDING_BOTTOM - 18 - 12) / this.zoom - this.detail.bbr.h
+    // TODO: exact calculation
+    // console.log('dmx-detail created', window.innerHeight, this.zoom, this.detail.bbr.h, h)
+    this.maxHeight = {'max-height': `${h}px`}
   },
 
   mounted () {
-    // console.log('dmx-detail mounted')
+    // console.log('dmx-detail mounted', this.zoom)
   },
 
   mixins: [
@@ -42,7 +49,8 @@ export default {
   data () {
     return {
       // The component used as event emitter; it's the topicmap renderers parent component
-      parent: this.$parent.$parent.$parent
+      parent: this.$parent.$parent.$parent,
+      maxHeight: undefined
     }
   },
 
@@ -151,7 +159,6 @@ export default {
 .dmx-detail .dmx-object-renderer {
   min-width: 120px;
   max-width: 420px;
-  max-height: 82vh;
   margin-top: 18px;
   padding: 0 18px 12px 12px;
   overflow: auto;

@@ -446,7 +446,7 @@ const actions = {
     // update state
     _topicmap.setViewport(pan, zoom)
     state.zoom = zoom
-    Object.values(state.details).forEach(updateDetailPos)
+    Object.values(state.details).forEach(repositionDetail)
     // update server
     if (_topicmapWritable) {
       dmx.rpc.setTopicmapViewport(_topicmap.id, pan, zoom)
@@ -1045,11 +1045,11 @@ function updateDetail (object) {
 
 function listenPosition (detail) {
   detail.node.on('position', () => {
-    updateDetailPos(detail)
+    repositionDetail(detail)
   })
 }
 
-function updateDetailPos (detail) {
+function repositionDetail (detail) {
   detail.bbr = detail.node.renderedBoundingBox({includeOverlays: false})
 }
 

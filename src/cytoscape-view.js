@@ -9,9 +9,8 @@ const LABEL_FONT_SIZE      = style.getPropertyValue('--label-font-size')
 const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
 const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
 
-const PAN_PADDING = 64          // in pixel
-const PAN_PADDING_TOP = 64      // in pixel
-const PAN_PADDING_BOTTOM = 24   // in pixel
+const PAN_PADDING = 24          // in pixel
+const PAN_PADDING_TOP = 64      // in pixel     // copy in dmx-detail.vue
 
 const MAX_LABEL_LENGTH = 80     // in chars
 
@@ -179,7 +178,7 @@ export default class CytoscapeView {
       y = -y1 + PAN_PADDING_TOP
     } else if (y2 > h) {
       // console.log('bottom', h - y2)
-      y = h - y2 - PAN_PADDING_BOTTOM
+      y = h - y2 - PAN_PADDING
     }
     if (x || y) {
       cy.animate({
