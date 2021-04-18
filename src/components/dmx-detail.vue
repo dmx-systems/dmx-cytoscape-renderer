@@ -165,6 +165,10 @@ export default {
   border: 1px solid var(--border-color-lighter);
 }
 
+.dmx-detail.selected {
+  border-color: var(--highlight-color);
+}
+
 .dmx-detail .dmx-object-renderer {
   min-width: 120px;
   max-width: 420px;
