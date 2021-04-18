@@ -580,6 +580,10 @@ function eventHandlers () {
         render: e.renderedPosition
       })
     }
+  }).on('grabon', e => {
+    dispatch('_syncActive', id(e.target))
+  }).on('freeon', e => {
+    dispatch('_syncActive', -1)
   }).on('dragfreeon', e => {
     topicDrag(e.target)
   })

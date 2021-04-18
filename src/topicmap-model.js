@@ -54,6 +54,8 @@ const state = {
                                   // "renderTopicmap" action.
                                   // Note: dmx-detail component style updates reactively.
   zoom: undefined,                // Note: dmx-detail component style updates reactively.
+  activeId: -1,                   // ID of active topic, -1 if no one
+                                  // Note: dmx-detail component style updates reactively.
 
   details: {}     // In-map details. Detail records keyed by object ID (created by createDetail() and
                   // createDetailForSelection()):     ### FIXDOC
@@ -451,6 +453,10 @@ const actions = {
     if (_topicmapWritable) {
       dmx.rpc.setTopicmapViewport(_topicmap.id, pan, zoom)
     }
+  },
+
+  _syncActive (_, id) {
+    state.activeId = id
   },
 
   _setModifiers (_, _modifiers) {

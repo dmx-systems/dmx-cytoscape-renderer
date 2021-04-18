@@ -66,6 +66,10 @@ export default {
       return this.$store.state['dmx.topicmaps.topicmap'].zoom
     },
 
+    activeId () {
+      return this.$store.state['dmx.topicmaps.topicmap'].activeId
+    },
+
     object () {
       return this.detail.object
     },
@@ -76,6 +80,10 @@ export default {
 
     selected () {
       return this.selection.includesId(this.detail.id)
+    },
+
+    active () {
+      return this.activeId === this.detail.id
     },
 
     style () {
@@ -92,7 +100,7 @@ export default {
         top:  `${bbr.y2 - o.y}px`,
         left: `${bbr.x1 - o.x}px`,
         transform: `scale(${this.zoom})`,
-        'z-index': this.selected ? 1 : 'auto',
+        'z-index': this.active ? 2 : this.selected ? 1 : 'auto',
         'background-color': this.object.backgroundColor
       }
     },
