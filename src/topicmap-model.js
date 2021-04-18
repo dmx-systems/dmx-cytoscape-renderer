@@ -940,7 +940,8 @@ function showDetail (detail) {
 }
 
 /**
- * Measures the size of the given detail, and plays the fisheye animation.
+ * Measures the size of the given detail, and updates its "pos" and "size" properties.
+ * Plays the fisheye animation.
  *
  * Precondition:
  * - the DOM is updated already.
@@ -962,6 +963,7 @@ function adjustDetailSize (detail) {
     width:  detailDOM.clientWidth,
     height: detailDOM.clientHeight
   }
+  // console.log(detail.pos.x, detail.pos.y, detail.size.width, detail.size.height)
   return new Promise(resolve => {
     if (AUTO_LAYOUT) {
       cyView.playFisheyeAnimation(resolve)

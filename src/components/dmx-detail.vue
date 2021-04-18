@@ -97,8 +97,8 @@ export default {
       const bbr = this.detail.bbr
       return {
         // align detail DOM's top with detail node's bottom
-        top:  `${bbr.y2 - o.y}px`,
-        left: `${bbr.x1 - o.x}px`,
+        top:  `${bbr.y2 - o.y - 1.4 * this.zoom}px`,
+        left: `${bbr.x1 - o.x + 1.4 * this.zoom}px`,
         transform: `scale(${this.zoom})`,
         'z-index': this.active ? 2 : this.selected ? 1 : 'auto',
         'background-color': this.object.backgroundColor
@@ -180,9 +180,9 @@ export default {
 .dmx-detail button.pin {
   visibility: hidden;
   position: absolute;
-  right: 3px;
+  right: 1px;
   font-size: 16px !important;
-  padding: 0 !important;
+  padding: 0 2px !important;
 }
 
 .dmx-detail  button.pin.unpinned {

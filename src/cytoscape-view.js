@@ -163,6 +163,7 @@ export default class CytoscapeView {
    */
   autoPan (bbr) {
     const {x1, y1, x2, y2} = bbr
+    // console.log('autoPan()')
     const w = cy.width()
     const h = cy.height()
     let x, y
