@@ -92,6 +92,7 @@ export default {
         top:  `${bbr.y2 - o.y}px`,
         left: `${bbr.x1 - o.x}px`,
         transform: `scale(${this.zoom})`,
+        'z-index': this.selected ? 1 : 'auto',
         'background-color': this.object.backgroundColor
       }
     },
