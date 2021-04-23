@@ -241,22 +241,30 @@ function instantiateCy (container) {
           width:  ele => renderNode(ele).width,
           height: ele => renderNode(ele).height,
           'border-width': 1,
-          'border-color': BORDER_COLOR_LIGHTER,
-          'border-opacity': 1
+          'border-color': BORDER_COLOR_LIGHTER
+        }
+      },
+      {
+        selector: 'node[icon]:selected',
+        style: {
+          'border-width': 2,
+          'border-color': HIGHLIGHT_COLOR
         }
       },
       {
         selector: 'node.aux-node',
         style: {
           width: 6,
-          height: 6
+          height: 6,
+          'border-width': 2,
+          'border-color': HIGHLIGHT_COLOR,
+          'border-opacity': 0
         }
       },
       {
-        selector: 'node.aux-node.expanded',
+        selector: 'node.aux-node:selected',
         style: {
-          shape: 'rectangle',
-          'background-opacity': 0
+          'border-opacity': 1
         }
       },
       {
@@ -287,13 +295,6 @@ function instantiateCy (container) {
           'font-size': LABEL_FONT_SIZE,
           'text-rotation': 'autorotate',
           'text-wrap': 'wrap'
-        }
-      },
-      {
-        selector: 'node:selected',
-        style: {
-          'border-width': 2,
-          'border-color': HIGHLIGHT_COLOR
         }
       },
       {
