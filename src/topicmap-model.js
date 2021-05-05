@@ -397,10 +397,17 @@ const actions = {
         deleteAssoc(dir.arg)
         break
       case 'UPDATE_TOPIC_TYPE':
+        // TODO: cyView.update() would be sufficient if rendering would rely on viewTopic's computed props instead of
+        // per-instance "data" (see cyNode() in cytoscape-view.js). Like "arrow heads" rendering on role type update.
         updateTopicIcons(dir.arg.uri)
         break
       case 'UPDATE_ASSOCIATION_TYPE':
+        // TODO: cyView.update() would be sufficient if rendering would rely on viewAssoc's computed props instead of
+        // per-instance "data" (see cyEdge() in cytoscape-view.js). Like "arrow heads" rendering on role type update.
         updateAssocColors(dir.arg.uri)
+        break
+      case 'UPDATE_ROLE_TYPE':
+        cyView.update()
         break
       }
     })
