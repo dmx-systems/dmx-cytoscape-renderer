@@ -219,6 +219,10 @@ export default class CytoscapeView {
     // cy.resize()
   }
 
+  update () {
+    cy.style().update()
+  }
+
   hideEdgeHandle () {
     eh.hide()
   }
@@ -289,6 +293,13 @@ function instantiateCy (container) {
           width: 3,
           'line-color': 'data(color)',
           'curve-style': 'bezier',
+          'source-arrow-color': 'data(color)',
+          'target-arrow-color': 'data(color)',
+          'source-arrow-shape': 'data(viewAssoc.player1.arrowShape)',
+          'target-arrow-shape': 'data(viewAssoc.player2.arrowShape)',
+          'source-arrow-fill':  ele => ele.data('viewAssoc').player1.hollow ? 'hollow' : 'filled',
+          'target-arrow-fill':  ele => ele.data('viewAssoc').player2.hollow ? 'hollow' : 'filled',
+          'arrow-scale': 1.1,
           // See label positioning trick: https://github.com/cytoscape/cytoscape.js/issues/2329
           label: ele => ele.data('label') + '\n\n\u2060',
           'font-family': FONT_FAMILY,
@@ -696,7 +707,7 @@ function cyEdge (viewAssoc) {
   return {
     data: {
       id:      viewAssoc.id,
-      label:   viewAssoc.value,
+      label:   viewAssoc.value,         // FIXME: toString()?
       color:   viewAssoc.color,
       source:  viewAssoc.player1.id,
       target:  viewAssoc.player2.id,
