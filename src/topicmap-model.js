@@ -672,6 +672,8 @@ function updateAssoc (assoc) {
     // update state
     viewAssoc.value = assoc.value
     viewAssoc.typeUri = assoc.typeUri
+    viewAssoc.player1.roleTypeUri = assoc.player1.roleTypeUri
+    viewAssoc.player2.roleTypeUri = assoc.player2.roleTypeUri
     // update view
     if (viewAssoc.isVisible()) {
       cyView.updateAssoc(assoc.id, {
