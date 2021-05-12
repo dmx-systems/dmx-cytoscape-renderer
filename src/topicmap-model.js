@@ -387,13 +387,13 @@ const actions = {
       case 'DELETE_TOPIC':
         deleteTopic(dir.arg)
         break
-      case 'UPDATE_ASSOCIATION': {
+      case 'UPDATE_ASSOC': {
         const assoc = new dmx.Assoc(dir.arg)
         updateAssoc(assoc)
         updateDetail(assoc)
         break
       }
-      case 'DELETE_ASSOCIATION':
+      case 'DELETE_ASSOC':
         deleteAssoc(dir.arg)
         break
       case 'UPDATE_TOPIC_TYPE':
@@ -401,7 +401,7 @@ const actions = {
         // per-instance "data" (see cyNode() in cytoscape-view.js). Like "arrow heads" rendering on role type update.
         updateTopicIcons(dir.arg.uri)
         break
-      case 'UPDATE_ASSOCIATION_TYPE':
+      case 'UPDATE_ASSOC_TYPE':
         // TODO: cyView.update() would be sufficient if rendering would rely on viewAssoc's computed props instead of
         // per-instance "data" (see cyEdge() in cytoscape-view.js). Like "arrow heads" rendering on role type update.
         updateAssocColors(dir.arg.uri)
@@ -664,7 +664,7 @@ function updateTopic (topic) {
 }
 
 /**
- * Processes an UPDATE_ASSOCIATION directive.
+ * Processes an UPDATE_ASSOC directive.
  */
 function updateAssoc (assoc) {
   const viewAssoc = _topicmap.getAssocIfExists(assoc.id)
@@ -695,7 +695,7 @@ function deleteTopic (topic) {
 }
 
 /**
- * Processes a DELETE_ASSOCIATION directive.
+ * Processes a DELETE_ASSOC directive.
  */
 function deleteAssoc (assoc) {
   // Note: state is already updated by dmx-topicmap-panel
@@ -726,7 +726,7 @@ function updateTopicIcons (typeUri) {
 }
 
 /**
- * Processes an UPDATE_ASSOCIATION_TYPE directive.
+ * Processes an UPDATE_ASSOC_TYPE directive.
  */
 function updateAssocColors (typeUri) {
   _topicmap.assocs
