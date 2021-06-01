@@ -81,6 +81,20 @@ const actions = {
     return dmx.rpc.getTopicmap(id)
   },
 
+  fetchTopicmapAppendix ({rootState, dispatch}, topicmap) {
+    // implicit read permission
+    const p = []
+    const topicTypeUris = []
+    topicmap.topics.forEach(topic => {
+      if (!rootState.typeCache.topicTypes[topic.typeUri] && !topicTypeUris.includes(topic.typeUri)) {
+        topicTypeUris.push(topic.typeUri)
+        p.push(dmx.rpc.getTopicTypeImplicitly(topic.id).then(topicType => dispatch('putTopicType', topicType)))
+      }
+    })
+    console.log(p)
+    return Promise.all(p)
+  },
+
   /**
    * @returns   a promise resolved once topicmap rendering is complete.
    */
