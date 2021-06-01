@@ -85,10 +85,17 @@ const actions = {
     // implicit read permission
     const p = []
     const topicTypeUris = []
+    const assocTypeUris = []
     topicmap.topics.forEach(topic => {
       if (!rootState.typeCache.topicTypes[topic.typeUri] && !topicTypeUris.includes(topic.typeUri)) {
         topicTypeUris.push(topic.typeUri)
         p.push(dmx.rpc.getTopicTypeImplicitly(topic.id).then(topicType => dispatch('putTopicType', topicType)))
+      }
+    })
+    topicmap.assocs.forEach(assoc => {
+      if (!rootState.typeCache.assocTypes[assoc.typeUri] && !assocTypeUris.includes(assoc.typeUri)) {
+        assocTypeUris.push(assoc.typeUri)
+        p.push(dmx.rpc.getAssocTypeImplicitly(assoc.id).then(assocType => dispatch('putAssocType', assocType)))
       }
     })
     console.log(p)
