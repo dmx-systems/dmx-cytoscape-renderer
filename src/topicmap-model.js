@@ -82,10 +82,11 @@ const actions = {
   },
 
   fetchTopicmapAppendix ({rootState, dispatch}, topicmap) {
-    // implicit read permission
+    // implicit read permission for 1) topic types, 2) assoc types, and 3) role types
     const p = []
     const topicTypeUris = []
     const assocTypeUris = []
+    const roleTypeUris = []
     topicmap.topics.forEach(topic => {
       if (!rootState.typeCache.topicTypes[topic.typeUri] && !topicTypeUris.includes(topic.typeUri)) {
         topicTypeUris.push(topic.typeUri)
@@ -96,6 +97,16 @@ const actions = {
       if (!rootState.typeCache.assocTypes[assoc.typeUri] && !assocTypeUris.includes(assoc.typeUri)) {
         assocTypeUris.push(assoc.typeUri)
         p.push(dmx.rpc.getAssocTypeImplicitly(assoc.id).then(assocType => dispatch('putAssocType', assocType)))
+      }
+      const uri1 = assoc.player1.roleTypeUri
+      if (!rootState.typeCache.roleTypes[uri1] && !roleTypeUris.includes(uri1)) {
+        roleTypeUris.push(uri1)
+        p.push(dmx.rpc.getRoleTypeImplicitly(assoc.id, uri1).then(roleType => dispatch('putRoleType', roleType)))
+      }
+      const uri2 = assoc.player2.roleTypeUri
+      if (!rootState.typeCache.roleTypes[uri2] && !roleTypeUris.includes(uri2)) {
+        roleTypeUris.push(uri2)
+        p.push(dmx.rpc.getRoleTypeImplicitly(assoc.id, uri2).then(roleType => dispatch('putRoleType', roleType)))
       }
     })
     console.log(p)
