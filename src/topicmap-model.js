@@ -127,6 +127,12 @@ const actions = {
     return cyView.renderTopicmap(topicmap, writable, selection).then(showPinnedDetails)
   },
 
+  // On logout, before the type cache is diminished, we remove in-map details from screen
+  // to avoid render errors due to missing types.
+  clearTopicmap () {
+    state.details = {}
+  },
+
   // Topicmap type specific actions
 
   /**
