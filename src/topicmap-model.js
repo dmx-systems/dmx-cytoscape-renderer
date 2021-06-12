@@ -109,7 +109,6 @@ const actions = {
         p.push(dmx.rpc.getRoleTypeImplicitly(assoc.id, uri2).then(roleType => dispatch('putRoleType', roleType)))
       }
     })
-    console.log(p)
     return Promise.all(p)
   },
 
