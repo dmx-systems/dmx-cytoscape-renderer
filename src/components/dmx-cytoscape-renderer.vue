@@ -27,7 +27,7 @@ export default {
   },
 
   destroyed () {
-    console.log('dmx-cytoscape-renderer destroyed')
+    // console.log('dmx-cytoscape-renderer destroyed')
     // Note: at this time the store modules are switched already
   },
 
