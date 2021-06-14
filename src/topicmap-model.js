@@ -791,10 +791,10 @@ function initPos (viewTopic) {
   if (viewTopic.getViewProp('dmx.topicmaps.x') === undefined) {
     const pos = {}
     if (_object) {
-      // If there is a single selection: place lower/right to the selected topic/assoc
+      // If there is a single selection: place lower/left to the selected topic/assoc
       // TODO: more elaborated placement, e.g. at near free position?
       const p = _topicmap.getPosition(_object.id)
-      pos.x = p.x + 60
+      pos.x = p.x - 60
       pos.y = p.y + 120
     } else {
       pos.x = 200
