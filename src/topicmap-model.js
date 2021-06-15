@@ -22,6 +22,12 @@ import dmx from 'dmx-api'
 
 const AUTO_LAYOUT = false
 
+// auto positioning
+const POS_DX = -60
+const POS_DY = 120
+const POS_X = 200
+const POS_Y = 240
+
 // These 2 variables + state.selection are initialized together by "renderTopicmap" action.
 let _topicmap           // the rendered topicmap (dmx.Topicmap)
 let _topicmapWritable   // true if the current user has WRITE permission for the rendered topicmap (boolean)
@@ -794,11 +800,11 @@ function initPos (viewTopic) {
       // If there is a single selection: place lower/left to the selected topic/assoc
       // TODO: more elaborated placement, e.g. at near free position?
       const p = _topicmap.getPosition(_object.id)
-      pos.x = p.x - 60
-      pos.y = p.y + 120
+      pos.x = p.x + POS_DX
+      pos.y = p.y + POS_DY
     } else {
-      pos.x = 200
-      pos.y = 240
+      pos.x = POS_X
+      pos.y = POS_Y
     }
     viewTopic.setPosition(pos)
   }
