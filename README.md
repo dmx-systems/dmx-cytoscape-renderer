@@ -4,6 +4,27 @@ A DMX 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**2.1** -- Jun 15, 2021
+
+* Feature:
+    * **Arrow heads** for associations
+* Major GUI improvement:
+    * **No lock/unlock** of in-map details anymore
+        * All commands (*node-level* as well as *content-level*) are immediately available
+        * In-map details open towards bottom (instead of center-aligned), resulting in a more stable topicmap rendering
+* Further GUI improvements:
+    * **Scrollable in-map details**, *height-limited* based on window height, for better content-level navigation
+    * In-map details not fitting on screen are *top-aligned* (instead of bottom-aligned), because you want start reading at
+      top
+    * When revealing a topic: place it lower/left (instead lower/right) for better result in conjunction with pinned
+      topics/assocs
+    * Clicking outside context menu cancels selection
+    * More visible "Pin" button
+* Fixes:
+    * *Implicit READ permission for types* is now implemented
+* Chore:
+    * Remove debug log
+
 **2.0** -- Dec 30, 2020
 
 * BREAKING CHANGES
@@ -240,7 +261,3 @@ A DMX 5 topicmap renderer as a composable GUI component.
 
 * Factored out as a standalone component from:  
   https://github.com/jri/dm5-topicmap-panel
-
-------------
-Jörg Richter  
-Dec 30, 2020
