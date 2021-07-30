@@ -598,30 +598,30 @@ function eventHandlers () {
   }).on('freeon', e => {
     dispatch('_syncActive', -1)
   }).on('dragfreeon', e => {
-    topicDrag(e.target)
+    topicDragged(e.target)
   })
 }
 
-function topicDrag (node) {
+function topicDragged (node) {
   if (!isAuxNode(node)) {    // aux nodes don't emit topic-dragged events
     if (isTopicSelected(id(node)) && isMultiSelection()) {
       // console.log('drag multi', selection.topicIds)
-      emitTopicsDrag()
+      emitTopicsDragged()
     } else {
       // console.log('drag single', id(node))
-      emitTopicDrag(node)
+      emitTopicDragged(node)
     }
   }
 }
 
-function emitTopicDrag (node) {
+function emitTopicDragged (node) {
   parent.$emit('topic-dragged', {
     id: id(node),
     pos: node.position()
   })
 }
 
-function emitTopicsDrag (node) {
+function emitTopicsDragged () {
   parent.$emit('topics-dragged', selection.topicIds.map(id => {
     const pos = cyElement(id).position()
     return {
