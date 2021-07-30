@@ -23,6 +23,7 @@ const onUnselectEdge = edgeHandler('unselect')
 let cy                  // Cytoscape instance
 let ec                  // cytoscape-edge-connections API object
 let eh                  // cytoscape-edgehandles API object
+let dropHandler         // array of predicator functions
 let parent              // the dmx-topicmap-panel (a Vue instance); used as event emitter
 let box                 // the measurement box
 let modifiers           // modifier keys
@@ -42,11 +43,12 @@ cytoscape.use(require('cytoscape-edge-connections'))
 
 export default class CytoscapeView {
 
-  constructor (container, contextCommands, _parent, _box, _modifiers, _dispatch) {
-    parent    = _parent
-    box       = _box
-    modifiers = _modifiers
-    dispatch  = _dispatch
+  constructor (container, contextCommands, _dropHandler, _parent, _box, _modifiers, _dispatch) {
+    dropHandler = _dropHandler
+    parent      = _parent
+    box         = _box
+    modifiers   = _modifiers
+    dispatch    = _dispatch
     cy = instantiateCy(container)
     ec = cy.edgeConnections()
     eh = edgeHandles()
@@ -625,7 +627,7 @@ function dragHandler (dragState) {
   return e => {
     const _node = nodeAt(e.position, dragState.node)
     if (_node) {
-      if (_node !== dragState.hoverNode) {
+      if (_node !== dragState.hoverNode && isDroppable(dragState.node, _node)) {
         dragState.hoverNode && dragState.unhover()
         dragState.hoverNode = _node
         dragState.hover()
@@ -655,6 +657,10 @@ function isInside (pos, node) {
   const y = pos.y
   const box = node.boundingBox()
   return x > box.x1 && x < box.x2 && y > box.y1 && y < box.y2
+}
+
+function isDroppable (node1, node2) {
+  return dropHandler.map(handler => handler(node1.data('viewTopic'), node2.data('viewTopic'))).some(val => val)
 }
 
 function topicDragged (node) {

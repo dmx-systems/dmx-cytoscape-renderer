@@ -22,7 +22,8 @@ export default {
       parent:          this.$parent,
       container:       this.$refs['cytoscape-container'],     // only known in mounted()
       box:             this.$refs['measurement-box'],         // only known in mounted()
-      contextCommands: this.contextCommands
+      contextCommands: this.contextCommands,
+      dropHandler:     this.dropHandler
     })
   },
 
@@ -39,6 +40,7 @@ export default {
     object: dmx.DMXObject,
     writable: Boolean,
     contextCommands: Object,
+    dropHandler: Array,
     quillConfig: Object
   },
 

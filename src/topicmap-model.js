@@ -465,9 +465,9 @@ const actions = {
    * @param   parent      the dmx-topicmap-panel (a Vue instance)
    * @param   box         the DOM element used for measurement
    */
-  _initCytoscape ({dispatch}, {container, contextCommands, parent, box}) {
+  _initCytoscape ({dispatch}, {container, contextCommands, dropHandler, parent, box}) {
     // console.log('_initCytoscape')
-    cyView = new CytoscapeView(container, contextCommands, parent, box, modifiers, dispatch)
+    cyView = new CytoscapeView(container, contextCommands, dropHandler, parent, box, modifiers, dispatch)
   },
 
   _syncObject (_, object) {
