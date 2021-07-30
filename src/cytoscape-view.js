@@ -1,5 +1,6 @@
 import cytoscape from 'cytoscape'
 import dmx from 'dmx-api'
+import DragState from './drag-state'
 
 // get style from CSS variables
 const style = window.getComputedStyle(document.body)
@@ -280,7 +281,7 @@ function instantiateCy (container) {
         }
       },
       {
-        selector: 'node.eh-source, node.eh-target',
+        selector: 'node.eh-source, node.eh-target, node.hover',
         style: {
           'border-width': 2,
           'border-color': HIGHLIGHT_COLOR,
@@ -593,6 +594,24 @@ function eventHandlers () {
         render: e.renderedPosition
       })
     }
+  }).on('tapstart', 'node', e => {
+    const dragState = new DragState(e.target)
+    const handler = dragHandler(dragState)
+    cy.on('tapdrag', handler)
+    cy.one('tapend', e => {
+      cy.off('tapdrag', handler)
+      if (dragState.hoverNode) {
+        dragState.unhover()
+        dragState.resetPosition()
+        parent.$emit('topic-dropped', {
+          // topic 1 dropped onto topic 2
+          topicId1: id(dragState.node),
+          topicId2: id(dragState.hoverNode)
+        })
+      } else if (dragState.dragged()) {
+        topicDragged(dragState.node)
+      }
+    })
   }).on('grabon', e => {
     dispatch('_syncActive', id(e.target))
   }).on('freeon', e => {
@@ -600,6 +619,42 @@ function eventHandlers () {
   }).on('dragfreeon', e => {
     topicDragged(e.target)
   })
+}
+
+function dragHandler (dragState) {
+  return e => {
+    const _node = nodeAt(e.position, dragState.node)
+    if (_node) {
+      if (_node !== dragState.hoverNode) {
+        dragState.hoverNode && dragState.unhover()
+        dragState.hoverNode = _node
+        dragState.hover()
+      }
+    } else {
+      if (dragState.hoverNode) {
+        dragState.unhover()
+        dragState.hoverNode = undefined
+      }
+    }
+  }
+}
+
+function nodeAt (pos, excludeNode) {
+  var foundNode
+  cy.nodes().forEach(node => {
+    if (node !== excludeNode && isInside(pos, node)) {
+      foundNode = node
+      return false    // abort iteration (as supported by Cytoscape collection)
+    }
+  })
+  return foundNode
+}
+
+function isInside (pos, node) {
+  const x = pos.x
+  const y = pos.y
+  const box = node.boundingBox()
+  return x > box.x1 && x < box.x2 && y > box.y1 && y < box.y2
 }
 
 function topicDragged (node) {
