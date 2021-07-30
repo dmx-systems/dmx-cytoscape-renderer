@@ -603,7 +603,7 @@ function eventHandlers () {
 }
 
 function topicDrag (node) {
-  if (!isAuxNode(node)) {    // aux nodes don't emit topic-drag events
+  if (!isAuxNode(node)) {    // aux nodes don't emit topic-dragged events
     if (isTopicSelected(id(node)) && isMultiSelection()) {
       // console.log('drag multi', selection.topicIds)
       emitTopicsDrag()
@@ -615,14 +615,14 @@ function topicDrag (node) {
 }
 
 function emitTopicDrag (node) {
-  parent.$emit('topic-drag', {
+  parent.$emit('topic-dragged', {
     id: id(node),
     pos: node.position()
   })
 }
 
 function emitTopicsDrag (node) {
-  parent.$emit('topics-drag', selection.topicIds.map(id => {
+  parent.$emit('topics-dragged', selection.topicIds.map(id => {
     const pos = cyElement(id).position()
     return {
       topicId: id,
