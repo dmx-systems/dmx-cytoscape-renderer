@@ -23,7 +23,7 @@ const onUnselectEdge = edgeHandler('unselect')
 let cy                  // Cytoscape instance
 let ec                  // cytoscape-edge-connections API object
 let eh                  // cytoscape-edgehandles API object
-let dropHandler         // array of predicator functions
+let dropHandler         // array of drop handler objects (2 function props: 'isDroppable', 'handleDrop')
 let parent              // the dmx-topicmap-panel (a Vue instance); used as event emitter
 let box                 // the measurement box
 let modifiers           // modifier keys
@@ -605,11 +605,8 @@ function eventHandlers () {
       if (dragState.hoverNode) {
         dragState.unhover()
         dragState.resetPosition()
-        parent.$emit('topic-dropped', {
-          // topic 1 dropped onto topic 2
-          topicId1: id(dragState.node),
-          topicId2: id(dragState.hoverNode)
-        })
+        // topic 1 dropped onto topic 2
+        handleDrop(dragState.node.data('viewTopic'), dragState.hoverNode.data('viewTopic'))
       } else if (dragState.dragged()) {
         topicDragged(dragState.node)
       }
@@ -660,7 +657,13 @@ function isInside (pos, node) {
 }
 
 function isDroppable (node1, node2) {
-  return dropHandler.map(handler => handler(node1.data('viewTopic'), node2.data('viewTopic'))).some(val => val)
+  return dropHandler.map(handler => handler.isDroppable && handler.isDroppable(
+    node1.data('viewTopic'), node2.data('viewTopic')
+  )).some(val => val)
+}
+
+function handleDrop (viewTopic1, viewTopic2) {
+  dropHandler.forEach(handler => handler.handleDrop && handler.handleDrop(viewTopic1, viewTopic2))
 }
 
 function topicDragged (node) {
