@@ -657,9 +657,15 @@ function isInside (pos, node) {
 }
 
 function isDroppable (node1, node2) {
-  return dropHandler.map(handler => handler.isDroppable && handler.isDroppable(
-    node1.data('viewTopic'), node2.data('viewTopic')
-  )).some(val => val)
+  return dropHandler.map(handler => {
+    // Note: dragging an edge handle fires drag events as well. These must not be treated as a drag-n-drop operation.
+    // Handlers must not be called ('viewTopic' data is undefined).
+    const topic1 = node1.data('viewTopic')
+    const topic2 = node2.data('viewTopic')
+    if (handler.isDroppable && topic1 && topic2) {
+      return handler.isDroppable(topic1, topic2)
+    }
+  }).some(val => val)
 }
 
 function handleDrop (viewTopic1, viewTopic2) {
