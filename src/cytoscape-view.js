@@ -615,8 +615,6 @@ function eventHandlers () {
     dispatch('_syncActive', id(e.target))
   }).on('freeon', e => {
     dispatch('_syncActive', -1)
-  }).on('dragfreeon', e => {
-    topicDragged(e.target)
   })
 }
 
