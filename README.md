@@ -4,6 +4,12 @@ A DMX 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**2.2** -- Aug 27, 2021
+
+* Improvements:
+    * Drag'n'drop support for topics
+        * Add component attribute `drop-handler` (Array)
+
 **2.1** -- Jun 15, 2021
 
 * Feature:
