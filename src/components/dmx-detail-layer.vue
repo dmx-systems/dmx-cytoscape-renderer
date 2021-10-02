@@ -37,6 +37,10 @@ export default {
 </script>
 
 <style>
+:root {
+  --min-detail-scale: 1;
+}
+
 .dmx-detail-layer {
   position: absolute;
   width: 10000px;     /* avoid early line wrapping */
@@ -60,12 +64,7 @@ export default {
 
 @keyframes detail {
   0% {
-    transform: scale(0.4);
-    transform-origin: top left;
-  }
-  100% {
-    transform: scale(1);
-    transform-origin: top left;
+    transform: scale(var(--min-detail-scale));
   }
 }
 </style>

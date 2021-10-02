@@ -25,6 +25,15 @@ export default {
       contextCommands: this.contextCommands,
       dropHandler:     this.dropHandler
     })
+    this.$store.watch(
+      state => state['dmx.topicmaps.topicmap'] && state['dmx.topicmaps.topicmap'].zoom,
+      zoom => {
+        // console.log('zoom watch', zoom)
+        if (zoom) {
+          document.body.style.setProperty('--min-detail-scale', 0.4 * zoom)
+        }
+      }
+    )
   },
 
   destroyed () {
