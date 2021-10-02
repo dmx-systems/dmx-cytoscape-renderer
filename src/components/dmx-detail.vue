@@ -87,18 +87,11 @@ export default {
     },
 
     style () {
-      const o = {x: 0, y: 0}
-      const size = this.detail.size
-      if (size) {
-        // distance between top/left and scaled top/left; Note: "transform scale" grows/shrinks element from center
-        o.x = (size.width - size.width * this.zoom) / 2
-        o.y = (size.height - size.height * this.zoom) / 2
-      }
       const bbr = this.detail.bbr
       return {
         // align detail DOM's top with detail node's bottom
-        top:  `${bbr.y2 - o.y - 1.4 * this.zoom}px`,
-        left: `${bbr.x1 - o.x + 1.4 * this.zoom}px`,
+        top:  `${bbr.y2 - 1.4 * this.zoom}px`,
+        left: `${bbr.x1 + 1.4 * this.zoom}px`,
         transform: `scale(${this.zoom})`,
         'z-index': this.active ? 2 : this.selected ? 1 : 'auto',
         'background-color': this.object.backgroundColor
@@ -162,6 +155,7 @@ export default {
 <style>
 .dmx-detail {
   position: absolute;
+  transform-origin: top left;
   border: 1px solid var(--border-color-lighter);
 }
 
