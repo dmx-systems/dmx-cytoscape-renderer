@@ -1,8 +1,10 @@
 <template>
   <div class="dmx-detail-layer">
-    <dmx-detail v-for="detail in details" :detail="detail" :detail-renderers="detailRenderers"
-      :quill-config="quillConfig" :key="detail.node.id()">
-    </dmx-detail>
+    <transition-group name="detail">
+      <dmx-detail v-for="detail in details" :detail="detail" :detail-renderers="detailRenderers"
+        :quill-config="quillConfig" :key="detail.node.id()">
+      </dmx-detail>
+    </transition-group>
   </div>
 </template>
 
@@ -39,5 +41,31 @@ export default {
   position: absolute;
   width: 10000px;     /* avoid early line wrapping */
   top: 0;
+}
+
+.dmx-detail-layer .detail-enter-active {
+  animation: detail 0.3s;
+  transition: opacity 0.3s;
+}
+
+.dmx-detail-layer .detail-leave-active {
+  animation: detail 0.3s reverse;
+  transition: opacity 0.3s;
+}
+
+.dmx-detail-layer .detail-enter,
+.dmx-detail-layer .detail-leave-to {
+  opacity: 0.4;
+}
+
+@keyframes detail {
+  0% {
+    transform: scale(0.4);
+    transform-origin: top left;
+  }
+  100% {
+    transform: scale(1);
+    transform-origin: top left;
+  }
 }
 </style>
