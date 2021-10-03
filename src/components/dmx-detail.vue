@@ -49,7 +49,7 @@ export default {
   data () {
     return {
       // The component used as event emitter; it's the topicmap renderers parent component
-      parent: this.$parent.$parent.$parent,
+      parent: this.$parent.$parent.$parent.$parent,
       maxHeight: undefined
     }
   },
