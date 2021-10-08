@@ -1,5 +1,6 @@
 <template>
   <div class="dmx-cytoscape-renderer" @mousedown.capture="mousedown">
+    <img v-if="imagePath" :src="imageUrl" :style="imageStyle">
     <div class="cytoscape-container" ref="cytoscape-container"></div>
     <div class="measurement-box" ref="measurement-box"></div>
     <dmx-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig"></dmx-detail-layer>
@@ -46,11 +47,42 @@ export default {
   ],
 
   props: {
+    topicmap: Object,
     object: dmx.DMXObject,
     writable: Boolean,
     contextCommands: Object,
     dropHandler: Array,
     quillConfig: Object
+  },
+
+  computed: {
+
+    panX () {
+      return this.topicmap && this.topicmap.panX
+    },
+
+    panY () {
+      return this.topicmap && this.topicmap.panY
+    },
+
+    zoom () {
+      return this.topicmap && this.topicmap.zoom
+    },
+
+    imagePath () {
+      return this.topicmap && this.topicmap.bgImagePath
+    },
+
+    imageUrl () {
+      return '/filerepo' + this.imagePath
+    },
+
+    imageStyle () {
+      return {
+        transform: `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`,
+        'transform-origin': 'top left'
+      }
+    }
   },
 
   watch: {
@@ -95,5 +127,9 @@ export default {
 .dmx-cytoscape-renderer .measurement-box {
   position: absolute;
   visibility: hidden;
+}
+
+.dmx-cytoscape-renderer > img {
+  position: absolute;
 }
 </style>

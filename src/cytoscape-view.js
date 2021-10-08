@@ -74,9 +74,9 @@ export default class CytoscapeView {
       cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))    /* eslint space-in-parens: "off" */
       ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
       setViewport({
-        x: topicmap.viewProps['dmx.topicmaps.pan_x'],
-        y: topicmap.viewProps['dmx.topicmaps.pan_y']
-      }, topicmap.viewProps['dmx.topicmaps.zoom'])
+        x: topicmap.panX,
+        y: topicmap.panY
+      }, topicmap.zoom)
       // console.timeEnd('renderTopicmap')
     })
   }
