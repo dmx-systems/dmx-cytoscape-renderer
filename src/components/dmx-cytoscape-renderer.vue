@@ -1,6 +1,6 @@
 <template>
   <div class="dmx-cytoscape-renderer" @mousedown.capture="mousedown">
-    <img v-if="imagePath" :src="imageUrl" :style="imageStyle">
+    <img v-if="imageUrl" :src="imageUrl" :style="imageStyle">
     <div class="cytoscape-container" ref="cytoscape-container"></div>
     <div class="measurement-box" ref="measurement-box"></div>
     <dmx-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig"></dmx-detail-layer>
@@ -69,12 +69,8 @@ export default {
       return this.topicmap && this.topicmap.zoom
     },
 
-    imagePath () {
-      return this.topicmap && this.topicmap.bgImagePath
-    },
-
     imageUrl () {
-      return '/filerepo' + this.imagePath
+      return this.topicmap && this.topicmap.bgImageUrl
     },
 
     imageStyle () {
