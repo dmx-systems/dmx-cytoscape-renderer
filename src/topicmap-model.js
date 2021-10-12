@@ -83,7 +83,6 @@ const actions = {
   // Topicmap Panel protocol
 
   fetchTopicmap (_, id) {
-    // console.log('fetchTopicmap', id, '(topicmap-model)')
     return dmx.rpc.getTopicmap(id)
   },
 
@@ -122,7 +121,6 @@ const actions = {
    * @returns   a promise resolved once topicmap rendering is complete.
    */
   renderTopicmap (_, {topicmap, writable, selection}) {
-    // console.log('renderTopicmap', topicmap.id, topicmap.viewProps)
     _topicmap = topicmap
     _topicmapWritable = writable
     ele = undefined
@@ -178,7 +176,6 @@ const actions = {
   },
 
   renderRelatedTopic (_, {relTopic, pos, autoPan}) {
-    // console.log('renderRelatedTopic', relTopic, autoPan)
     // update state + view
     const topicOp = _revealTopic(relTopic, pos, autoPan)
     const assocOp = _revealAssoc(relTopic.assoc)
@@ -201,7 +198,6 @@ const actions = {
    * - the server is *not* yet up-to-date
    */
   setTopicPosition (_, {id, pos}) {
-    // console.log('setTopicPosition', id)
     // update state
     _topicmap.getTopic(id).setPosition(pos)
     // update view (up-to-date already)
@@ -220,7 +216,6 @@ const actions = {
    * @param   topicCoords    array of 3-prop objects: 'topicId', 'x', 'y'
    */
   setTopicPositions (_, topicCoords) {
-    // console.log('setTopicPositions', topicCoords)
     // update state
     topicCoords.forEach(coord =>
       _topicmap.getTopic(coord.topicId).setPosition({
@@ -237,7 +232,6 @@ const actions = {
 
   // TODO: move update-server aspect to main application? Move this action to webclient.js?
   hideMulti ({dispatch}, idLists) {
-    // console.log('hideMulti', idLists.topicIds, idLists.assocIds)
     // update state + view (for immediate visual feedback)
     idLists.topicIds.forEach(id => dispatch('_hideTopic', id))
     idLists.assocIds.forEach(id => dispatch('_hideAssoc', id))
@@ -248,7 +242,6 @@ const actions = {
   },
 
   setTopicPinned (_, {topicId, pinned, showDetails}) {
-    // console.log('setTopicPinned', topicId, pinned, showDetails)
     // update state
     _topicmap.getTopic(topicId).setPinned(pinned)
     // update view
@@ -262,7 +255,6 @@ const actions = {
   },
 
   setAssocPinned (_, {assocId, pinned, showDetails}) {
-    // console.log('setAssocPinned', assocId, pinned, showDetails)
     // update state
     _topicmap.getAssoc(assocId).setPinned(pinned)
     // update view
@@ -384,7 +376,6 @@ const actions = {
   },
 
   _setTopicVisibility (_, {topicmapId, topicId, visibility}) {
-    // console.log('_setTopicVisibility (Cytoscape Renderer)')
     if (topicmapId === _topicmap.id) {
       const viewTopic = _topicmap.getTopicIfExists(topicId)
       if (viewTopic) {
@@ -401,7 +392,6 @@ const actions = {
   },
 
   _setAssocVisibility (_, {topicmapId, assocId, visibility}) {
-    // console.log('_setAssocVisibility (Cytoscape Renderer)')
     if (topicmapId === _topicmap.id) {
       const viewAssoc = _topicmap.getAssocIfExists(assocId)
       if (viewAssoc) {
@@ -421,21 +411,19 @@ const actions = {
     // console.log(`Cytoscape Renderer: processing ${directives.length} directives`)
     directives.forEach(dir => {
       switch (dir.type) {
-      case 'UPDATE_TOPIC': {
+      case 'UPDATE_TOPIC':
         const topic = new dmx.Topic(dir.arg)
         updateTopic(topic)
         updateDetail(topic)
         break
-      }
       case 'DELETE_TOPIC':
         deleteTopic(dir.arg)
         break
-      case 'UPDATE_ASSOC': {
+      case 'UPDATE_ASSOC':
         const assoc = new dmx.Assoc(dir.arg)
         updateAssoc(assoc)
         updateDetail(assoc)
         break
-      }
       case 'DELETE_ASSOC':
         deleteAssoc(dir.arg)
         break
@@ -466,24 +454,20 @@ const actions = {
    * @param   box         the DOM element used for measurement
    */
   _initCytoscape ({dispatch}, {container, contextCommands, dropHandler, parent, box}) {
-    // console.log('_initCytoscape')
     cyView = new CytoscapeView(container, contextCommands, dropHandler, parent, box, modifiers, dispatch)
   },
 
   _syncObject (_, object) {
-    // console.log('_syncObject', object)
     _object = object
   },
 
   _syncWritable (_, writable) {
-    // console.log('_syncWritable', writable)
     state.objectWritable = writable
   },
 
   // Note: no debounce here; consecutive calls might relate to *different* details,
   // in particular when loading a topicmap with several pinned topics which have images
   _syncDetailSize (_, id) {
-    // console.log('_syncDetailSize', id)
     // Note: at the time assoc parts arrive the detail size needs to be adjusted.
     // If the assoc is unselected meanwhile the detail record does not exist anymore.
     const detail = _detail(id)
@@ -494,7 +478,6 @@ const actions = {
   },
 
   _syncViewport (_, {pan, zoom}) {
-    // console.log('_syncViewport', zoom)
     // update state
     _topicmap.setViewport(pan, zoom)
     state.zoom = zoom
@@ -534,7 +517,6 @@ const actions = {
    *            whether to show topic/assoc in-map details (boolean)
    */
   renderAsSelected (_, {id, p, showDetails}) {
-    // console.log('renderAsSelected', id, showDetails)
     // Note: if selectById() throws we don't want create the promise. Otherwise we would get 2 error messages instead of
     // one due to nested promises. renderAsSelected() runs itself in a promise executor function (before an object can
     // be rendered as selected the topicmap rendering must be complete).
@@ -560,7 +542,6 @@ const actions = {
   },
 
   renderAsUnselected () {
-    // console.log('renderAsUnselected')
     const p = unselectElement()
     p && p.then(playFisheyeAnimationIfDetailsOnscreen)
     ele = undefined
@@ -573,7 +554,6 @@ const actions = {
    * navigation was aborted (by closing a "Unsaved Changes" warning).
    */
   _renderAsSelected (_, id) {
-    // console.log('_renderAsSelected', id)
     // Note: when a navigation was aborted (by closing a "Unsaved Changes" warning) Cytoscape has removed the visual
     // selection from the former object already and the app calls "_renderAsSelected" in order to visually restore the
     // former selection. In this case calling "_renderAsSelected" when ele is defined already is not an error.
@@ -589,7 +569,6 @@ const actions = {
    * @throws  if this component is not in single selection state.
    */
   _renderAsUnselected (_, id) {
-    // console.log('_renderAsUnselected', id)
     if (!ele) {
       throw Error(`_renderAsUnselected(${id}) when "ele" is not set`)
     }
@@ -686,7 +665,6 @@ function _revealAssoc (assoc) {
  * Processes an UPDATE_TOPIC directive.
  */
 function updateTopic (topic) {
-  // console.log('updateTopic', topic)
   const viewTopic = _topicmap.getTopicIfExists(topic.id)
   if (viewTopic) {
     // update state
@@ -787,7 +765,6 @@ function updateAssocColors (typeUri) {
  * Auto-position topic if no position is set.
  */
 function initPos (viewTopic) {
-  // console.log('initPos', viewTopic.id, viewTopic.getViewProp('dmx.topicmaps.x') !== undefined, _object && _object.id)
   if (viewTopic.getViewProp('dmx.topicmaps.x') === undefined) {
     const pos = {}
     if (_object) {
@@ -820,7 +797,6 @@ function initPos (viewTopic) {
  * @return  if the restore animation is played: a promise resolved once the animation is complete, otherwise undefined
  */
 function unselectElement () {
-  // console.log('unselectElement', ele && eleId(ele))
   if (!ele) {
     // Note: normally "ele" is expected to be defined when entering this function.
     // Normally the route is the source of truth, and changing app state is the *effect* of a route change. But there is
@@ -831,7 +807,6 @@ function unselectElement () {
     // would still be readable after logout. This would get rather complicate.
     return
   }
-  // console.log('unselectElement', eleId(ele), cyView.cy.elements(":selected").size())
   // Note 1: when the user clicks on the background Cytoscape unselects the selected element on its own.
   // Calling cy.elements(":selected") afterwards would return an empty collection.
   // This is why we maintain an explicit "ele" state.
@@ -848,7 +823,6 @@ function unselectElement () {
  * @return  a promise resolved once the animation is complete.
  */
 function playRestoreAnimation () {
-  // console.log('starting restore animation')
   return AUTO_LAYOUT ?                                                            /* eslint operator-linebreak: "off" */
     Promise.all(_topicmap.topics
       .filter(viewTopic => viewTopic.isVisible())
@@ -922,7 +896,6 @@ function createDetail (viewObject) {
  * @return  the created detail record
  */
 function createDetailForSelection () {
-  // console.log('createDetailForSelection', state.objectWritable)
   const id = eleId(ele)
   const node = cyView.detailNode(id)
   let viewObject
@@ -943,7 +916,6 @@ function createDetailForSelection () {
     },
     // Note: properties would not be reactive. With getters it works.
     get writable () {
-      // console.log('get writable', state.objectWritable)
       return state.objectWritable
     },
     get pinned () {
@@ -1009,7 +981,6 @@ function adjustDetailSize (detail) {
     width:  detailDOM.clientWidth,
     height: detailDOM.clientHeight
   }
-  // console.log(detail.pos.x, detail.pos.y, detail.size.width, detail.size.height)
   return new Promise(resolve => {
     if (AUTO_LAYOUT) {
       cyView.playFisheyeAnimation(resolve)
@@ -1020,7 +991,6 @@ function adjustDetailSize (detail) {
 }
 
 function removeDetailIfUnpinned (id, pinned, showDetails) {
-  // console.log('removeDetailIfUnpinned', id, pinned, showDetails, isSelected(id))
   if (!pinned && (!isSelected(id) || !showDetails)) {
     removeDetail(detail(id)).then(playFisheyeAnimationIfDetailsOnscreen)
   }
@@ -1037,7 +1007,6 @@ function removeDetailIfUnpinned (id, pinned, showDetails) {
  */
 function removeSelectionDetail () {
   const detail = selectionDetail()
-  // console.log('removeSelectionDetail', detail)
   // Note: the detail record might be removed meanwhile due to async operation (TODO: why excatly?)
   if (!detail) {
     // Note: this is expected behavior if in-map detail are not shown. To avoid this condition more complex state
@@ -1068,7 +1037,6 @@ function selectionDetail () {
  * @return  a promise resolved once the restore animation is complete.
  */
 function removeDetail (detail) {
-  // console.log('removeDetail', detail.id)
   // update state
   _removeDetail(detail)
   // update view
