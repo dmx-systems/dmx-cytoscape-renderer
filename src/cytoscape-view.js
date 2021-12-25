@@ -20,6 +20,8 @@ const onSelectEdge   = edgeHandler('select')
 const onUnselectNode = nodeHandler('unselect')
 const onUnselectEdge = edgeHandler('unselect')
 
+const iconsReady = dmx.icons.init()
+
 let cy                  // Cytoscape instance
 let ec                  // cytoscape-edge-connections API object
 let eh                  // cytoscape-edgehandles API object
@@ -62,7 +64,7 @@ export default class CytoscapeView {
   renderTopicmap (topicmap, writable, _selection) {
     writable ? eh.enable() : eh.disable()
     selection = _selection
-    return dmx.icons.ready.then(() => {
+    return iconsReady.then(() => {
       // console.log('renderTopicmap', topicmap.id)
       // console.time('renderTopicmap')
       // Note 1: utilization of cy.batch() would have a detrimental effect on calculating aux node positions of parallel
