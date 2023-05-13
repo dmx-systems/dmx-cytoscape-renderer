@@ -65,8 +65,6 @@ export default class CytoscapeView {
     writable ? eh.enable() : eh.disable()
     selection = _selection
     return iconsReady.then(() => {
-      // console.log('renderTopicmap', topicmap.id)
-      // console.time('renderTopicmap')
       // Note 1: utilization of cy.batch() would have a detrimental effect on calculating aux node positions of parallel
       // edges. This is because aux node positions of parallel edges are calculated several times.
       // Note 2: the cytoscape-edge-connections extension expects an aux node still to exist at the time its edge is
@@ -79,7 +77,6 @@ export default class CytoscapeView {
         x: topicmap.panX,
         y: topicmap.panY
       }, topicmap.zoom)
-      // console.timeEnd('renderTopicmap')
     })
   }
 
@@ -168,22 +165,17 @@ export default class CytoscapeView {
    */
   autoPan (bbr) {
     const {x1, y1, x2, y2} = bbr
-    // console.log('autoPan()')
     const w = cy.width()
     const h = cy.height()
     let x, y
     if (x1 < 0 || x2 - x1 > w) {
-      // console.log('left', -x1)
       x = -x1 + PAN_PADDING
     } else if (x2 > w) {
-      // console.log('right', w - x2)
       x = w - x2 - PAN_PADDING
     }
     if (y1 < 0 || y2 - y1 > h) {
-      // console.log('top', -y1)
       y = -y1 + PAN_PADDING_TOP
     } else if (y2 > h) {
-      // console.log('bottom', h - y2)
       y = h - y2 - PAN_PADDING
     }
     if (x || y) {
@@ -214,14 +206,9 @@ export default class CytoscapeView {
   reset () {
     cy.animate({
       zoom: 1,
-      center: {},
+      pan: {x: 0, y: 0},
       easing: 'ease-in-out-cubic'
     })
-  }
-
-  // TODO: drop it? Apparently resizing is automatic in Cytoscape meanwhile.
-  resize () {
-    // cy.resize()
   }
 
   update () {
@@ -516,7 +503,6 @@ function edgeHandles () {
       return !isAuxNode(node) ? 'middle top' : 'middle middle'
     },
     complete: (sourceNode, targetNode, addedEles) => {
-      // console.log('complete', sourceNode, targetNode, addedEles)
       emitAssocCreate(sourceNode, targetNode)
       addedEles.remove()
     }
@@ -587,7 +573,6 @@ function eventHandlers () {
   registerUnselectHandlers()
   cy.on('tap', 'node', e => {
     const clicks = e.originalEvent.detail
-    // console.log('tap node', id(e.target), e.originalEvent, clicks)
     if (clicks === 2) {
       parent.$emit('topic-double-click', e.target.data('viewTopic'))
     }
@@ -675,10 +660,8 @@ function handleDrop (viewTopic1, viewTopic2) {
 function topicDragged (node) {
   if (!isAuxNode(node)) {    // aux nodes don't emit topic-dragged events
     if (isTopicSelected(id(node)) && isMultiSelection()) {
-      // console.log('drag multi', selection.topicIds)
       emitTopicsDragged()
     } else {
-      // console.log('drag single', id(node))
       emitTopicDragged(node)
     }
   }
@@ -724,7 +707,6 @@ function onViewport () {
 
 // Note: instead of returning a promise we take a callback, because debounced functions can't return anything
 const playFisheyeAnimation = dmx.utils.debounce(callback => {
-  // console.log('playFisheyeAnimation')
   fisheyeAnimation && fisheyeAnimation.stop()
   fisheyeAnimation = cy.layout({
     name: 'cose-bilkent',
@@ -776,11 +758,11 @@ function cyNode (viewTopic) {
 function cyEdge (viewAssoc) {
   return {
     data: {
-      id:      viewAssoc.id,
-      label:   viewAssoc.value,         // FIXME: toString()?
-      color:   viewAssoc.color,
-      source:  viewAssoc.player1.id,
-      target:  viewAssoc.player2.id,
+      id:     viewAssoc.id,
+      label:  viewAssoc.value,          // FIXME: toString()?
+      color:  viewAssoc.color,
+      source: viewAssoc.player1.id,
+      target: viewAssoc.player2.id,
       viewAssoc
     }
   }
