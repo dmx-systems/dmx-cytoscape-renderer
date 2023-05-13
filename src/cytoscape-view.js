@@ -744,7 +744,7 @@ function cyNode (viewTopic) {
       backgroundColor: viewTopic.backgroundColor,
       viewTopic
     },
-    position: viewTopic.getPosition()
+    position: viewTopic.pos
   }
 }
 

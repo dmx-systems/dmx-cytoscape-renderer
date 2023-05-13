@@ -826,7 +826,7 @@ function playRestoreAnimation () {
   return AUTO_LAYOUT ?                                                            /* eslint operator-linebreak: "off" */
     Promise.all(_topicmap.topics
       .filter(viewTopic => viewTopic.isVisible())
-      .map(viewTopic => cyView.updateTopicPos(viewTopic.id, viewTopic.getPosition()))
+      .map(viewTopic => cyView.updateTopicPos(viewTopic.id, viewTopic.pos))
     )
     : Promise.resolve()
 }
