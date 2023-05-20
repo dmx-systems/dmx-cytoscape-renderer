@@ -4,6 +4,16 @@ A DMX 5 topicmap renderer as a composable GUI component.
 
 ## Version History
 
+**3.0** -- May 20, 2023
+
+* BREAKING CHANGES
+    * Make use of `dmx-api` 3.0
+* Features:
+    * Topicmap can have a background image
+    * Show/hide object details is animated
+* Improvements:
+    * "Reset" does not pan to center but to original position
+
 **2.2** -- Aug 27, 2021
 
 * Improvements:
