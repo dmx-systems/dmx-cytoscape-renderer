@@ -28,8 +28,6 @@ const POS_DY = 120
 const POS_X = 200
 const POS_Y = 240
 
-// These 2 variables + state.selection are initialized together by "renderTopicmap" action.
-let _topicmap           // the rendered topicmap (dmx.Topicmap)
 let _topicmapWritable   // true if the current user has WRITE permission for the rendered topicmap (boolean)
 
 let _object             // the selected object (dmx.DMXObject)
@@ -52,18 +50,9 @@ const modifiers = {}    // modifier keys
 
 const state = {
 
-  objectWritable: undefined,      // True if the current user has WRITE permission for the selected object (boolean).
-                                  // Note: the "writable" prop of the selected object's detail record updates
-                                  // reactively. "_object" and "objectWritable" update together, but asynchronously.
-  selection: undefined,           // The selection model for the rendered topicmap (a Selection object, defined in
-                                  // dmx-topicmaps). Initialized together with _topicmap and _topicmapWritable by
-                                  // "renderTopicmap" action.
-                                  // Note: dmx-detail component style updates reactively.
-  zoom: undefined,                // Note: dmx-detail component style updates reactively.
-  activeId: -1,                   // ID of active topic, -1 if no one
-                                  // Note: dmx-detail component style updates reactively.
+  topicmap: undefined,            // The rendered topicmap (dmx.Topicmap)
 
-  details: {}     // In-map details. Detail records keyed by object ID (created by createDetail() and
+  details: {},    // In-map details. Detail records keyed by object ID (created by createDetail() and
                   // createDetailForSelection()):     ### FIXDOC
                   //  {
                   //    id        ID of "object" (Number). May be set before "object" is actually available.
@@ -76,6 +65,17 @@ const state = {
                   //    writable  Getter. True if the current user has WRITE permission for "object" (boolean)
                   //    pinned    Getter. Whether the detail is pinned (boolean)
                   //  }
+
+  objectWritable: undefined,      // True if the current user has WRITE permission for the selected object (boolean).
+                                  // Note: the "writable" prop of the selected object's detail record updates
+                                  // reactively. "_object" and "objectWritable" update together, but asynchronously.
+  selection: undefined,           // The selection model for the rendered topicmap (a Selection object, defined in
+                                  // dmx-topicmaps). Initialized together with "topicmap" and "_topicmapWritable" by
+                                  // "renderTopicmap" action.
+                                  // Note: dmx-detail component style updates reactively.
+  zoom: undefined,                // Note: dmx-detail component style updates reactively.
+  activeId: -1                    // ID of active topic, -1 if no one
+                                  // Note: dmx-detail component style updates reactively.
 }
 
 const actions = {
@@ -121,9 +121,9 @@ const actions = {
    * @returns   a promise resolved once topicmap rendering is complete.
    */
   renderTopicmap (_, {topicmap, writable, selection}) {
-    _topicmap = topicmap
     _topicmapWritable = writable
     ele = undefined
+    state.topicmap = topicmap
     state.selection = selection
     state.zoom = topicmap.zoom
     state.details = {}
@@ -152,9 +152,9 @@ const actions = {
     // update server
     if (_topicmapWritable) {
       if (op.type === 'add') {
-        dmx.rpc.addTopicToTopicmap(_topicmap.id, topic.id, op.viewTopic.viewProps)
+        dmx.rpc.addTopicToTopicmap(state.topicmap.id, topic.id, op.viewTopic.viewProps)
       } else if (op.type === 'show') {
-        dmx.rpc.setTopicVisibility(_topicmap.id, topic.id, true)
+        dmx.rpc.setTopicVisibility(state.topicmap.id, topic.id, true)
       }
     }
   },
@@ -166,11 +166,11 @@ const actions = {
     // update server
     if (_topicmapWritable) {
       if (op.type === 'add') {
-        dmx.rpc.addAssocToTopicmap(_topicmap.id, assoc.id, op.viewAssoc.viewProps)
+        dmx.rpc.addAssocToTopicmap(state.topicmap.id, assoc.id, op.viewAssoc.viewProps)
       } else if (op.type === 'show') {
         // Note: actually never called by DMX webclient. The "renderAssoc" action is only called after assoc creation;
         // In this case op.type is always "add". In most cases assocs are revealed through "renderRelatedTopic" action.
-        dmx.rpc.setAssocVisibility(_topicmap.id, assoc.id, true)
+        dmx.rpc.setAssocVisibility(state.topicmap.id, assoc.id, true)
       }
     }
   },
@@ -186,7 +186,7 @@ const actions = {
         // Note: the case the topic is revealed but not the assoc can't happen
         // Note: if the topic is not revealed (but the assoc is) topicOp.viewTopic is undefined
         const viewProps = topicOp.viewTopic && topicOp.viewTopic.viewProps
-        dmx.rpc.addRelatedTopicToTopicmap(_topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
+        dmx.rpc.addRelatedTopicToTopicmap(state.topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
       }
     }
   },
@@ -199,11 +199,11 @@ const actions = {
    */
   setTopicPosition (_, {id, pos}) {
     // update state
-    _topicmap.getTopic(id).setPosition(pos)
+    state.topicmap.getTopic(id).setPosition(pos)
     // update view (up-to-date already)
     // update server
     if (_topicmapWritable) {
-      dmx.rpc.setTopicPosition(_topicmap.id, id, pos)
+      dmx.rpc.setTopicPosition(state.topicmap.id, id, pos)
     }
   },
 
@@ -218,7 +218,7 @@ const actions = {
   setTopicPositions (_, topicCoords) {
     // update state
     topicCoords.forEach(coord =>
-      _topicmap.getTopic(coord.topicId).setPosition({
+      state.topicmap.getTopic(coord.topicId).setPosition({
         x: coord.x,
         y: coord.y
       })
@@ -226,7 +226,7 @@ const actions = {
     // update view (up-to-date already)
     // update server
     if (_topicmapWritable) {
-      dmx.rpc.setTopicPositions(_topicmap.id, topicCoords)
+      dmx.rpc.setTopicPositions(state.topicmap.id, topicCoords)
     }
   },
 
@@ -237,18 +237,18 @@ const actions = {
     idLists.assocIds.forEach(id => dispatch('_hideAssoc', id))
     // update server
     if (_topicmapWritable) {
-      dmx.rpc.hideMulti(_topicmap.id, idLists)
+      dmx.rpc.hideMulti(state.topicmap.id, idLists)
     }
   },
 
   setTopicPinned (_, {topicId, pinned, showDetails}) {
     // update state
-    _topicmap.getTopic(topicId).setPinned(pinned)
+    state.topicmap.getTopic(topicId).setPinned(pinned)
     // update view
     removeDetailIfUnpinned(topicId, pinned, showDetails)
     // update server
     if (_topicmapWritable) {
-      dmx.rpc.setTopicViewProps(_topicmap.id, topicId, {
+      dmx.rpc.setTopicViewProps(state.topicmap.id, topicId, {
         'dmx.topicmaps.pinned': pinned
       })
     }
@@ -256,12 +256,12 @@ const actions = {
 
   setAssocPinned (_, {assocId, pinned, showDetails}) {
     // update state
-    _topicmap.getAssoc(assocId).setPinned(pinned)
+    state.topicmap.getAssoc(assocId).setPinned(pinned)
     // update view
     removeDetailIfUnpinned(assocId, pinned, showDetails)
     // update server
     if (_topicmapWritable) {
-      dmx.rpc.setAssocViewProps(_topicmap.id, assocId, {
+      dmx.rpc.setAssocViewProps(state.topicmap.id, assocId, {
         'dmx.topicmaps.pinned': pinned
       })
     }
@@ -277,7 +277,7 @@ const actions = {
   _hideTopic (_, id) {
     // update state
     hideAssocsWithPlayer(id)
-    _topicmap.getTopic(id).setVisibility(false)
+    state.topicmap.getTopic(id).setVisibility(false)
     _removeDetailIfOnscreen(id)
     // update view
     cyView.remove(id)
@@ -294,12 +294,12 @@ const actions = {
    */
   _hideAssoc (_, id) {
     // Note: idempotence is needed for hide-multi
-    if (!_topicmap.hasAssoc(id)) {
+    if (!state.topicmap.hasAssoc(id)) {
       return
     }
     // update state
-    removeAssocsWithPlayer(id)    // Note: topicmap contexts of *explicitly* hidden assocs are removed
-    _topicmap.removeAssoc(id)     // Note: topicmap contexts of *explicitly* hidden assocs are removed
+    removeAssocsWithPlayer(id)        // Note: topicmap contexts of *explicitly* hidden assocs are removed
+    state.topicmap.removeAssoc(id)    // Note: topicmap contexts of *explicitly* hidden assocs are removed
     _removeDetailIfOnscreen(id)
     // update view
     cyView.remove(id)
@@ -315,7 +315,7 @@ const actions = {
   _deleteTopic (_, id) {
     // update state
     removeAssocsWithPlayer(id)
-    _topicmap.removeTopic(id)
+    state.topicmap.removeTopic(id)
     _removeDetailIfOnscreen(id)
     // update view
     cyView.remove(id)
@@ -333,12 +333,12 @@ const actions = {
    */
   _deleteAssoc (_, id) {
     // Note: idempotence is needed for delete-multi
-    if (!_topicmap.hasAssoc(id)) {
+    if (!state.topicmap.hasAssoc(id)) {
       return
     }
     // update state
     removeAssocsWithPlayer(id)
-    _topicmap.removeAssoc(id)
+    state.topicmap.removeAssoc(id)
     _removeDetailIfOnscreen(id)
     // update view
     cyView.remove(id)
@@ -347,25 +347,25 @@ const actions = {
   // WebSocket messages
 
   _addTopicToTopicmap (_, {topicmapId, viewTopic}) {
-    if (topicmapId === _topicmap.id) {
+    if (topicmapId === state.topicmap.id) {
       const _viewTopic = new dmx.ViewTopic(viewTopic)
-      _topicmap.addTopic(_viewTopic)                                      // update state
+      state.topicmap.addTopic(_viewTopic)                                 // update state
       cyView.addTopic(_viewTopic)                                         // update view
     }
   },
 
   _addAssocToTopicmap (_, {topicmapId, viewAssoc}) {
-    if (topicmapId === _topicmap.id) {
+    if (topicmapId === state.topicmap.id) {
       const _viewAssoc = new dmx.ViewAssoc(viewAssoc)
-      _topicmap.addAssoc(_viewAssoc)                                      // update state
+      state.topicmap.addAssoc(_viewAssoc)                                 // update state
       cyView.addAssoc(_viewAssoc)                                         // update view
     }
   },
 
   _setTopicPosition (_, {topicmapId, topicId, pos}) {
-    if (topicmapId === _topicmap.id) {
+    if (topicmapId === state.topicmap.id) {
       // Note: the topic might not be in this topicmap because not readable by current user
-      const viewTopic = _topicmap.getTopicIfExists(topicId)
+      const viewTopic = state.topicmap.getTopicIfExists(topicId)
       if (viewTopic) {
         viewTopic.setPosition(pos)                                        // update state
         if (viewTopic.isVisible()) {
@@ -376,15 +376,15 @@ const actions = {
   },
 
   _setTopicVisibility (_, {topicmapId, topicId, visibility}) {
-    if (topicmapId === _topicmap.id) {
-      const viewTopic = _topicmap.getTopicIfExists(topicId)
+    if (topicmapId === state.topicmap.id) {
+      const viewTopic = state.topicmap.getTopicIfExists(topicId)
       if (viewTopic) {
         viewTopic.setVisibility(visibility)                               // update state
         if (visibility) {
           cyView.addTopic(viewTopic)                                      // update view
           autoRevealAssocs(topicId)
         } else {
-          _topicmap.hideAssocsWithPlayer(topicId)                         // update state
+          state.topicmap.hideAssocsWithPlayer(topicId)                    // update state
           cyView.remove(topicId)                                          // update view
         }
       }
@@ -392,15 +392,15 @@ const actions = {
   },
 
   _setAssocVisibility (_, {topicmapId, assocId, visibility}) {
-    if (topicmapId === _topicmap.id) {
-      const viewAssoc = _topicmap.getAssocIfExists(assocId)
+    if (topicmapId === state.topicmap.id) {
+      const viewAssoc = state.topicmap.getAssocIfExists(assocId)
       if (viewAssoc) {
         if (visibility) {
           viewAssoc.setVisibility(visibility)                             // update state
           cyView.addAssoc(viewAssoc)                                      // update view
         } else {
-          _topicmap.removeAssocsWithPlayer(assocId)                       // update state
-          _topicmap.removeAssoc(assocId)                                  // update state
+          state.topicmap.removeAssocsWithPlayer(assocId)                  // update state
+          state.topicmap.removeAssoc(assocId)                             // update state
           cyView.remove(assocId)                                          // update view
         }
       }
@@ -479,12 +479,12 @@ const actions = {
 
   _syncViewport (_, {pan, zoom}) {
     // update state
-    _topicmap.setViewport(pan, zoom)
+    state.topicmap.setViewport(pan, zoom)
     state.zoom = zoom
     Object.values(state.details).forEach(repositionDetail)
     // update server
     if (_topicmapWritable) {
-      dmx.rpc.setTopicmapViewport(_topicmap.id, pan, zoom)
+      dmx.rpc.setTopicmapViewport(state.topicmap.id, pan, zoom)
     }
   },
 
@@ -598,7 +598,7 @@ export default {
 // Update state
 
 function hideAssocsWithPlayer (id) {
-  _topicmap.getAssocsWithPlayer(id).forEach(assoc => {
+  state.topicmap.getAssocsWithPlayer(id).forEach(assoc => {
     assoc.setVisibility(false)
     _removeDetailIfOnscreen(assoc.id)
     hideAssocsWithPlayer(assoc.id)        // recursion
@@ -606,8 +606,8 @@ function hideAssocsWithPlayer (id) {
 }
 
 function removeAssocsWithPlayer (id) {
-  _topicmap.getAssocsWithPlayer(id).forEach(assoc => {
-    _topicmap.removeAssoc(assoc.id)
+  state.topicmap.getAssocsWithPlayer(id).forEach(assoc => {
+    state.topicmap.removeAssoc(assoc.id)
     _removeDetailIfOnscreen(assoc.id)
     removeAssocsWithPlayer(assoc.id)      // recursion
   })
@@ -619,8 +619,8 @@ function removeAssocsWithPlayer (id) {
  * @param   id    a topic ID or an assoc ID
  */
 function autoRevealAssocs (id) {
-  _topicmap.getAssocsWithPlayer(id)
-    .filter(viewAssoc => _topicmap.getOtherPlayer(viewAssoc, id).isVisible())
+  state.topicmap.getAssocsWithPlayer(id)
+    .filter(viewAssoc => state.topicmap.getOtherPlayer(viewAssoc, id).isVisible())
     .forEach(viewAssoc => {
       _revealAssoc(viewAssoc)
       autoRevealAssocs(viewAssoc.id)      // recursion
@@ -635,7 +635,7 @@ function autoRevealAssocs (id) {
  */
 function _revealTopic (topic, pos, autoPan) {
   // update state
-  const op = _topicmap.revealTopic(topic, pos)
+  const op = state.topicmap.revealTopic(topic, pos)
   // update view
   if (op.type === 'add' || op.type === 'show') {
     cyView.addTopic(initPos(op.viewTopic))
@@ -651,7 +651,7 @@ function _revealTopic (topic, pos, autoPan) {
  */
 function _revealAssoc (assoc) {
   // update state
-  const op = _topicmap.revealAssoc(assoc)
+  const op = state.topicmap.revealAssoc(assoc)
   // update view
   if (op.type === 'add' || op.type === 'show') {
     cyView.addAssoc(op.viewAssoc)
@@ -665,7 +665,7 @@ function _revealAssoc (assoc) {
  * Processes an UPDATE_TOPIC directive.
  */
 function updateTopic (topic) {
-  const viewTopic = _topicmap.getTopicIfExists(topic.id)
+  const viewTopic = state.topicmap.getTopicIfExists(topic.id)
   if (viewTopic) {
     // update state
     viewTopic.value = topic.value
@@ -682,7 +682,7 @@ function updateTopic (topic) {
  * Processes an UPDATE_ASSOC directive.
  */
 function updateAssoc (assoc) {
-  const viewAssoc = _topicmap.getAssocIfExists(assoc.id)
+  const viewAssoc = state.topicmap.getAssocIfExists(assoc.id)
   if (viewAssoc) {
     // update state
     viewAssoc.value = assoc.value
@@ -723,7 +723,7 @@ function deleteAssoc (assoc) {
  * Processes an UPDATE_TOPIC_TYPE directive.
  */
 function updateTopicIcons (typeUri) {
-  _topicmap.topics
+  state.topicmap.topics
     .filter(topic => topic.typeUri === typeUri)
     .filter(topic => topic.isVisible())
     .forEach(topic => {
@@ -744,7 +744,7 @@ function updateTopicIcons (typeUri) {
  * Processes an UPDATE_ASSOC_TYPE directive.
  */
 function updateAssocColors (typeUri) {
-  _topicmap.assocs
+  state.topicmap.assocs
     .filter(assoc => assoc.typeUri === typeUri)
     .filter(assoc => assoc.isVisible())
     .forEach(assoc => {
@@ -770,7 +770,7 @@ function initPos (viewTopic) {
     if (_object) {
       // If there is a single selection: place lower/left to the selected topic/assoc
       // TODO: more elaborated placement, e.g. at near free position?
-      const p = _topicmap.getPosition(_object.id)
+      const p = state.topicmap.getPosition(_object.id)
       pos.x = p.x + POS_DX
       pos.y = p.y + POS_DY
     } else {
@@ -824,7 +824,7 @@ function unselectElement () {
  */
 function playRestoreAnimation () {
   return AUTO_LAYOUT ?                                                            /* eslint operator-linebreak: "off" */
-    Promise.all(_topicmap.topics
+    Promise.all(state.topicmap.topics
       .filter(viewTopic => viewTopic.isVisible())
       .map(viewTopic => cyView.updateTopicPos(viewTopic.id, viewTopic.pos))
     )
@@ -832,13 +832,13 @@ function playRestoreAnimation () {
 }
 
 function showPinnedDetails () {
-  _topicmap.topics
+  state.topicmap.topics
     .filter(topic => topic.isPinned() && topic.isVisible())
     .forEach(topic => createDetail(topic).then(showDetail))
-  _topicmap.assocs
+  state.topicmap.assocs
     .filter(assoc => assoc.isPinned() && assoc.isVisible())
     .forEach(assoc => createDetail(assoc).then(showDetail))
-  return _topicmap
+  return state.topicmap
 }
 
 /**
@@ -900,9 +900,9 @@ function createDetailForSelection () {
   const node = cyView.detailNode(id)
   let viewObject
   if (ele.isNode()) {
-    viewObject = _topicmap.getTopic(id)
+    viewObject = state.topicmap.getTopic(id)
   } else {
-    viewObject = _topicmap.getAssoc(id)
+    viewObject = state.topicmap.getAssoc(id)
     cyView.select(node)     // select aux node along with assoc
   }
   const detail = {
@@ -951,7 +951,7 @@ function createAndShowSelectionDetail () {
  */
 function showDetail (detail) {
   detail.node.addClass('expanded')
-  Vue.set(state.details, detail.id, detail)       // Vue.set() triggers dmx-detail-layer rendering
+  Vue.set(state.details, detail.id, detail)       // Vue.set() triggers dmx-html-overlay rendering
   return Vue.nextTick().then(
     () => adjustDetailSize(detail)
   )
@@ -969,7 +969,7 @@ function showDetail (detail) {
  * @return  a promise resolved once the fisheye animation is complete
  */
 function adjustDetailSize (detail) {
-  const detailDOM = document.querySelector(`.dmx-detail-layer .dmx-detail[data-detail-id="${detail.id}"]`)
+  const detailDOM = document.querySelector(`.dmx-html-overlay .dmx-detail[data-detail-id="${detail.id}"]`)
   if (!detailDOM) {
     throw Error(`detail DOM ${detail.id} not found`)
   }
@@ -1055,7 +1055,7 @@ function _removeDetailIfOnscreen (id) {
 
 function _removeDetail (detail) {
   // update state
-  Vue.delete(state.details, detail.id)              // Vue.delete() triggers dmx-detail-layer rendering
+  Vue.delete(state.details, detail.id)              // Vue.delete() triggers dmx-html-overlay rendering
 }
 
 function updateDetail (object) {
@@ -1100,7 +1100,7 @@ function isSelected (objectId) {
 }
 
 // copy in dmx-cytoscape-renderer.vue
-// copy in dmx-detail-layer.vue
+// copy in dmx-html-overlay.vue
 // copy in cytoscape-edge-connections (index.js)
 function eleId (ele) {
   // Note: Cytoscape element IDs are strings

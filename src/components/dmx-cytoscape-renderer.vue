@@ -3,7 +3,7 @@
     <img v-if="imageUrl" :src="imageUrl" :style="imageStyle">
     <div class="cytoscape-container" ref="cytoscape-container"></div>
     <div class="measurement-box" ref="measurement-box"></div>
-    <dmx-detail-layer :detail-renderers="detailRenderers" :quill-config="quillConfig"></dmx-detail-layer>
+    <dmx-html-overlay :detail-renderers="detailRenderers" :quill-config="quillConfig"></dmx-html-overlay>
   </div>
 </template>
 
@@ -106,7 +106,7 @@ export default {
   },
 
   components: {
-    'dmx-detail-layer': require('./dmx-detail-layer').default
+    'dmx-html-overlay': require('./dmx-html-overlay').default
   }
 }
 </script>

@@ -797,7 +797,7 @@ function edgeId (node) {
   return Number(ec.edgeId(node))
 }
 
-// copy in dmx-detail-layer.vue
+// copy in dmx-html-overlay.vue
 function id (ele) {
   // Note: cytoscape element IDs are strings
   return Number(ele.id())

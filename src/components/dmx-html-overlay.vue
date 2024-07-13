@@ -1,5 +1,6 @@
 <template>
-  <div class="dmx-detail-layer">
+  <div class="dmx-html-overlay">
+    <dmx-topic v-for="topic in topics" :view-topic="topic" :key="topic.id"></dmx-topic>
     <transition-group name="detail">
       <dmx-detail v-for="detail in details" :detail="detail" :detail-renderers="detailRenderers"
         :quill-config="quillConfig" :key="detail.node.id()">
@@ -20,16 +21,26 @@ export default {
   },
 
   computed: {
+
+    topics () {
+      return this.topicmap?.topics.filter(topic => topic.isVisible())
+    },
+
     details () {
       const topicmapModel = this.$store.state['dmx.topicmaps.topicmap']
       if (!topicmapModel) {
-        // console.log('Cytoscape renderer not available')
+        console.log('Cytoscape renderer not available')
       }
       return topicmapModel && topicmapModel.details
+    },
+
+    topicmap () {
+      return this.$store.state['dmx.topicmaps.topicmap'].topicmap
     }
   },
 
   components: {
+    'dmx-topic': require('./dmx-topic').default,
     'dmx-detail': require('./dmx-detail').default
   }
 }
@@ -41,24 +52,24 @@ export default {
   --min-detail-scale: 1;
 }
 
-.dmx-detail-layer {
+.dmx-html-overlay {
   position: absolute;
   width: 10000px;     /* avoid early line wrapping */
   top: 0;
 }
 
-.dmx-detail-layer .detail-enter-active {
+.dmx-html-overlay .detail-enter-active {
   animation: detail 0.3s;
   transition: opacity 0.3s;
 }
 
-.dmx-detail-layer .detail-leave-active {
+.dmx-html-overlay .detail-leave-active {
   animation: detail 0.3s reverse;
   transition: opacity 0.3s;
 }
 
-.dmx-detail-layer .detail-enter,
-.dmx-detail-layer .detail-leave-to {
+.dmx-html-overlay .detail-enter,
+.dmx-html-overlay .detail-leave-to {
   opacity: 0.4;
 }
 
