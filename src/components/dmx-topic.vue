@@ -1,6 +1,7 @@
 <template>
   <div :class="['dmx-topic', {selected}]" :style="style">
-    {{viewTopic.value}}
+    <span class="fa icon" :style="iconStyle">{{viewTopic.icon}}</span>
+    <span>{{viewTopic.value}}</span>
   </div>
 </template>
 
@@ -19,6 +20,12 @@ export default {
         left: `${this.viewTopic.pos.x * this.zoom + this.topicmap.panX}px`,
         transform: `scale(${this.zoom}) translate(-50%, 60%)`,  // for debugging, FIXME: -50%, -50%
         backgroundColor: this.viewTopic.backgroundColor
+      }
+    },
+
+    iconStyle () {
+      return {
+        color: this.viewTopic.iconColor
       }
     },
 
@@ -44,7 +51,7 @@ export default {
 <style>
 .dmx-topic {
   position: absolute;
-  padding: 4px;
+  padding: 4px 5px;
   border: 1px solid var(--border-color-lighter);
   transform-origin: top left;
   /* opacity: 0.8; */
@@ -52,5 +59,11 @@ export default {
 
 .dmx-topic.selected {
   border-color: var(--highlight-color);
+}
+
+.dmx-topic .icon {
+  font-size: 16px;
+  margin-right: 4px;
+  vertical-align: text-bottom;
 }
 </style>
