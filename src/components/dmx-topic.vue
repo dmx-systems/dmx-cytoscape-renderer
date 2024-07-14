@@ -1,5 +1,6 @@
 <template>
-  <div class="dmx-topic" :style="style">
+  <div :class="['dmx-topic', {selected}]" :style="style">
+    {{viewTopic.value}}
   </div>
 </template>
 
@@ -12,16 +13,29 @@ export default {
 
   computed: {
 
-    zoom () {
-      return this.$store.state['dmx.topicmaps.topicmap'].topicmap.zoom
-    },
-
     style () {
       return {
-        top:  `${this.viewTopic.pos.y}px`,
-        left: `${this.viewTopic.pos.x}px`,
-        transform: `scale(${this.zoom})`
+        top:  `${this.viewTopic.pos.y * this.zoom + this.topicmap.panY}px`,
+        left: `${this.viewTopic.pos.x * this.zoom + this.topicmap.panX}px`,
+        transform: `scale(${this.zoom}) translate(-50%, 60%)`,  // for debugging, FIXME: -50%, -50%
+        backgroundColor: this.viewTopic.backgroundColor
       }
+    },
+
+    selected () {
+      return this.selection.includesId(this.viewTopic.id)
+    },
+
+    zoom () {
+      return this.topicmap.zoom
+    },
+
+    topicmap () {
+      return this.$store.state['dmx.topicmaps.topicmap'].topicmap
+    },
+
+    selection () {
+      return this.$store.state['dmx.topicmaps.topicmap'].selection
     }
   }
 }
@@ -30,8 +44,13 @@ export default {
 <style>
 .dmx-topic {
   position: absolute;
-  width: 50px;
-  height: 50px;
-  background-color: beige;
+  padding: 4px;
+  border: 1px solid var(--border-color-lighter);
+  transform-origin: top left;
+  /* opacity: 0.8; */
+}
+
+.dmx-topic.selected {
+  border-color: var(--highlight-color);
 }
 </style>
