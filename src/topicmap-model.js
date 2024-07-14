@@ -73,7 +73,6 @@ const state = {
                                   // dmx-topicmaps). Initialized together with "topicmap" and "_topicmapWritable" by
                                   // "renderTopicmap" action.
                                   // Note: dmx-detail component style updates reactively.
-  zoom: undefined,                // Note: dmx-detail component style updates reactively.
   activeId: -1                    // ID of active topic, -1 if no one
                                   // Note: dmx-detail component style updates reactively.
 }
@@ -125,7 +124,6 @@ const actions = {
     ele = undefined
     state.topicmap = topicmap
     state.selection = selection
-    state.zoom = topicmap.zoom
     state.details = {}
     return cyView.renderTopicmap(topicmap, writable, selection).then(showPinnedDetails)
   },
@@ -480,7 +478,6 @@ const actions = {
   _syncViewport (_, {pan, zoom}) {
     // update state
     state.topicmap.setViewport(pan, zoom)
-    state.zoom = zoom
     Object.values(state.details).forEach(repositionDetail)
     // update server
     if (_topicmapWritable) {
@@ -869,8 +866,8 @@ function createDetail (viewObject) {
       return {
         x1: this.pos.x,
         y1: this.pos.y,
-        x2: this.pos.x + (this.size.width * state.zoom),
-        y2: this.pos.y + (this.size.height * state.zoom)
+        x2: this.pos.x + (this.size.width * state.topicmap.zoom),
+        y2: this.pos.y + (this.size.height * state.topicmap.zoom)
       }
     }
   }
@@ -925,8 +922,8 @@ function createDetailForSelection () {
       return {
         x1: this.pos.x,
         y1: this.pos.y,
-        x2: this.pos.x + (this.size.width * state.zoom),
-        y2: this.pos.y + (this.size.height * state.zoom)
+        x2: this.pos.x + (this.size.width * state.topicmap.zoom),
+        y2: this.pos.y + (this.size.height * state.topicmap.zoom)
       }
     }
   }

@@ -11,10 +11,16 @@ export default {
   },
 
   computed: {
+
+    zoom () {
+      return this.$store.state['dmx.topicmaps.topicmap'].topicmap.zoom
+    },
+
     style () {
       return {
         top:  `${this.viewTopic.pos.y}px`,
-        left: `${this.viewTopic.pos.x}px`
+        left: `${this.viewTopic.pos.x}px`,
+        transform: `scale(${this.zoom})`
       }
     }
   }

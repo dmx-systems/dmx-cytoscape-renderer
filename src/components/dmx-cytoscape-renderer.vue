@@ -27,7 +27,7 @@ export default {
       dropHandler:     this.dropHandler
     })
     this.$store.watch(
-      state => state['dmx.topicmaps.topicmap'] && state['dmx.topicmaps.topicmap'].zoom,
+      state => state['dmx.topicmaps.topicmap']?.topicmap?.zoom,
       zoom => {
         // console.log('zoom watch', zoom)
         if (zoom) {
