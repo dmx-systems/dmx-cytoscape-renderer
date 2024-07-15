@@ -5,10 +5,8 @@ import DragState from './drag-state'
 // get style from CSS variables
 const style = window.getComputedStyle(document.body)
 const FONT_FAMILY          = style.getPropertyValue('--main-font-family')
-const MAIN_FONT_SIZE       = style.getPropertyValue('--main-font-size')
 const LABEL_FONT_SIZE      = style.getPropertyValue('--label-font-size')
 const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
-const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
 
 const PAN_PADDING = 24          // in pixel     // copy in dmx-detail.vue
 const PAN_PADDING_TOP = 64      // in pixel     // copy in dmx-detail.vue
@@ -25,7 +23,8 @@ const iconsReady = dmx.icons.init()
 let cy                  // Cytoscape instance
 let ec                  // cytoscape-edge-connections API object
 let eh                  // cytoscape-edgehandles API object
-let dropHandler         // array of drop handler objects (2 function props: 'isDroppable', 'handleDrop')
+let iaHandler           // local interaction handlers (object)
+                        //  - dropHandler: array of drop handler objects (2 function props: 'isDroppable', 'handleDrop')
 let parent              // the dmx-topicmap-panel (a Vue instance); used as event emitter
 let box                 // the measurement box
 let modifiers           // modifier keys
@@ -45,12 +44,12 @@ cytoscape.use(require('cytoscape-edge-connections'))
 
 export default class CytoscapeView {
 
-  constructor (container, contextCommands, _dropHandler, _parent, _box, _modifiers, _dispatch) {
-    dropHandler = _dropHandler
-    parent      = _parent
-    box         = _box
-    modifiers   = _modifiers
-    dispatch    = _dispatch
+  constructor (container, contextCommands, _iaHandler, _parent, _box, _modifiers, _dispatch) {
+    iaHandler = _iaHandler
+    parent    = _parent
+    box       = _box
+    modifiers = _modifiers
+    dispatch  = _dispatch
     cy = instantiateCy(container)
     ec = cy.edgeConnections()
     eh = edgeHandles()
@@ -232,19 +231,11 @@ function instantiateCy (container) {
         selector: 'node[icon]',
         style: {
           shape: 'rectangle',
-          'background-image': ele => renderNode(ele).url,
           'background-opacity': 0,
           width:  ele => renderNode(ele).width,
           height: ele => renderNode(ele).height,
-          'border-width': 1,
-          'border-color': BORDER_COLOR_LIGHTER
-        }
-      },
-      {
-        selector: 'node[icon]:selected',
-        style: {
           'border-width': 2,
-          'border-color': HIGHLIGHT_COLOR
+          'border-opacity': 0
         }
       },
       {
@@ -272,7 +263,7 @@ function instantiateCy (container) {
         }
       },
       {
-        selector: 'node.eh-source, node.eh-target, node.hover',
+        selector: 'node.eh-source, node.eh-target',
         style: {
           'border-width': 2,
           'border-color': HIGHLIGHT_COLOR,
@@ -321,31 +312,22 @@ const memoCache = {}
 function renderNode (ele) {
   const label = nodeLabel(ele.data('label'))
   const icon = ele.data('icon')
-  const iconColor = ele.data('iconColor')
-  const backgroundColor = ele.data('backgroundColor')
-  const memoKey = `${label}-${icon}-${iconColor}-${backgroundColor}`
+  const memoKey = `${label}-${icon}`
   let r = memoCache[memoKey]
   if (!r) {
-    r = _renderNode(label, icon, iconColor, backgroundColor)
+    r = _renderNode(label, icon)
     memoCache[memoKey] = r
   }
   return r
 }
 
-function _renderNode (label, icon, iconColor, backgroundColor) {
+function _renderNode (label, icon) {
   const glyph = dmx.icons.faGlyph(icon)
   const iconWidth = 0.009 * glyph.width
   const size = measureText(label)
   const width = size.width + iconWidth + 18
   const height = size.height + 8
-  const x = iconWidth + 12
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-      <rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"></rect>
-      <text x="${x}" y="${height - 7}" font-family="${FONT_FAMILY}" font-size="${MAIN_FONT_SIZE}">${label}</text>
-      <path d="${glyph.path}" fill="${iconColor}" transform="scale(0.009 -0.009) translate(600 -2080)"></path>
-    </svg>`
   return {
-    url: 'data:image/svg+xml,' + encodeURIComponent(svg),
     width,
     height
   }
@@ -584,7 +566,7 @@ function eventHandlers () {
       })
     }
   }).on('tapstart', 'node', e => {
-    const dragState = new DragState(e.target)
+    const dragState = new DragState(e.target, iaHandler)
     const handler = dragHandler(dragState)
     cy.on('tapdrag', handler)
     cy.one('tapend', e => {
@@ -607,9 +589,16 @@ function eventHandlers () {
 
 function dragHandler (dragState) {
   return e => {
-    const _node = nodeAt(e.position, dragState.node)
+    const node = dragState.node
+    // continuously update client-side state
+    console.log(node.id())
+    if (node.data('icon')) {    // ignore aux-nodes and eh-handles
+      iaHandler.nodeMoved(id(node), node.position())
+    }
+    // hovering
+    const _node = nodeAt(e.position, node)
     if (_node) {
-      if (_node !== dragState.hoverNode && isDroppable(dragState.node, _node)) {
+      if (_node !== dragState.hoverNode && isDroppable(node, _node)) {
         dragState.hoverNode && dragState.unhover()
         dragState.hoverNode = _node
         dragState.hover()
@@ -642,7 +631,7 @@ function isInside (pos, node) {
 }
 
 function isDroppable (node1, node2) {
-  return dropHandler.map(handler => {
+  return iaHandler.dropHandler.map(handler => {
     // Note: dragging an edge handle fires drag events as well. These must not be treated as a drag-n-drop operation.
     // Handlers must not be called ('viewTopic' data is undefined).
     const topic1 = node1.data('viewTopic')
@@ -654,7 +643,7 @@ function isDroppable (node1, node2) {
 }
 
 function handleDrop (viewTopic1, viewTopic2) {
-  dropHandler.forEach(handler => handler.handleDrop && handler.handleDrop(viewTopic1, viewTopic2))
+  iaHandler.dropHandler.forEach(handler => handler.handleDrop && handler.handleDrop(viewTopic1, viewTopic2))
 }
 
 function topicDragged (node) {
@@ -740,8 +729,8 @@ function cyNode (viewTopic) {
       id:              viewTopic.id,
       label:           viewTopic.value.toString(),    // treat Number/Boolean values as strings, expected by nodeLabel()
       icon:            viewTopic.icon,
-      iconColor:       viewTopic.iconColor,
-      backgroundColor: viewTopic.backgroundColor,
+      iconColor:       viewTopic.iconColor,           // TODO: drop?
+      backgroundColor: viewTopic.backgroundColor,     // TODO: drop?
       viewTopic
     },
     position: viewTopic.pos

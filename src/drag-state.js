@@ -3,21 +3,22 @@
  */
 export default class DragState {
 
-  constructor (node) {
+  constructor (node, iaHandler) {
     this.node = node              // the dragged node
     this.nodePosition = {         // the dragged node's original position. Note: a new pos object must be created.
       x: node.position('x'),
       y: node.position('y')
     }
     this.hoverNode = undefined    // the node hovered while dragging
+    this.iaHandler = iaHandler
   }
 
   hover () {
-    this.hoverNode.addClass('hover')
+    this.iaHandler.addClass(this.hoverNode.id(), 'hover')
   }
 
   unhover () {
-    this.hoverNode.removeClass('hover')
+    this.iaHandler.removeClass(this.hoverNode.id(), 'hover')
   }
 
   resetPosition () {

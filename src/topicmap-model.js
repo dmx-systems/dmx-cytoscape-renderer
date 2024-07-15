@@ -52,6 +52,8 @@ const state = {
 
   topicmap: undefined,            // The rendered topicmap (dmx.Topicmap)
 
+  topicClasses: {},               // per-topic ID (key) array of class names (value)
+
   details: {},    // In-map details. Detail records keyed by object ID (created by createDetail() and
                   // createDetailForSelection()):     ### FIXDOC
                   //  {
@@ -197,7 +199,7 @@ const actions = {
    */
   setTopicPosition (_, {id, pos}) {
     // update state
-    state.topicmap.getTopic(id).setPosition(pos)
+    setTopicPosition(id, pos)
     // update view (up-to-date already)
     // update server
     if (_topicmapWritable) {
@@ -452,7 +454,13 @@ const actions = {
    * @param   box         the DOM element used for measurement
    */
   _initCytoscape ({dispatch}, {container, contextCommands, dropHandler, parent, box}) {
-    cyView = new CytoscapeView(container, contextCommands, dropHandler, parent, box, modifiers, dispatch)
+    const iaHandler = {
+      nodeMoved: setTopicPosition,
+      addClass,
+      removeClass,
+      dropHandler
+    }
+    cyView = new CytoscapeView(container, contextCommands, iaHandler, parent, box, modifiers, dispatch)
   },
 
   _syncObject (_, object) {
@@ -593,6 +601,25 @@ export default {
 // === DMX Model ===
 
 // Update state
+
+function setTopicPosition (id, pos) {
+  state.topicmap.getTopic(id).setPosition(pos)
+}
+
+function addClass (id, clazz) {
+  if (!state.topicClasses[id]) {
+    Vue.set(state.topicClasses, id, [])
+  }
+  state.topicClasses[id].push(clazz)
+}
+
+function removeClass (id, clazz) {
+  const i = state.topicClasses[id].indexOf(clazz)
+  if (i === -1) {
+    throw Error(`'${clazz}' not found in ${state.topicClasses[id]}`)
+  }
+  state.topicClasses[id].splice(i, 1)
+}
 
 function hideAssocsWithPlayer (id) {
   state.topicmap.getAssocsWithPlayer(id).forEach(assoc => {
