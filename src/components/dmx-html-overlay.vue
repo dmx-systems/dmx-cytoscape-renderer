@@ -31,7 +31,7 @@ export default {
       if (!topicmapModel) {
         console.log('Cytoscape renderer not available')
       }
-      return topicmapModel && topicmapModel.details
+      return topicmapModel?.details
     },
 
     topicmap () {

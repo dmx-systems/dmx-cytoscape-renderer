@@ -185,7 +185,7 @@ const actions = {
       if (assocOp.type) {
         // Note: the case the topic is revealed but not the assoc can't happen
         // Note: if the topic is not revealed (but the assoc is) topicOp.viewTopic is undefined
-        const viewProps = topicOp.viewTopic && topicOp.viewTopic.viewProps
+        const viewProps = topicOp.viewTopic?.viewProps
         dmx.rpc.addRelatedTopicToTopicmap(state.topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
       }
     }
@@ -547,8 +547,7 @@ const actions = {
   },
 
   renderAsUnselected () {
-    const p = unselectElement()
-    p && p.then(playFisheyeAnimationIfDetailsOnscreen)
+    unselectElement()?.then(playFisheyeAnimationIfDetailsOnscreen)
     ele = undefined
   },
 
@@ -615,8 +614,8 @@ function addClass (id, clazz) {
 
 function removeClass (id, clazz) {
   const i = state.topicClasses[id].indexOf(clazz)
-  // Note: while edge dragging if source equals target there is no "hoverover" event but "hoverout"
-  // (see edgeHandles() in cytoscape-view.js)
+  // Note: while edge dragging if source equals target Cytoscape does not fire "hoverover" but does fire "hoverout",
+  // so when trying to remove "eh-target" class it might not be there (see edgeHandles() in cytoscape-view.js)
   if (i >= 0) {
     state.topicClasses[id].splice(i, 1)
   }
@@ -1091,6 +1090,10 @@ function updateDetail (object) {
 }
 
 function listenPosition (detail) {
+  // Note: we could reposition the topic details in the nodeMoved() handler (setTopicPosition()) and would not need an
+  // extra "position" handler then. However for *assoc* details we still need a "position" handler as an assoc's aux-
+  // node is moved programmatically (by the cytoscape-edge-connections extension), not by dragging. So we handle the
+  // detail positioning uniformly for both, topic details and assoc details.
   detail.node.on('position', () => {
     repositionDetail(detail)
   })

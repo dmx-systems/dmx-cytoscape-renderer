@@ -186,9 +186,11 @@ export default class CytoscapeView {
   }
 
   /**
-   * Returns the detail node for the given DMX object.
+   * Returns the detail node for the given DMX object (topic or association).
    *
    * @param   id    a DMX object id (number)
+   *
+   * @return  a topic's node, or an association's aux-node
    */
   detailNode (id) {
     const ele = cyElement(id)
@@ -600,7 +602,7 @@ function eventHandlers () {
 function dragHandler (dragState) {
   return e => {
     const node = dragState.node
-    // continuously update client-side state
+    // continuously update client-side position state
     if (node.data('icon')) {    // ignore aux-nodes and eh-handles
       iaHandler.nodeMoved(id(node), node.position())
     }
@@ -802,7 +804,7 @@ function id (ele) {
 }
 
 /**
- * Returns the Cytoscape element with the given ID.
+ * Returns the Cytoscape element (node or edge) with the given ID.
  *
  * @param   id      a DMX object id (number)
  *
