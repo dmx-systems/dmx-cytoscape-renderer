@@ -263,14 +263,6 @@ function instantiateCy (container) {
         }
       },
       {
-        selector: 'node.eh-source, node.eh-target',
-        style: {
-          'border-width': 2,
-          'border-color': HIGHLIGHT_COLOR,
-          'border-opacity': 1
-        }
-      },
-      {
         selector: 'edge[color]',
         style: {
           width: 3,
@@ -485,8 +477,26 @@ function edgeHandles () {
       return !isAuxNode(node) ? 'middle top' : 'middle middle'
     },
     complete: (sourceNode, targetNode, addedEles) => {
+      // console.log('complete', sourceNode.data('label'), targetNode.data('label'))
       emitAssocCreate(sourceNode, targetNode)
       addedEles.remove()
+      iaHandler.removeClass(id(targetNode), 'eh-target')
+    },
+    start (sourceNode) {
+      // console.log('start', sourceNode.data('label'))
+      iaHandler.addClass(id(sourceNode), 'eh-source')
+    },
+    stop (sourceNode) {
+      // console.log('stop', sourceNode.data('label'))
+      iaHandler.removeClass(id(sourceNode), 'eh-source')
+    },
+    hoverover (sourceNode, targetNode) {
+      // console.log('hoverover', sourceNode.data('label'), targetNode.data('label'))
+      iaHandler.addClass(id(targetNode), 'eh-target')
+    },
+    hoverout (sourceNode, targetNode) {
+      // console.log('hoverout', sourceNode.data('label'), targetNode.data('label'))
+      iaHandler.removeClass(id(targetNode), 'eh-target')
     }
   })
 }
@@ -591,7 +601,6 @@ function dragHandler (dragState) {
   return e => {
     const node = dragState.node
     // continuously update client-side state
-    console.log(node.id())
     if (node.data('icon')) {    // ignore aux-nodes and eh-handles
       iaHandler.nodeMoved(id(node), node.position())
     }

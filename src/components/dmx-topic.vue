@@ -63,10 +63,9 @@ export default {
   border: 1px solid var(--border-color-lighter);
   transform-origin: top left;
   pointer-events: none;
-  opacity: 0.7;
 }
 
-.dmx-topic.selected, .dmx-topic.hover {
+.dmx-topic.selected, .dmx-topic.eh-source, .dmx-topic.eh-target, .dmx-topic.hover {
   border: 2px solid var(--highlight-color);
 }
 

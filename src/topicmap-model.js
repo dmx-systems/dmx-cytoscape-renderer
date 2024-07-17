@@ -615,10 +615,11 @@ function addClass (id, clazz) {
 
 function removeClass (id, clazz) {
   const i = state.topicClasses[id].indexOf(clazz)
-  if (i === -1) {
-    throw Error(`'${clazz}' not found in ${state.topicClasses[id]}`)
+  // Note: while edge dragging if source equals target there is no "hoverover" event but "hoverout"
+  // (see edgeHandles() in cytoscape-view.js)
+  if (i >= 0) {
+    state.topicClasses[id].splice(i, 1)
   }
-  state.topicClasses[id].splice(i, 1)
 }
 
 function hideAssocsWithPlayer (id) {
