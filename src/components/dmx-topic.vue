@@ -1,5 +1,5 @@
 <template>
-  <div :class="classes" :style="style">
+  <div :class="classes" :data-id="viewTopic.id" :style="style">
     <span class="fa icon" :style="iconStyle">{{viewTopic.icon}}</span>
     <span>{{viewTopic.value}}</span>
   </div>

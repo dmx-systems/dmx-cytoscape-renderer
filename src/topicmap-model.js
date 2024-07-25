@@ -547,7 +547,7 @@ const actions = {
   },
 
   renderAsUnselected () {
-    unselectElement()?.then(playFisheyeAnimationIfDetailsOnscreen)
+    unselectElement()?.then?.(playFisheyeAnimationIfDetailsOnscreen)
     ele = undefined
   },
 
@@ -695,8 +695,10 @@ function updateTopic (topic) {
     viewTopic.value = topic.value
     // update view
     if (viewTopic.isVisible()) {
-      cyView.updateTopic(topic.id, {
-        label: topic.value
+      Vue.nextTick(() => {        // Cy node sizing relies on up-to-date topic DOM
+        cyView.updateTopic(topic.id, {
+          label: topic.value
+        })
       })
     }
   }
@@ -818,7 +820,8 @@ function initPos (viewTopic) {
  * Precondition:
  * - an element is selected
  *
- * @return  if the restore animation is played: a promise resolved once the animation is complete, otherwise undefined
+ * @return  if the restore animation is played: a promise resolved once the animation is complete.
+ *          Returns undefined if the detail is not on screen. Returns false if the detail is on screen but pinned.
  */
 function unselectElement () {
   if (!ele) {
@@ -1027,7 +1030,8 @@ function removeDetailIfUnpinned (id, pinned, showDetails) {
  * Precondition:
  * - an element is selected
  *
- * @return  if the restore animation is played: a promise resolved once the animation is complete, otherwise undefined
+ * @return  if the restore animation is played: a promise resolved once the animation is complete.
+ *          Returns undefined if the detail is not on screen. Returns false if the detail is on screen but pinned.
  */
 function removeSelectionDetail () {
   const detail = selectionDetail()
@@ -1109,6 +1113,11 @@ function playFisheyeAnimationIfDetailsOnscreen () {
   }
 }
 
+/**
+ * Looks up a detail record by object ID, or throws if details are not on screen for that object.
+ *
+ * @return  the detail record
+ */
 function detail (id) {
   const detail = _detail(id)
   if (!detail) {
@@ -1117,6 +1126,11 @@ function detail (id) {
   return detail
 }
 
+/**
+ * Looks up a detail record by object ID.
+ *
+ * @return  the detail record, or undefined if details are not on screen for that object
+ */
 function _detail (id) {
   return state.details[id]
 }

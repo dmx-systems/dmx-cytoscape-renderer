@@ -18,7 +18,7 @@ const onSelectEdge   = edgeHandler('select')
 const onUnselectNode = nodeHandler('unselect')
 const onUnselectEdge = edgeHandler('unselect')
 
-const iconsReady = dmx.icons.init()
+const iconsReady = dmx.icons.init()     // TODO: drop it
 
 let cy                  // Cytoscape instance
 let ec                  // cytoscape-edge-connections API object
@@ -26,7 +26,7 @@ let eh                  // cytoscape-edgehandles API object
 let iaHandler           // local interaction handlers (object)
                         //  - dropHandler: array of drop handler objects (2 function props: 'isDroppable', 'handleDrop')
 let parent              // the dmx-topicmap-panel (a Vue instance); used as event emitter
-let box                 // the measurement box
+let box                 // the measurement box      // TODO: drop it
 let modifiers           // modifier keys
 let dispatch
 let fisheyeAnimation
@@ -309,14 +309,19 @@ function renderNode (ele) {
   const memoKey = `${label}-${icon}`
   let r = memoCache[memoKey]
   if (!r) {
-    r = _renderNode(label, icon)
+    r = _renderNode(id(ele), label, icon)
     memoCache[memoKey] = r
   }
   return r
 }
 
-function _renderNode (label, icon) {
-  const glyph = dmx.icons.faGlyph(icon)
+function _renderNode (id, label, icon) {
+  const e = document.querySelector(`.dmx-topic[data-id="${id}"]`)
+  return {
+    width: e.clientWidth,
+    height: e.clientHeight,
+  }
+  /*const glyph = dmx.icons.faGlyph(icon)
   const iconWidth = 0.009 * glyph.width
   const size = measureText(label)
   const width = size.width + iconWidth + 18
@@ -324,7 +329,7 @@ function _renderNode (label, icon) {
   return {
     width,
     height
-  }
+  }*/
 }
 
 function nodeLabel (label) {
@@ -333,6 +338,7 @@ function nodeLabel (label) {
   return label
 }
 
+// TODO: drop it
 function measureText (text) {
   box.textContent = text
   return {
