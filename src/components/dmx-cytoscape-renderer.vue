@@ -2,7 +2,6 @@
   <div class="dmx-cytoscape-renderer" @mousedown.capture="mousedown">
     <img v-if="imageUrl" :src="imageUrl" :style="imageStyle">
     <div class="cytoscape-container" ref="cytoscape-container"></div>
-    <div class="measurement-box" ref="measurement-box"></div>
     <dmx-html-overlay :detail-renderers="detailRenderers" :quill-config="quillConfig"></dmx-html-overlay>
   </div>
 </template>
@@ -22,7 +21,6 @@ export default {
     this.$store.dispatch('_initCytoscape', {
       parent:          this.$parent,
       container:       this.$refs['cytoscape-container'],     // only known in mounted()
-      box:             this.$refs['measurement-box'],         // only known in mounted()
       contextCommands: this.contextCommands,
       dropHandler:     this.dropHandler
     })
@@ -118,11 +116,6 @@ export default {
 
 .dmx-cytoscape-renderer .cytoscape-container {
   height: 100%;
-}
-
-.dmx-cytoscape-renderer .measurement-box {
-  position: absolute;
-  visibility: hidden;
 }
 
 .dmx-cytoscape-renderer > img {

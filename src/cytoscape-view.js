@@ -24,7 +24,6 @@ let eh                  // cytoscape-edgehandles API object
 let iaHandler           // local interaction handlers (object)
                         //  - dropHandler: array of drop handler objects (2 function props: 'isDroppable', 'handleDrop')
 let parent              // the dmx-topicmap-panel (a Vue instance); used as event emitter
-let box                 // the measurement box      // TODO: drop it
 let modifiers           // modifier keys
 let dispatch
 let fisheyeAnimation
@@ -42,10 +41,9 @@ cytoscape.use(require('cytoscape-edge-connections'))
 
 export default class CytoscapeView {
 
-  constructor (container, contextCommands, _iaHandler, _parent, _box, _modifiers, _dispatch) {
+  constructor (container, contextCommands, _iaHandler, _parent, _modifiers, _dispatch) {
     iaHandler = _iaHandler
     parent    = _parent
-    box       = _box
     modifiers = _modifiers
     dispatch  = _dispatch
     cy = instantiateCy(container)
@@ -299,22 +297,11 @@ function instantiateCy (container) {
 
 // Node Rendering
 
-const memoCache = {}
-
 function calcNodeSize (ele) {
   const e = document.querySelector(`.dmx-topic[data-id="${id(ele)}"]`)
   return {
     width: e.clientWidth,
     height: e.clientHeight,
-  }
-}
-
-// TODO: drop it
-function measureText (text) {
-  box.textContent = text
-  return {
-    width: box.clientWidth,
-    height: box.clientHeight
   }
 }
 

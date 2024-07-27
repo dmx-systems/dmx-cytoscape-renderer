@@ -456,16 +456,15 @@ const actions = {
   /**
    * @param   container   the container DOM element for the Cytoscape instance
    * @param   parent      the dmx-topicmap-panel (a Vue instance)
-   * @param   box         the DOM element used for measurement
    */
-  _initCytoscape ({dispatch}, {container, contextCommands, dropHandler, parent, box}) {
+  _initCytoscape ({dispatch}, {container, contextCommands, dropHandler, parent}) {
     const iaHandler = {
       nodeMoved: setTopicPosition,
       addClass,
       removeClass,
       dropHandler
     }
-    cyView = new CytoscapeView(container, contextCommands, iaHandler, parent, box, modifiers, dispatch)
+    cyView = new CytoscapeView(container, contextCommands, iaHandler, parent, modifiers, dispatch)
   },
 
   _syncObject (_, object) {
@@ -665,19 +664,17 @@ function autoRevealAssocs (id) {
 function _revealTopic (topic, pos, autoPan) {
   // update state
   const op = state.topicmap.revealTopic(topic, pos)
-  let p
   // update view
-  if (op.type === 'add' || op.type === 'show') {
-    p = Vue.nextTick().then(() => {        // Cytoscape node sizing relies on up-to-date topic DOM
+  return {
+    op,
+    p: op.type === 'add' || op.type === 'show' ? Vue.nextTick().then(() => {
+      // Cytoscape node sizing relies on up-to-date topic DOM
       cyView.addTopic(initPos(op.viewTopic))
-    })
-  } else {
-    p = Promise.resolve()
+      if (autoPan) {
+        cyView.autoPanById(topic.id)
+      }
+    }) : Promise.resolve()
   }
-  if (autoPan) {
-    cyView.autoPanById(topic.id)
-  }
-  return {op, p}
 }
 
 /**
