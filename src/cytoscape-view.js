@@ -11,8 +11,6 @@ const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
 const PAN_PADDING = 24          // in pixel     // copy in dmx-detail.vue
 const PAN_PADDING_TOP = 64      // in pixel     // copy in dmx-detail.vue
 
-const MAX_LABEL_LENGTH = 80     // in chars
-
 const onSelectNode   = nodeHandler('select')
 const onSelectEdge   = edgeHandler('select')
 const onUnselectNode = nodeHandler('unselect')
@@ -234,8 +232,8 @@ function instantiateCy (container) {
         style: {
           shape: 'rectangle',
           'background-opacity': 0,
-          width:  ele => renderNode(ele).width,
-          height: ele => renderNode(ele).height,
+          width:  ele => calcNodeSize(ele).width,
+          height: ele => calcNodeSize(ele).height,
           'border-width': 2,
           'border-opacity': 0
         }
@@ -303,39 +301,12 @@ function instantiateCy (container) {
 
 const memoCache = {}
 
-function renderNode (ele) {
-  const label = nodeLabel(ele.data('label'))
-  const icon = ele.data('icon')
-  const memoKey = `${label}-${icon}`
-  let r = memoCache[memoKey]
-  if (!r) {
-    r = _renderNode(id(ele), label, icon)
-    memoCache[memoKey] = r
-  }
-  return r
-}
-
-function _renderNode (id, label, icon) {
-  const e = document.querySelector(`.dmx-topic[data-id="${id}"]`)
+function calcNodeSize (ele) {
+  const e = document.querySelector(`.dmx-topic[data-id="${id(ele)}"]`)
   return {
     width: e.clientWidth,
     height: e.clientHeight,
   }
-  /*const glyph = dmx.icons.faGlyph(icon)
-  const iconWidth = 0.009 * glyph.width
-  const size = measureText(label)
-  const width = size.width + iconWidth + 18
-  const height = size.height + 8
-  return {
-    width,
-    height
-  }*/
-}
-
-function nodeLabel (label) {
-  label = label.length > MAX_LABEL_LENGTH ? label.substr(0, MAX_LABEL_LENGTH) + '…' : label
-  label = label.replace(/&/g, '&amp;').replace(/</g, '&lt;')    // TODO: move to utils?
-  return label
 }
 
 // TODO: drop it
@@ -742,6 +713,7 @@ const playFisheyeAnimation = dmx.utils.debounce(callback => {
  */
 function cyNode (viewTopic) {
   return {
+    // TODO: data still needed?
     data: {
       id:              viewTopic.id,
       label:           viewTopic.value.toString(),    // treat Number/Boolean values as strings, expected by nodeLabel()

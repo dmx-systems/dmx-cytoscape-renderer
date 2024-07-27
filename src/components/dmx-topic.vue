@@ -1,11 +1,13 @@
 <template>
   <div :class="classes" :data-id="viewTopic.id" :style="style">
     <span class="fa icon" :style="iconStyle">{{viewTopic.icon}}</span>
-    <span>{{viewTopic.value}}</span>
+    <span>{{label}}</span>
   </div>
 </template>
 
 <script>
+const MAX_LABEL_LENGTH = 64     // chars
+
 export default {
 
   props: {
@@ -31,6 +33,12 @@ export default {
       return {
         color: this.viewTopic.iconColor
       }
+    },
+
+    label () {
+      let label = this.viewTopic.value.toString()
+      label = label.length > MAX_LABEL_LENGTH ? label.substr(0, MAX_LABEL_LENGTH) + '…' : label
+      return label
     },
 
     selected () {
