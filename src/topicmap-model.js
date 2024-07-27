@@ -709,6 +709,8 @@ function updateTopic (topic) {
         cyView.updateTopic(topic.id, {
           label: topic.value
         })
+        const detail = _detail(topic.id)
+        detail && repositionDetail(detail)
       })
     }
   }
@@ -987,7 +989,6 @@ function createAndShowSelectionDetail () {
  * @return  a promise resolved once the fisheye animation is complete
  */
 function showDetail (detail) {
-  detail.node.addClass('expanded')
   Vue.set(state.details, detail.id, detail)       // Vue.set() triggers dmx-html-overlay rendering
   return Vue.nextTick().then(
     () => adjustDetailSize(detail)
@@ -1079,7 +1080,6 @@ function removeDetail (detail) {
   _removeDetail(detail)
   // update view
   detail.node.off('position')                       // FIXME: do not unregister *all* position handlers?
-  detail.node.removeClass('expanded')
   detail.node.style({width: null, height: null})    // reset size
   cyView.hideEdgeHandle()
   return playRestoreAnimation()
@@ -1097,7 +1097,7 @@ function _removeDetail (detail) {
 }
 
 function updateDetail (object) {
-  const detail = Object.values(state.details).find(detail => detail.id === object.id)
+  const detail = _detail(object.id)
   if (detail) {
     detail.object = object.isType ? object.asType() : object    // logical copy in createDetail()
   }
