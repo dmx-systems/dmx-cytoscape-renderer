@@ -61,6 +61,8 @@ const state = {
                   //    object    The object to render (dmx.Topic, dmx.Assoc)
                   //    node      Getter. The "detail node" (a Cytoscape node). Either "ele" (if "ele" is a node),
                   //              or the "aux node" (if "ele" is an edge). This node is visually styled (border, size).
+                  //    bbr       The rendered bounding box (x1, y1, x2, y2) of the "detail node". Used by dmx-detail
+                  //              component to calculate position of the detail DOM.
                   //    pos       The position of the detail DOM.
                   //    size      The size (in pixel) of the detail DOM (object with "width" and "height" props).
                   //              Needed to calculate "pos".
@@ -147,7 +149,7 @@ const actions = {
    */
   renderTopic (_, {topic, pos, autoPan}) {
     // update state + view
-    const op = _revealTopic(topic, pos, autoPan)
+    const op = _revealTopic(topic, pos, autoPan).op
     autoRevealAssocs(topic.id)
     // update server
     if (_topicmapWritable) {
@@ -177,18 +179,21 @@ const actions = {
 
   renderRelatedTopic (_, {relTopic, pos, autoPan}) {
     // update state + view
-    const topicOp = _revealTopic(relTopic, pos, autoPan)
-    const assocOp = _revealAssoc(relTopic.assoc)
-    autoRevealAssocs(relTopic.id)
-    // update server
-    if (_topicmapWritable) {
-      if (assocOp.type) {
-        // Note: the case the topic is revealed but not the assoc can't happen
-        // Note: if the topic is not revealed (but the assoc is) topicOp.viewTopic is undefined
-        const viewProps = topicOp.viewTopic?.viewProps
-        dmx.rpc.addRelatedTopicToTopicmap(state.topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
+    const result = _revealTopic(relTopic, pos, autoPan)
+    result.p.then(() => {     // Note: Cytoscape edge can only be added once node is added
+      const topicOp = result.op
+      const assocOp = _revealAssoc(relTopic.assoc)
+      autoRevealAssocs(relTopic.id)
+      // update server
+      if (_topicmapWritable) {
+        if (assocOp.type) {
+          // Note: the case the topic is revealed but not the assoc can't happen
+          // Note: if the topic is not revealed (but the assoc is) topicOp.viewTopic is undefined
+          const viewProps = topicOp.viewTopic?.viewProps
+          dmx.rpc.addRelatedTopicToTopicmap(state.topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
+        }
       }
-    }
+    })
   },
 
   /**
@@ -660,14 +665,19 @@ function autoRevealAssocs (id) {
 function _revealTopic (topic, pos, autoPan) {
   // update state
   const op = state.topicmap.revealTopic(topic, pos)
+  let p
   // update view
   if (op.type === 'add' || op.type === 'show') {
-    cyView.addTopic(initPos(op.viewTopic))
+    p = Vue.nextTick().then(() => {        // Cytoscape node sizing relies on up-to-date topic DOM
+      cyView.addTopic(initPos(op.viewTopic))
+    })
+  } else {
+    p = Promise.resolve()
   }
   if (autoPan) {
     cyView.autoPanById(topic.id)
   }
-  return op
+  return {op, p}
 }
 
 /**
@@ -695,7 +705,7 @@ function updateTopic (topic) {
     viewTopic.value = topic.value
     // update view
     if (viewTopic.isVisible()) {
-      Vue.nextTick(() => {        // Cy node sizing relies on up-to-date topic DOM
+      Vue.nextTick(() => {        // Cytoscape node sizing relies on up-to-date topic DOM
         cyView.updateTopic(topic.id, {
           label: topic.value
         })
