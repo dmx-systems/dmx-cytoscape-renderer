@@ -132,7 +132,7 @@ const actions = {
     // Cytoscape node sizing relies on up-to-date topic DOM
     return Vue.nextTick().then(() => {
       cyView.renderTopicmap(topicmap, writable, selection)
-      showPinnedDetails()
+      return showPinnedDetails()
     })
   },
 
