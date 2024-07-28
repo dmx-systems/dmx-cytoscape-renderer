@@ -16,8 +16,6 @@ const onSelectEdge   = edgeHandler('select')
 const onUnselectNode = nodeHandler('unselect')
 const onUnselectEdge = edgeHandler('unselect')
 
-const iconsReady = dmx.icons.init()     // TODO: drop it
-
 let cy                  // Cytoscape instance
 let ec                  // cytoscape-edge-connections API object
 let eh                  // cytoscape-edgehandles API object
@@ -59,20 +57,18 @@ export default class CytoscapeView {
   renderTopicmap (topicmap, writable, _selection) {
     writable ? eh.enable() : eh.disable()
     selection = _selection
-    return iconsReady.then(() => {
-      // Note 1: utilization of cy.batch() would have a detrimental effect on calculating aux node positions of parallel
-      // edges. This is because aux node positions of parallel edges are calculated several times.
-      // Note 2: the cytoscape-edge-connections extension expects an aux node still to exist at the time its edge is
-      // removed. So we must remove the edges first.
-      cy.remove('edge')
-      cy.remove('node')
-      cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))    /* eslint space-in-parens: "off" */
-      ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
-      setViewport({
-        x: topicmap.panX,
-        y: topicmap.panY
-      }, topicmap.zoom)
-    })
+    // Note 1: utilization of cy.batch() would have a detrimental effect on calculating aux node positions of parallel
+    // edges. This is because aux node positions of parallel edges are calculated several times.
+    // Note 2: the cytoscape-edge-connections extension expects an aux node still to exist at the time its edge is
+    // removed. So we must remove the edges first.
+    cy.remove('edge')
+    cy.remove('node')
+    cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))    /* eslint space-in-parens: "off" */
+    ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
+    setViewport({
+      x: topicmap.panX,
+      y: topicmap.panY
+    }, topicmap.zoom)
   }
 
   addTopic (viewTopic) {
@@ -298,7 +294,11 @@ function instantiateCy (container) {
 // Node Rendering
 
 function calcNodeSize (ele) {
-  const e = document.querySelector(`.dmx-topic[data-id="${id(ele)}"]`)
+  const topicId = id(ele)
+  const e = document.querySelector(`.dmx-topic[data-id="${topicId}"]`)
+  if (!e) {
+    throw Error(`Calculating size of Cytoscape node ${topicId} failed (topic DOM not on screen)`)
+  }
   return {
     width: e.clientWidth,
     height: e.clientHeight,

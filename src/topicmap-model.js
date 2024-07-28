@@ -129,7 +129,11 @@ const actions = {
     state.topicmap = topicmap
     state.selection = selection
     state.details = {}
-    return cyView.renderTopicmap(topicmap, writable, selection).then(showPinnedDetails)
+    // Cytoscape node sizing relies on up-to-date topic DOM
+    return Vue.nextTick().then(() => {
+      cyView.renderTopicmap(topicmap, writable, selection)
+      showPinnedDetails()
+    })
   },
 
   // On logout, before the type cache is diminished, we remove in-map details from screen
