@@ -239,17 +239,6 @@ const actions = {
     }
   },
 
-  // TODO: move update-server aspect to main application? Move this action to webclient.js?
-  hideMulti ({dispatch}, idLists) {
-    // update state + view (for immediate visual feedback)
-    idLists.topicIds.forEach(id => dispatch('_hideTopic', id))
-    idLists.assocIds.forEach(id => dispatch('_hideAssoc', id))
-    // update server
-    if (_topicmapWritable) {
-      dmx.rpc.hideMulti(state.topicmap.id, idLists)
-    }
-  },
-
   setTopicPinned (_, {topicId, pinned, showDetails}) {
     // update state
     state.topicmap.getTopic(topicId).setPinned(pinned)
@@ -276,78 +265,8 @@ const actions = {
     }
   },
 
-  /**
-   * Low-level action that updates client state and view.
-   * Server state is *not* updated as done by hideMulti() high-level action (see above).
-   *
-   * Note: there is no high-level action to hide a single topic.
-   * Hiding is always performed as a multi-operation, that is in a single request.
-   */
-  _hideTopic (_, id) {
+  removeObject (_, id) {
     // update state
-    hideAssocsWithPlayer(id)
-    state.topicmap.getTopic(id).setVisibility(false)
-    _removeDetailIfOnscreen(id)
-    // update view
-    cyView.remove(id)
-  },
-
-  /**
-   * Low-level action that updates client state and view.
-   * Server state is *not* updated as done by hideMulti() high-level action (see above).
-   *
-   * Note: there is no high-level action to hide a single assoc.
-   * Hiding is always performed as a multi-operation, that is in a single request.
-   *
-   * Note: its the same code as _deleteAssoc().
-   */
-  _hideAssoc (_, id) {
-    // Note: idempotence is needed for hide-multi
-    if (!state.topicmap.hasAssoc(id)) {
-      return
-    }
-    // update state
-    removeAssocsWithPlayer(id)        // Note: topicmap contexts of *explicitly* hidden assocs are removed
-    state.topicmap.removeAssoc(id)    // Note: topicmap contexts of *explicitly* hidden assocs are removed
-    _removeDetailIfOnscreen(id)
-    // update view
-    cyView.remove(id)
-  },
-
-  /**
-   * Low-level action that updates client state and view when a topic is about to be deleted.
-   * The caller is responsible for updating the server state.
-   *
-   * Note: there is no universal high-level action to delete a single topic.
-   * This is to realize a delete-multi operation as a single request.
-   */
-  _deleteTopic (_, id) {
-    // update state
-    removeAssocsWithPlayer(id)
-    state.topicmap.removeTopic(id)
-    _removeDetailIfOnscreen(id)
-    // update view
-    cyView.remove(id)
-  },
-
-  /**
-   * Low-level action that updates client state and view.
-   * Server state is *not* updated as done by deleteMulti() high-level action (see webclient.js of module
-   * dmx-webclient).
-   *
-   * Note: there is no high-level action to delete a single assoc.
-   * Deleting is always performed as a multi-operation, that is in a single request.
-   *
-   * Note: its the same code as _hideAssoc().
-   */
-  _deleteAssoc (_, id) {
-    // Note: idempotence is needed for delete-multi
-    if (!state.topicmap.hasAssoc(id)) {
-      return
-    }
-    // update state
-    removeAssocsWithPlayer(id)
-    state.topicmap.removeAssoc(id)
     _removeDetailIfOnscreen(id)
     // update view
     cyView.remove(id)
@@ -627,22 +546,6 @@ function removeClass (id, clazz) {
   if (i >= 0) {
     state.topicClasses[id].splice(i, 1)
   }
-}
-
-function hideAssocsWithPlayer (id) {
-  state.topicmap.getAssocsWithPlayer(id).forEach(assoc => {
-    assoc.setVisibility(false)
-    _removeDetailIfOnscreen(assoc.id)
-    hideAssocsWithPlayer(assoc.id)        // recursion
-  })
-}
-
-function removeAssocsWithPlayer (id) {
-  state.topicmap.getAssocsWithPlayer(id).forEach(assoc => {
-    state.topicmap.removeAssoc(assoc.id)
-    _removeDetailIfOnscreen(assoc.id)
-    removeAssocsWithPlayer(assoc.id)      // recursion
-  })
 }
 
 // Update state + view
