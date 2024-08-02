@@ -312,6 +312,8 @@ const actions = {
           cyView.addTopic(viewTopic)                                      // update view
           autoRevealAssocs(topicId)
         } else {
+          // FIXME: call _removeDetailIfOnscreen() for entire assoc cascade. Don't call topicmap.hideAssocsWithPlayer()
+          // but self implement recursion, compare to hideAssocsWithPlayer() in topicmap.js (dmx-topicmaps module)
           state.topicmap.hideAssocsWithPlayer(topicId)                    // update state
           cyView.remove(topicId)                                          // update view
         }
@@ -327,6 +329,8 @@ const actions = {
           viewAssoc.setVisibility(visibility)                             // update state
           cyView.addAssoc(viewAssoc)                                      // update view
         } else {
+          // FIXME: call _removeDetailIfOnscreen() for assoc cascade. Don't call topicmap.removeAssocsWithPlayer()
+          // but self implement recursion, compare to removeAssocsWithPlayer() in topicmap.js (dmx-topicmaps module)
           state.topicmap.removeAssocsWithPlayer(assocId)                  // update state
           state.topicmap.removeAssoc(assocId)                             // update state
           cyView.remove(assocId)                                          // update view
@@ -473,8 +477,8 @@ const actions = {
     ele = _ele
   },
 
-  renderAsUnselected () {
-    unselectElement()?.then?.(playFisheyeAnimationIfDetailsOnscreen)
+  renderAsUnselected (_, noViewUpdate) {
+    unselectElement(noViewUpdate)?.then?.(playFisheyeAnimationIfDetailsOnscreen)
     ele = undefined
   },
 
@@ -739,7 +743,7 @@ function initPos (viewTopic) {
  * @return  if the restore animation is played: a promise resolved once the animation is complete.
  *          Returns undefined if the detail is not on screen. Returns false if the detail is on screen but pinned.
  */
-function unselectElement () {
+function unselectElement (noViewUpdate) {
   if (!ele) {
     // Note: normally "ele" is expected to be defined when entering this function.
     // Normally the route is the source of truth, and changing app state is the *effect* of a route change. But there is
@@ -755,7 +759,9 @@ function unselectElement () {
   // This is why we maintain an explicit "ele" state.
   // Note 2: unselect() removes the element's selection style when manually stripping selection from route.
   // In this situation cy.elements(":selected") would return a non-empty collection.
-  cyView.unselect(ele)
+  if (!noViewUpdate) {
+    cyView.unselect(ele)
+  }
   //
   return removeSelectionDetail()
 }
