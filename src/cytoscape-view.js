@@ -556,6 +556,12 @@ function eventHandlers () {
         topicDragged(dragState.node)
       }
     })
+  }).on('position', 'node', e => {
+    // continuously update client-side position state
+    const node = e.target
+    if (node.data('icon')) {    // ignore aux-nodes and eh-handles
+      iaHandler.nodeMoved(id(node), node.position())
+    }
   }).on('grabon', e => {
     dispatch('_syncActive', id(e.target))
   }).on('freeon', e => {
@@ -565,12 +571,8 @@ function eventHandlers () {
 
 function dragHandler (dragState) {
   return e => {
-    const node = dragState.node
-    // continuously update client-side position state
-    if (node.data('icon')) {    // ignore aux-nodes and eh-handles
-      iaHandler.nodeMoved(id(node), node.position())
-    }
     // hovering
+    const node = dragState.node
     const _node = nodeAt(e.position, node)
     if (_node) {
       if (_node !== dragState.hoverNode && isDroppable(node, _node)) {
