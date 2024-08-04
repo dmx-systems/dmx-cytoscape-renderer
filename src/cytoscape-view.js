@@ -556,12 +556,14 @@ function eventHandlers () {
         topicDragged(dragState.node)
       }
     })
-  }).on('position', 'node', e => {
+  }).on('position', 'node.topic', e => {
     // continuously update client-side position state
     const node = e.target
-    if (node.data('icon')) {    // ignore aux-nodes and eh-handles
-      iaHandler.nodeMoved(id(node), node.position())
-    }
+    iaHandler.topicMoved(id(node), node.position())
+  }).on('position', 'node.aux-node', e => {
+    // continuously update client-side position state
+    const node = e.target
+    iaHandler.assocMoved(edgeId(node))
   }).on('grabon', e => {
     dispatch('_syncActive', id(e.target))
   }).on('freeon', e => {
@@ -702,6 +704,7 @@ const playFisheyeAnimation = dmx.utils.debounce(callback => {
  */
 function cyNode (viewTopic) {
   return {
+    classes: 'topic',
     // TODO: data still needed?
     data: {
       id:              viewTopic.id,

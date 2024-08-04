@@ -121,6 +121,8 @@ const actions = {
   },
 
   /**
+   * Dispatched from external module dmx-topicmap-panel.
+   *
    * @returns   a promise resolved once topicmap rendering is complete.
    */
   renderTopicmap (_, {topicmap, writable, selection}) {
@@ -201,39 +203,36 @@ const actions = {
   },
 
   /**
+   * Dispatched from application to persist topic position (see e.g. DMX platform's dmx-topicmaps module).
+   * TODO: drop this action and manage persistence within this module (respecting "_topicmapWritable")?
+   * TODO: rename to "storeTopicPosition()"
+   *
    * Preconditions:
    * - the topic belongs to the selected topicmap
-   * - the view is up-to-date
-   * - the server is *not* yet up-to-date
+   * - the client-side state and view are up-to-date
+   * - the server-state is *not* yet up-to-date
    */
   setTopicPosition (_, {id, pos}) {
-    // update state
-    setTopicPosition(id, pos)
-    // update view (up-to-date already)
-    // update server
+    // update server state
     if (_topicmapWritable) {
       dmx.rpc.setTopicPosition(state.topicmap.id, id, pos)
     }
   },
 
   /**
+   * Dispatched from application to persist topic positions (see e.g. DMX platform's dmx-topicmaps module).
+   * TODO: drop this action and manage persistence within this module (respecting "_topicmapWritable")?
+   * TODO: rename to "storeTopicPositions()"
+   *
    * Preconditions:
    * - the topics belong to the selected topicmap
-   * - the view is up-to-date
-   * - the server is *not* yet up-to-date
+   * - the client-side state and view are up-to-date
+   * - the server-state is *not* yet up-to-date
    *
    * @param   topicCoords    array of 3-prop objects: 'topicId', 'x', 'y'
    */
   setTopicPositions (_, topicCoords) {
-    // update state
-    topicCoords.forEach(coord =>
-      state.topicmap.getTopic(coord.topicId).setPosition({
-        x: coord.x,
-        y: coord.y
-      })
-    )
-    // update view (up-to-date already)
-    // update server
+    // update server state
     if (_topicmapWritable) {
       dmx.rpc.setTopicPositions(state.topicmap.id, topicCoords)
     }
@@ -386,7 +385,8 @@ const actions = {
    */
   _initCytoscape ({dispatch}, {container, contextCommands, dropHandler, parent}) {
     const iaHandler = {
-      nodeMoved: setTopicPosition,
+      topicMoved: setTopicPosition,
+      assocMoved: repositionDetailIfOnscreen,
       addClass,
       removeClass,
       dropHandler
@@ -534,6 +534,7 @@ export default {
 
 function setTopicPosition (id, pos) {
   state.topicmap.getTopic(id).setPosition(pos)
+  repositionDetailIfOnscreen(id)
 }
 
 function addClass (id, clazz) {
@@ -823,7 +824,6 @@ function createDetail (viewObject) {
       }
     }
   }
-  listenPosition(detail)
   return new Promise(resolve => {
     viewObject.fetchObject().then(object => {
       detail.object = object.isType ? object.asType() : object    // logical copy in updateDetail()
@@ -879,7 +879,6 @@ function createDetailForSelection () {
       }
     }
   }
-  listenPosition(detail)
   return detail
 }
 
@@ -1013,14 +1012,9 @@ function updateDetail (object) {
   }
 }
 
-function listenPosition (detail) {
-  // Note: we could reposition the topic details in the nodeMoved() handler (setTopicPosition()) and would not need an
-  // extra "position" handler then. However for *assoc* details we still need a "position" handler as an assoc's aux-
-  // node is moved programmatically (by the cytoscape-edge-connections extension), not by dragging. So we handle the
-  // detail positioning uniformly for both, topic details and assoc details.
-  detail.node.on('position', () => {
-    repositionDetail(detail)
-  })
+function repositionDetailIfOnscreen (id) {
+  const detail = _detail(id)
+  detail && repositionDetail(detail)
 }
 
 function repositionDetail (detail) {
