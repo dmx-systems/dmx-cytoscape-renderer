@@ -27,7 +27,7 @@ export default class DragState {
       easing: 'ease-in-out-cubic',
       duration: 200
     })
-    this.iaHandler.nodeMoved(this.node.id(), this.nodePosition)   // TODO: update position continuously while animation
+    this.iaHandler.topicMoved(this.node.id(), this.nodePosition)   // TODO: update position continuously while animation
   }
 
   dragged () {

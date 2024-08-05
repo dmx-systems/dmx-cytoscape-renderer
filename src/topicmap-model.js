@@ -547,9 +547,10 @@ function addClass (id, clazz) {
 
 function removeClass (id, clazz) {
   console.log('removeClass', id, clazz)
-  const i = state.topicClasses[id].indexOf(clazz)
-  // Note: while edge dragging if source equals target Cytoscape does not fire "hoverover" but does fire "hoverout",
-  // so when trying to remove "eh-target" class it might not be there (see edgeHandles() in cytoscape-view.js)
+  // Note: while edge dragging if source equals target Cytoscape does not fire "hoverover" but does fire "hoverout".
+  // The same happens if nodes are hovered very fast. So when trying to remove "eh-target" class it might not be
+  // there, or the array is missing completely (see edgeHandles() in cytoscape-view.js).
+  const i = state.topicClasses[id]?.indexOf(clazz)
   if (i >= 0) {
     state.topicClasses[id].splice(i, 1)
   }
