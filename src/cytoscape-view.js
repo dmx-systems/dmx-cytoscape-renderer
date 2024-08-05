@@ -233,11 +233,18 @@ function instantiateCy (container) {
         }
       },
       {
+        selector: 'node.eh-handle',
+        style: {
+          'background-color': HIGHLIGHT_COLOR,
+          width: 12,
+          height: 12
+        }
+      },
+      {
         selector: 'node.aux-node',
         style: {
           width: 6,
           height: 6,
-          'border-width': 2,
           'border-color': HIGHLIGHT_COLOR,
           'border-opacity': 0
         }
@@ -245,15 +252,19 @@ function instantiateCy (container) {
       {
         selector: 'node.aux-node:selected',
         style: {
+          width: 10,
+          height: 10,
+          'border-width': 2,
           'border-opacity': 1
         }
       },
       {
-        selector: 'node.eh-handle',
+        selector: 'node.aux-node.eh-target',
         style: {
-          'background-color': HIGHLIGHT_COLOR,
-          width: 12,
-          height: 12
+          width: 6,
+          height: 6,
+          'border-width': 6,
+          'border-opacity': 1
         }
       },
       {
@@ -446,23 +457,23 @@ function edgeHandles () {
       // console.log('complete', sourceNode.data('label'), targetNode.data('label'))
       emitAssocCreate(sourceNode, targetNode)
       addedEles.remove()
-      iaHandler.removeClass(id(targetNode), 'eh-target')
+      modifyClass(targetNode, 'eh-target', 'removeClass')
     },
     start (sourceNode) {
       // console.log('start', sourceNode.data('label'))
-      iaHandler.addClass(id(sourceNode), 'eh-source')
+      modifyClass(sourceNode, 'eh-source', 'addClass')
     },
     stop (sourceNode) {
       // console.log('stop', sourceNode.data('label'))
-      iaHandler.removeClass(id(sourceNode), 'eh-source')
+      modifyClass(sourceNode, 'eh-source', 'removeClass')
     },
     hoverover (sourceNode, targetNode) {
       // console.log('hoverover', sourceNode.data('label'), targetNode.data('label'))
-      iaHandler.addClass(id(targetNode), 'eh-target')
+      modifyClass(targetNode, 'eh-target', 'addClass')
     },
     hoverout (sourceNode, targetNode) {
       // console.log('hoverout', sourceNode.data('label'), targetNode.data('label'))
-      iaHandler.removeClass(id(targetNode), 'eh-target')
+      modifyClass(targetNode, 'eh-target', 'removeClass')
     }
   })
 }
@@ -472,6 +483,12 @@ function emitAssocCreate (sourceNode, targetNode) {
     playerId1: playerId(sourceNode),
     playerId2: playerId(targetNode)
   })
+}
+
+function modifyClass (node, clazz, func) {
+  if (!isAuxNode(node)) {
+    iaHandler[func](id(node), clazz)
+  }
 }
 
 function isEdgeHandle (ele) {

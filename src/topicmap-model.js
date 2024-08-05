@@ -538,6 +538,7 @@ function setTopicPosition (id, pos) {
 }
 
 function addClass (id, clazz) {
+  console.log('addClass', id, clazz)
   if (!state.topicClasses[id]) {
     Vue.set(state.topicClasses, id, [])
   }
@@ -545,6 +546,7 @@ function addClass (id, clazz) {
 }
 
 function removeClass (id, clazz) {
+  console.log('removeClass', id, clazz)
   const i = state.topicClasses[id].indexOf(clazz)
   // Note: while edge dragging if source equals target Cytoscape does not fire "hoverover" but does fire "hoverout",
   // so when trying to remove "eh-target" class it might not be there (see edgeHandles() in cytoscape-view.js)
@@ -988,8 +990,6 @@ function removeDetail (detail) {
   // update state
   _removeDetail(detail)
   // update view
-  detail.node.off('position')                       // FIXME: do not unregister *all* position handlers?
-  detail.node.style({width: null, height: null})    // reset size
   cyView.hideEdgeHandle()
   return playRestoreAnimation()
 }
