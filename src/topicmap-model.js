@@ -339,7 +339,7 @@ const actions = {
   },
 
   _processDirectives (_, directives) {
-    // console.log(`Cytoscape Renderer: processing ${directives.length} directives`)
+    // console.log(`Cytoscape Renderer: processing ${directives.length} directives`, directives)
     directives.forEach(dir => {
       switch (dir.type) {
       case 'UPDATE_TOPIC':
@@ -538,7 +538,7 @@ function setTopicPosition (id, pos) {
 }
 
 function addClass (id, clazz) {
-  console.log('addClass', id, clazz)
+  // console.log('addClass', id, clazz)
   if (!state.topicClasses[id]) {
     Vue.set(state.topicClasses, id, [])
   }
@@ -546,7 +546,7 @@ function addClass (id, clazz) {
 }
 
 function removeClass (id, clazz) {
-  console.log('removeClass', id, clazz)
+  // console.log('removeClass', id, clazz)
   // Note: while edge dragging if source equals target Cytoscape does not fire "hoverover" but does fire "hoverout".
   // The same happens if nodes are hovered very fast. So when trying to remove "eh-target" class it might not be
   // there, or the array is missing completely (see edgeHandles() in cytoscape-view.js).
@@ -617,12 +617,9 @@ function updateTopic (topic) {
     viewTopic.value = topic.value
     // update view
     if (viewTopic.isVisible()) {
-      Vue.nextTick(() => {        // Cytoscape node sizing relies on up-to-date topic DOM
-        cyView.updateTopic(topic.id, {
-          label: topic.value
-        })
-        const detail = _detail(topic.id)
-        detail && repositionDetail(detail)
+      Vue.nextTick(() => {                  // Cytoscape node sizing relies on up-to-date topic DOM
+        cyView.updateTopic(topic.id, {})    // retrigger Cytoscape node rendering
+        repositionDetailIfOnscreen(topic.id)
       })
     }
   }
@@ -682,11 +679,10 @@ function updateTopicIcons (typeUri) {
       // processes directives.
       //
       // update view
-      cyView.updateTopic(topic.id, {
-        icon:            topic.icon,
-        iconColor:       topic.iconColor,
-        backgroundColor: topic.backgroundColor
-      })
+      // console.log('updateTopicIcons', topic.id)
+      // TODO: immediate feedback, do this *before* saving
+      cyView.updateTopic(topic.id, {})    // retrigger Cytoscape node rendering
+      repositionDetailIfOnscreen(topic.id)
     })
 }
 

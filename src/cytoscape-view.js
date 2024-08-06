@@ -222,7 +222,7 @@ function instantiateCy (container) {
     container,
     style: [
       {
-        selector: 'node[icon]',
+        selector: 'node.topic',
         style: {
           shape: 'rectangle',
           'background-opacity': 0,
@@ -268,7 +268,7 @@ function instantiateCy (container) {
         }
       },
       {
-        selector: 'edge[color]',
+        selector: 'edge.assoc',
         style: {
           width: 3,
           'line-color': 'data(color)',
@@ -454,25 +454,20 @@ function edgeHandles () {
       return !isAuxNode(node) ? 'middle top' : 'middle middle'
     },
     complete: (sourceNode, targetNode, addedEles) => {
-      // console.log('complete', sourceNode.data('label'), targetNode.data('label'))
       emitAssocCreate(sourceNode, targetNode)
       addedEles.remove()
       modifyClass(targetNode, 'eh-target', 'removeClass')
     },
     start (sourceNode) {
-      // console.log('start', sourceNode.data('label'))
       modifyClass(sourceNode, 'eh-source', 'addClass')
     },
     stop (sourceNode) {
-      // console.log('stop', sourceNode.data('label'))
       modifyClass(sourceNode, 'eh-source', 'removeClass')
     },
     hoverover (sourceNode, targetNode) {
-      // console.log('hoverover', sourceNode.data('label'), targetNode.data('label'))
       modifyClass(targetNode, 'eh-target', 'addClass')
     },
     hoverout (sourceNode, targetNode) {
-      // console.log('hoverout', sourceNode.data('label'), targetNode.data('label'))
       modifyClass(targetNode, 'eh-target', 'removeClass')
     }
   })
@@ -579,8 +574,7 @@ function eventHandlers () {
     iaHandler.topicMoved(id(node), node.position())
   }).on('position', 'node.aux-node', e => {
     // continuously update client-side position state
-    const node = e.target
-    iaHandler.assocMoved(edgeId(node))
+    iaHandler.assocMoved(edgeId(e.target))
   }).on('grabon', e => {
     dispatch('_syncActive', id(e.target))
   }).on('freeon', e => {
@@ -722,13 +716,8 @@ const playFisheyeAnimation = dmx.utils.debounce(callback => {
 function cyNode (viewTopic) {
   return {
     classes: 'topic',
-    // TODO: data still needed?
     data: {
-      id:              viewTopic.id,
-      label:           viewTopic.value.toString(),    // treat Number/Boolean values as strings, expected by nodeLabel()
-      icon:            viewTopic.icon,
-      iconColor:       viewTopic.iconColor,           // TODO: drop?
-      backgroundColor: viewTopic.backgroundColor,     // TODO: drop?
+      id: viewTopic.id,
       viewTopic
     },
     position: viewTopic.pos
@@ -744,6 +733,7 @@ function cyNode (viewTopic) {
  */
 function cyEdge (viewAssoc) {
   return {
+    classes: 'assoc',
     data: {
       id:     viewAssoc.id,
       label:  viewAssoc.value,          // FIXME: toString()?
