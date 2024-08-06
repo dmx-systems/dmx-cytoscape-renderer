@@ -63,7 +63,7 @@ export default {
     },
 
     zoom () {
-      return this.$store.state['dmx.topicmaps.topicmap'].zoom
+      return this.$store.state['dmx.topicmaps.topicmap'].topicmap.zoom
     },
 
     activeId () {

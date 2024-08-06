@@ -5,29 +5,23 @@ import DragState from './drag-state'
 // get style from CSS variables
 const style = window.getComputedStyle(document.body)
 const FONT_FAMILY          = style.getPropertyValue('--main-font-family')
-const MAIN_FONT_SIZE       = style.getPropertyValue('--main-font-size')
 const LABEL_FONT_SIZE      = style.getPropertyValue('--label-font-size')
 const HIGHLIGHT_COLOR      = style.getPropertyValue('--highlight-color')
-const BORDER_COLOR_LIGHTER = style.getPropertyValue('--border-color-lighter')
 
 const PAN_PADDING = 24          // in pixel     // copy in dmx-detail.vue
 const PAN_PADDING_TOP = 64      // in pixel     // copy in dmx-detail.vue
-
-const MAX_LABEL_LENGTH = 80     // in chars
 
 const onSelectNode   = nodeHandler('select')
 const onSelectEdge   = edgeHandler('select')
 const onUnselectNode = nodeHandler('unselect')
 const onUnselectEdge = edgeHandler('unselect')
 
-const iconsReady = dmx.icons.init()
-
 let cy                  // Cytoscape instance
 let ec                  // cytoscape-edge-connections API object
 let eh                  // cytoscape-edgehandles API object
-let dropHandler         // array of drop handler objects (2 function props: 'isDroppable', 'handleDrop')
+let iaHandler           // local interaction handlers (object)
+                        //  - dropHandler: array of drop handler objects (2 function props: 'isDroppable', 'handleDrop')
 let parent              // the dmx-topicmap-panel (a Vue instance); used as event emitter
-let box                 // the measurement box
 let modifiers           // modifier keys
 let dispatch
 let fisheyeAnimation
@@ -45,12 +39,11 @@ cytoscape.use(require('cytoscape-edge-connections'))
 
 export default class CytoscapeView {
 
-  constructor (container, contextCommands, _dropHandler, _parent, _box, _modifiers, _dispatch) {
-    dropHandler = _dropHandler
-    parent      = _parent
-    box         = _box
-    modifiers   = _modifiers
-    dispatch    = _dispatch
+  constructor (container, contextCommands, _iaHandler, _parent, _modifiers, _dispatch) {
+    iaHandler = _iaHandler
+    parent    = _parent
+    modifiers = _modifiers
+    dispatch  = _dispatch
     cy = instantiateCy(container)
     ec = cy.edgeConnections()
     eh = edgeHandles()
@@ -64,20 +57,18 @@ export default class CytoscapeView {
   renderTopicmap (topicmap, writable, _selection) {
     writable ? eh.enable() : eh.disable()
     selection = _selection
-    return iconsReady.then(() => {
-      // Note 1: utilization of cy.batch() would have a detrimental effect on calculating aux node positions of parallel
-      // edges. This is because aux node positions of parallel edges are calculated several times.
-      // Note 2: the cytoscape-edge-connections extension expects an aux node still to exist at the time its edge is
-      // removed. So we must remove the edges first.
-      cy.remove('edge')
-      cy.remove('node')
-      cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))    /* eslint space-in-parens: "off" */
-      ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
-      setViewport({
-        x: topicmap.panX,
-        y: topicmap.panY
-      }, topicmap.zoom)
-    })
+    // Note 1: utilization of cy.batch() would have a detrimental effect on calculating aux node positions of parallel
+    // edges. This is because aux node positions of parallel edges are calculated several times.
+    // Note 2: the cytoscape-edge-connections extension expects an aux node still to exist at the time its edge is
+    // removed. So we must remove the edges first.
+    cy.remove('edge')
+    cy.remove('node')
+    cy.add(     topicmap.topics.filter(topic => topic.isVisible()).map(cyNode))    /* eslint space-in-parens: "off" */
+    ec.addEdges(topicmap.assocs.filter(assoc => assoc.isVisible()).map(cyEdge))
+    setViewport({
+      x: topicmap.panX,
+      y: topicmap.panY
+    }, topicmap.zoom)
   }
 
   addTopic (viewTopic) {
@@ -187,9 +178,11 @@ export default class CytoscapeView {
   }
 
   /**
-   * Returns the detail node for the given DMX object.
+   * Returns the detail node for the given DMX object (topic or association).
    *
    * @param   id    a DMX object id (number)
+   *
+   * @return  a topic's node, or an association's aux-node
    */
   detailNode (id) {
     const ele = cyElement(id)
@@ -229,38 +222,14 @@ function instantiateCy (container) {
     container,
     style: [
       {
-        selector: 'node[icon]',
+        selector: 'node.topic',
         style: {
           shape: 'rectangle',
-          'background-image': ele => renderNode(ele).url,
           'background-opacity': 0,
-          width:  ele => renderNode(ele).width,
-          height: ele => renderNode(ele).height,
-          'border-width': 1,
-          'border-color': BORDER_COLOR_LIGHTER
-        }
-      },
-      {
-        selector: 'node[icon]:selected',
-        style: {
+          width:  ele => calcNodeSize(ele).width,
+          height: ele => calcNodeSize(ele).height,
           'border-width': 2,
-          'border-color': HIGHLIGHT_COLOR
-        }
-      },
-      {
-        selector: 'node.aux-node',
-        style: {
-          width: 6,
-          height: 6,
-          'border-width': 2,
-          'border-color': HIGHLIGHT_COLOR,
           'border-opacity': 0
-        }
-      },
-      {
-        selector: 'node.aux-node:selected',
-        style: {
-          'border-opacity': 1
         }
       },
       {
@@ -272,15 +241,34 @@ function instantiateCy (container) {
         }
       },
       {
-        selector: 'node.eh-source, node.eh-target, node.hover',
+        selector: 'node.aux-node',
         style: {
-          'border-width': 2,
+          width: 6,
+          height: 6,
           'border-color': HIGHLIGHT_COLOR,
+          'border-opacity': 0
+        }
+      },
+      {
+        selector: 'node.aux-node:selected',
+        style: {
+          width: 10,
+          height: 10,
+          'border-width': 2,
           'border-opacity': 1
         }
       },
       {
-        selector: 'edge[color]',
+        selector: 'node.aux-node.eh-target',
+        style: {
+          width: 6,
+          height: 6,
+          'border-width': 6,
+          'border-opacity': 1
+        }
+      },
+      {
+        selector: 'edge.assoc',
         style: {
           width: 3,
           'line-color': 'data(color)',
@@ -316,52 +304,15 @@ function instantiateCy (container) {
 
 // Node Rendering
 
-const memoCache = {}
-
-function renderNode (ele) {
-  const label = nodeLabel(ele.data('label'))
-  const icon = ele.data('icon')
-  const iconColor = ele.data('iconColor')
-  const backgroundColor = ele.data('backgroundColor')
-  const memoKey = `${label}-${icon}-${iconColor}-${backgroundColor}`
-  let r = memoCache[memoKey]
-  if (!r) {
-    r = _renderNode(label, icon, iconColor, backgroundColor)
-    memoCache[memoKey] = r
+function calcNodeSize (ele) {
+  const topicId = id(ele)
+  const e = document.querySelector(`.dmx-topic[data-id="${topicId}"]`)
+  if (!e) {
+    throw Error(`Calculating size of Cytoscape node ${topicId} failed (topic DOM not on screen)`)
   }
-  return r
-}
-
-function _renderNode (label, icon, iconColor, backgroundColor) {
-  const glyph = dmx.icons.faGlyph(icon)
-  const iconWidth = 0.009 * glyph.width
-  const size = measureText(label)
-  const width = size.width + iconWidth + 18
-  const height = size.height + 8
-  const x = iconWidth + 12
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
-      <rect x="0" y="0" width="${width}" height="${height}" fill="${backgroundColor}"></rect>
-      <text x="${x}" y="${height - 7}" font-family="${FONT_FAMILY}" font-size="${MAIN_FONT_SIZE}">${label}</text>
-      <path d="${glyph.path}" fill="${iconColor}" transform="scale(0.009 -0.009) translate(600 -2080)"></path>
-    </svg>`
   return {
-    url: 'data:image/svg+xml,' + encodeURIComponent(svg),
-    width,
-    height
-  }
-}
-
-function nodeLabel (label) {
-  label = label.length > MAX_LABEL_LENGTH ? label.substr(0, MAX_LABEL_LENGTH) + '…' : label
-  label = label.replace(/&/g, '&amp;').replace(/</g, '&lt;')    // TODO: move to utils?
-  return label
-}
-
-function measureText (text) {
-  box.textContent = text
-  return {
-    width: box.clientWidth,
-    height: box.clientHeight
+    width: e.clientWidth,
+    height: e.clientHeight,
   }
 }
 
@@ -505,6 +456,19 @@ function edgeHandles () {
     complete: (sourceNode, targetNode, addedEles) => {
       emitAssocCreate(sourceNode, targetNode)
       addedEles.remove()
+      modifyClass(targetNode, 'eh-target', 'removeClass')
+    },
+    start (sourceNode) {
+      modifyClass(sourceNode, 'eh-source', 'addClass')
+    },
+    stop (sourceNode) {
+      modifyClass(sourceNode, 'eh-source', 'removeClass')
+    },
+    hoverover (sourceNode, targetNode) {
+      modifyClass(targetNode, 'eh-target', 'addClass')
+    },
+    hoverout (sourceNode, targetNode) {
+      modifyClass(targetNode, 'eh-target', 'removeClass')
     }
   })
 }
@@ -514,6 +478,12 @@ function emitAssocCreate (sourceNode, targetNode) {
     playerId1: playerId(sourceNode),
     playerId2: playerId(targetNode)
   })
+}
+
+function modifyClass (node, clazz, func) {
+  if (!isAuxNode(node)) {
+    iaHandler[func](id(node), clazz)
+  }
 }
 
 function isEdgeHandle (ele) {
@@ -584,7 +554,7 @@ function eventHandlers () {
       })
     }
   }).on('tapstart', 'node', e => {
-    const dragState = new DragState(e.target)
+    const dragState = new DragState(e.target, iaHandler)
     const handler = dragHandler(dragState)
     cy.on('tapdrag', handler)
     cy.one('tapend', e => {
@@ -598,6 +568,13 @@ function eventHandlers () {
         topicDragged(dragState.node)
       }
     })
+  }).on('position', 'node.topic', e => {
+    // continuously update client-side position state
+    const node = e.target
+    iaHandler.topicMoved(id(node), node.position())
+  }).on('position', 'node.aux-node', e => {
+    // continuously update client-side position state
+    iaHandler.assocMoved(edgeId(e.target))
   }).on('grabon', e => {
     dispatch('_syncActive', id(e.target))
   }).on('freeon', e => {
@@ -607,9 +584,11 @@ function eventHandlers () {
 
 function dragHandler (dragState) {
   return e => {
-    const _node = nodeAt(e.position, dragState.node)
+    // hovering
+    const node = dragState.node
+    const _node = nodeAt(e.position, node)
     if (_node) {
-      if (_node !== dragState.hoverNode && isDroppable(dragState.node, _node)) {
+      if (_node !== dragState.hoverNode && isDroppable(node, _node)) {
         dragState.hoverNode && dragState.unhover()
         dragState.hoverNode = _node
         dragState.hover()
@@ -642,7 +621,7 @@ function isInside (pos, node) {
 }
 
 function isDroppable (node1, node2) {
-  return dropHandler.map(handler => {
+  return iaHandler.dropHandler.map(handler => {
     // Note: dragging an edge handle fires drag events as well. These must not be treated as a drag-n-drop operation.
     // Handlers must not be called ('viewTopic' data is undefined).
     const topic1 = node1.data('viewTopic')
@@ -654,7 +633,7 @@ function isDroppable (node1, node2) {
 }
 
 function handleDrop (viewTopic1, viewTopic2) {
-  dropHandler.forEach(handler => handler.handleDrop && handler.handleDrop(viewTopic1, viewTopic2))
+  iaHandler.dropHandler.forEach(handler => handler.handleDrop && handler.handleDrop(viewTopic1, viewTopic2))
 }
 
 function topicDragged (node) {
@@ -736,12 +715,9 @@ const playFisheyeAnimation = dmx.utils.debounce(callback => {
  */
 function cyNode (viewTopic) {
   return {
+    classes: 'topic',
     data: {
-      id:              viewTopic.id,
-      label:           viewTopic.value.toString(),    // treat Number/Boolean values as strings, expected by nodeLabel()
-      icon:            viewTopic.icon,
-      iconColor:       viewTopic.iconColor,
-      backgroundColor: viewTopic.backgroundColor,
+      id: viewTopic.id,
       viewTopic
     },
     position: viewTopic.pos
@@ -757,6 +733,7 @@ function cyNode (viewTopic) {
  */
 function cyEdge (viewAssoc) {
   return {
+    classes: 'assoc',
     data: {
       id:     viewAssoc.id,
       label:  viewAssoc.value,          // FIXME: toString()?
@@ -797,14 +774,14 @@ function edgeId (node) {
   return Number(ec.edgeId(node))
 }
 
-// copy in dmx-detail-layer.vue
+// copy in dmx-html-overlay.vue
 function id (ele) {
   // Note: cytoscape element IDs are strings
   return Number(ele.id())
 }
 
 /**
- * Returns the Cytoscape element with the given ID.
+ * Returns the Cytoscape element (node or edge) with the given ID.
  *
  * @param   id      a DMX object id (number)
  *
