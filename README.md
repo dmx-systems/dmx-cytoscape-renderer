@@ -1,8 +1,17 @@
 # DMX 5 Cytoscape Renderer
 
-A DMX 5 topicmap renderer as a composable GUI component.
+A DMX 5 topicmap renderer as a reusable GUI component.
 
 ## Version History
+
+**3.5** -- Aug 8, 2024
+
+* Major bug fix:
+    * Topic labels and icons appear correctly on canvas (since DMX 5.3.4 there was a regression in certain browsers)
+        * Topic labels and icons on canvas now render as DOM, no SVG anymore
+        * No need to load Fontawesome SVG glyphs anymore, 450K less network traffic
+* Improvements:
+    * Minor visual improvement during create-association (drag'n'drop)
 
 **3.0.1** -- Jun 21, 2023
 
