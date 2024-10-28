@@ -160,16 +160,19 @@ const actions = {
    */
   renderTopic (_, {topic, pos, autoPan}) {
     // update state + view
-    const op = _revealTopic(topic, pos, autoPan).op
-    autoRevealAssocs(topic.id)
-    // update server
-    if (_topicmapWritable) {
-      if (op.type === 'add') {
-        dmx.rpc.addTopicToTopicmap(state.topicmap.id, topic.id, op.viewTopic.viewProps)
-      } else if (op.type === 'show') {
-        dmx.rpc.setTopicVisibility(state.topicmap.id, topic.id, true)
+    const result = _revealTopic(topic, pos, autoPan)
+    result.p.then(() => {     // Note: Cytoscape edge can only be added once node is added
+      autoRevealAssocs(topic.id)
+      // update server
+      if (_topicmapWritable) {
+        const op = result.op
+        if (op.type === 'add') {
+          dmx.rpc.addTopicToTopicmap(state.topicmap.id, topic.id, op.viewTopic.viewProps)
+        } else if (op.type === 'show') {
+          dmx.rpc.setTopicVisibility(state.topicmap.id, topic.id, true)
+        }
       }
-    }
+    })
   },
 
   renderAssoc (_, assoc) {
