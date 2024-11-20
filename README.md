@@ -4,6 +4,10 @@ A DMX 5 topicmap renderer as a reusable GUI component.
 
 ## Version History
 
+**3.5.1** -- Nov 20, 2024
+
+* Fix: reveal sole topic (w/o assoc)
+
 **3.5** -- Aug 8, 2024
 
 * Major bug fix:

@@ -1,6 +1,6 @@
 {
   "name": "dmx-cytoscape-renderer",
-  "version": "3.5.0",
+  "version": "3.5.1",
   "description": "A DMX 5 topicmap renderer as a reusable GUI component",
   "author": "Jörg Richter <jri@dmx.berlin>",
   "license": "AGPL-3.0",
