@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import {mapState} from 'vuex'
+import { mapState } from 'vuex'
 import dmx from 'dmx-api'
 
 const PAN_PADDING_TOP = 32      // in pixel     // copy in cytoscape-view.js    // experimental

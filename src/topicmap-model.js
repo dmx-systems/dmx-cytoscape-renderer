@@ -17,7 +17,7 @@
 */
 
 import CytoscapeView from './cytoscape-view'
-import Vue from 'vue'
+import { nextTick } from 'vue'
 import dmx from 'dmx-api'
 
 const AUTO_LAYOUT = false
@@ -137,7 +137,7 @@ const actions = {
     state.selection = selection
     state.details = {}
     // Cytoscape node sizing relies on up-to-date topic DOM
-    return Vue.nextTick().then(() => {
+    return nextTick().then(() => {
       cyView.renderTopicmap(topicmap, writable, selection)
       return showPinnedDetails()
     })
@@ -548,7 +548,7 @@ function setTopicPosition (id, pos) {
 function addClass (id, clazz) {
   // console.log('addClass', id, clazz)
   if (!state.topicClasses[id]) {
-    Vue.set(state.topicClasses, id, [])
+    state.topicClasses[id] = []
   }
   state.topicClasses[id].push(clazz)
 }
@@ -590,7 +590,7 @@ function _revealTopic (topic, pos, autoPan) {
   // update view
   return {
     op,
-    p: op.type === 'add' || op.type === 'show' ? Vue.nextTick().then(() => {
+    p: op.type === 'add' || op.type === 'show' ? nextTick().then(() => {
       // Cytoscape node sizing relies on up-to-date topic DOM
       cyView.addTopic(initPos(op.viewTopic))
       if (autoPan) {
@@ -625,7 +625,7 @@ function updateTopic (topic) {
     viewTopic.value = topic.value
     // update view
     if (viewTopic.isVisible()) {
-      Vue.nextTick(() => {                  // Cytoscape node sizing relies on up-to-date topic DOM
+      nextTick(() => {                      // Cytoscape node sizing relies on up-to-date topic DOM
         cyView.updateTopic(topic.id, {})    // retrigger Cytoscape node rendering
         repositionDetailIfOnscreen(topic.id)
       })
@@ -905,8 +905,8 @@ function createAndShowSelectionDetail () {
  * @return  a promise resolved once the fisheye animation is complete
  */
 function showDetail (detail) {
-  Vue.set(state.details, detail.id, detail)       // Vue.set() triggers dmx-html-overlay rendering
-  return Vue.nextTick().then(
+  state.details[detail.id] = detail
+  return nextTick().then(
     () => adjustDetailSize(detail)
   )
 }
@@ -1007,7 +1007,7 @@ function _removeDetailIfOnscreen (id) {
 
 function _removeDetail (detail) {
   // update state
-  Vue.delete(state.details, detail.id)              // Vue.delete() triggers dmx-html-overlay rendering
+  delete state.details[detail.id]
 }
 
 function updateDetail (object) {
