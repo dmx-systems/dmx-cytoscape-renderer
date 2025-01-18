@@ -48,504 +48,504 @@ let ele                 // The single selection: a selected Cytoscape element (n
 
 const modifiers = {}    // modifier keys
 
-const state = {
-
-  topicmap: undefined,            // The rendered topicmap (dmx.Topicmap)
-
-  topicClasses: {},               // per-topic ID (key) array of class names (value)
-
-  details: {},    // In-map details. Detail records keyed by object ID (created by createDetail() and
-                  // createDetailForSelection()):     ### FIXDOC
-                  //  {
-                  //    id        ID of "object" (Number). May be set before "object" is actually available.
-                  //    object    The object to render (dmx.Topic, dmx.Assoc)
-                  //    node      Getter. The "detail node" (a Cytoscape node). Either "ele" (if "ele" is a node),
-                  //              or the "aux node" (if "ele" is an edge). This node is visually styled (border, size).
-                  //    bbr       The rendered bounding box (x1, y1, x2, y2) of the "detail node". Used by dmx-detail
-                  //              component to calculate position of the detail DOM.
-                  //    pos       The position of the detail DOM (object with "x" and "y" props).
-                  //              Calculated by "adjustDetailSize()".
-                  //    size      The size (in pixel) of the detail DOM (object with "width" and "height" props).
-                  //              Calculated by "adjustDetailSize()".
-                  //    renderedBoundingBox ... of the detail DOM (x1, y1, x2, y2), calculated from "pos" and "size" (a
-                  //              getter). Used for detail auto-panning (see "renderAsSelected()").
-                  //    writable  Getter. True if the current user has WRITE permission for "object" (boolean).
-                  //              Used by dmx-detail component to pass it to the dmx-object-renderer component to
-                  //              control inline editability.
-                  //    pinned    Getter. Whether the detail is pinned (boolean)
-                  //  }
-
-  objectWritable: undefined,      // True if the current user has WRITE permission for the selected object (boolean).
-                                  // Note: the "writable" prop of the selected object's detail record updates
-                                  // reactively. "_object" and "objectWritable" update together, but asynchronously.
-  selection: undefined,           // The selection model for the rendered topicmap (a Selection object, defined in
-                                  // dmx-topicmaps). Initialized together with "topicmap" and "_topicmapWritable" by
-                                  // "renderTopicmap" action.
-                                  // Note: dmx-detail component style updates reactively.
-  activeId: -1                    // ID of active topic, -1 if no one
-                                  // Note: dmx-detail component style updates reactively.
-}
-
-const actions = {
-
-  // Topicmap Panel protocol
-
-  fetchTopicmap (_, id) {
-    return dmx.rpc.getTopicmap(id)
-  },
-
-  fetchTopicmapAppendix ({rootState, dispatch}, topicmap) {
-    // implicit read permission for 1) topic types, 2) assoc types, and 3) role types
-    const p = []
-    const topicTypeUris = []
-    const assocTypeUris = []
-    const roleTypeUris = []
-    topicmap.topics.forEach(topic => {
-      if (!rootState.typeCache.topicTypes[topic.typeUri] && !topicTypeUris.includes(topic.typeUri)) {
-        topicTypeUris.push(topic.typeUri)
-        p.push(dmx.rpc.getTopicTypeImplicitly(topic.id).then(topicType => dispatch('putTopicType', topicType)))
-      }
-    })
-    topicmap.assocs.forEach(assoc => {
-      if (!rootState.typeCache.assocTypes[assoc.typeUri] && !assocTypeUris.includes(assoc.typeUri)) {
-        assocTypeUris.push(assoc.typeUri)
-        p.push(dmx.rpc.getAssocTypeImplicitly(assoc.id).then(assocType => dispatch('putAssocType', assocType)))
-      }
-      const uri1 = assoc.player1.roleTypeUri
-      if (!rootState.typeCache.roleTypes[uri1] && !roleTypeUris.includes(uri1)) {
-        roleTypeUris.push(uri1)
-        p.push(dmx.rpc.getRoleTypeImplicitly(assoc.id, uri1).then(roleType => dispatch('putRoleType', roleType)))
-      }
-      const uri2 = assoc.player2.roleTypeUri
-      if (!rootState.typeCache.roleTypes[uri2] && !roleTypeUris.includes(uri2)) {
-        roleTypeUris.push(uri2)
-        p.push(dmx.rpc.getRoleTypeImplicitly(assoc.id, uri2).then(roleType => dispatch('putRoleType', roleType)))
-      }
-    })
-    return Promise.all(p)
-  },
-
-  /**
-   * Dispatched from external module dmx-topicmap-panel.
-   *
-   * @returns   a promise resolved once topicmap rendering is complete.
-   */
-  renderTopicmap (_, {topicmap, writable, selection}) {
-    _topicmapWritable = writable
-    ele = undefined
-    state.topicmap = topicmap
-    state.selection = selection
-    state.details = {}
-    // Cytoscape node sizing relies on up-to-date topic DOM
-    return nextTick().then(() => {
-      cyView.renderTopicmap(topicmap, writable, selection)
-      return showPinnedDetails()
-    })
-  },
-
-  // On logout, before the type cache is diminished, we remove in-map details from screen
-  // to avoid render errors due to missing types.
-  clearTopicmap () {
-    state.details = {}
-  },
-
-  // Topicmap type specific actions
-
-  /**
-   * Reveals a topic on the topicmap panel.
-   *
-   * @param   topic   the topic to reveal (dmx.Topic).
-   * @param   pos     Optional: the topic position in model coordinates (object with "x", "y" props).
-   *                  If not given it's up to the topicmap renderer to position the topic.
-   */
-  renderTopic (_, {topic, pos, autoPan}) {
-    // update state + view
-    const result = _revealTopic(topic, pos, autoPan)
-    result.p.then(() => {     // Note: Cytoscape edge can only be added once node is added
-      autoRevealAssocs(topic.id)
-      // update server
-      if (_topicmapWritable) {
-        const op = result.op
-        if (op.type === 'add') {
-          dmx.rpc.addTopicToTopicmap(state.topicmap.id, topic.id, op.viewTopic.viewProps)
-        } else if (op.type === 'show') {
-          dmx.rpc.setTopicVisibility(state.topicmap.id, topic.id, true)
-        }
-      }
-    })
-  },
-
-  renderAssoc (_, assoc) {
-    // update state + view
-    const op = _revealAssoc(assoc)
-    // FIXME: auto-assoc-reveal for assocs?
-    // update server
-    if (_topicmapWritable) {
-      if (op.type === 'add') {
-        dmx.rpc.addAssocToTopicmap(state.topicmap.id, assoc.id, op.viewAssoc.viewProps)
-      } else if (op.type === 'show') {
-        // Note: actually never called by DMX webclient. The "renderAssoc" action is only called after assoc creation;
-        // In this case op.type is always "add". In most cases assocs are revealed through "renderRelatedTopic" action.
-        dmx.rpc.setAssocVisibility(state.topicmap.id, assoc.id, true)
-      }
-    }
-  },
-
-  renderRelatedTopic (_, {relTopic, pos, autoPan}) {
-    // update state + view
-    const result = _revealTopic(relTopic, pos, autoPan)
-    result.p.then(() => {     // Note: Cytoscape edge can only be added once node is added
-      const topicOp = result.op
-      const assocOp = _revealAssoc(relTopic.assoc)
-      autoRevealAssocs(relTopic.id)
-      // update server
-      if (_topicmapWritable) {
-        if (assocOp.type) {
-          // Note: the case the topic is revealed but not the assoc can't happen
-          // Note: if the topic is not revealed (but the assoc is) topicOp.viewTopic is undefined
-          const viewProps = topicOp.viewTopic?.viewProps
-          dmx.rpc.addRelatedTopicToTopicmap(state.topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
-        }
-      }
-    })
-  },
-
-  /**
-   * Dispatched from application to persist topic position (see e.g. DMX platform's dmx-topicmaps module).
-   * TODO: drop this action and manage persistence within this module (respecting "_topicmapWritable")?
-   * TODO: rename to "storeTopicPosition()"
-   *
-   * Preconditions:
-   * - the topic belongs to the selected topicmap
-   * - the client-side state and view are up-to-date
-   * - the server-state is *not* yet up-to-date
-   */
-  setTopicPosition (_, {id, pos}) {
-    // update server state
-    if (_topicmapWritable) {
-      dmx.rpc.setTopicPosition(state.topicmap.id, id, pos)
-    }
-  },
-
-  /**
-   * Dispatched from application to persist topic positions (see e.g. DMX platform's dmx-topicmaps module).
-   * TODO: drop this action and manage persistence within this module (respecting "_topicmapWritable")?
-   * TODO: rename to "storeTopicPositions()"
-   *
-   * Preconditions:
-   * - the topics belong to the selected topicmap
-   * - the client-side state and view are up-to-date
-   * - the server-state is *not* yet up-to-date
-   *
-   * @param   topicCoords    array of 3-prop objects: 'topicId', 'x', 'y'
-   */
-  setTopicPositions (_, topicCoords) {
-    // update server state
-    if (_topicmapWritable) {
-      dmx.rpc.setTopicPositions(state.topicmap.id, topicCoords)
-    }
-  },
-
-  setTopicPinned (_, {topicId, pinned, showDetails}) {
-    // update state
-    state.topicmap.getTopic(topicId).setPinned(pinned)
-    // update view
-    removeDetailIfUnpinned(topicId, pinned, showDetails)
-    // update server
-    if (_topicmapWritable) {
-      dmx.rpc.setTopicViewProps(state.topicmap.id, topicId, {
-        'dmx.topicmaps.pinned': pinned
-      })
-    }
-  },
-
-  setAssocPinned (_, {assocId, pinned, showDetails}) {
-    // update state
-    state.topicmap.getAssoc(assocId).setPinned(pinned)
-    // update view
-    removeDetailIfUnpinned(assocId, pinned, showDetails)
-    // update server
-    if (_topicmapWritable) {
-      dmx.rpc.setAssocViewProps(state.topicmap.id, assocId, {
-        'dmx.topicmaps.pinned': pinned
-      })
-    }
-  },
-
-  removeObject (_, id) {
-    // update state
-    _removeDetailIfOnscreen(id)
-    // update view
-    cyView.remove(id)
-  },
-
-  // WebSocket messages
-
-  _addTopicToTopicmap (_, {topicmapId, viewTopic}) {
-    if (topicmapId === state.topicmap.id) {
-      const _viewTopic = new dmx.ViewTopic(viewTopic)
-      state.topicmap.addTopic(_viewTopic)                                 // update state
-      cyView.addTopic(_viewTopic)                                         // update view
-    }
-  },
-
-  _addAssocToTopicmap (_, {topicmapId, viewAssoc}) {
-    if (topicmapId === state.topicmap.id) {
-      const _viewAssoc = new dmx.ViewAssoc(viewAssoc)
-      state.topicmap.addAssoc(_viewAssoc)                                 // update state
-      cyView.addAssoc(_viewAssoc)                                         // update view
-    }
-  },
-
-  _setTopicPosition (_, {topicmapId, topicId, pos}) {
-    if (topicmapId === state.topicmap.id) {
-      // Note: the topic might not be in this topicmap because not readable by current user
-      const viewTopic = state.topicmap.getTopicIfExists(topicId)
-      if (viewTopic) {
-        viewTopic.setPosition(pos)                                        // update state
-        if (viewTopic.isVisible()) {
-          cyView.updateTopicPos(topicId, pos)                             // update view
-        }
-      }
-    }
-  },
-
-  _setTopicVisibility (_, {topicmapId, topicId, visibility}) {
-    if (topicmapId === state.topicmap.id) {
-      const viewTopic = state.topicmap.getTopicIfExists(topicId)
-      if (viewTopic) {
-        viewTopic.setVisibility(visibility)                               // update state
-        if (visibility) {
-          cyView.addTopic(viewTopic)                                      // update view
-          autoRevealAssocs(topicId)
-        } else {
-          // FIXME: call _removeDetailIfOnscreen() for entire assoc cascade. Don't call topicmap.hideAssocsWithPlayer()
-          // but self implement recursion, compare to hideAssocsWithPlayer() in topicmap.js (dmx-topicmaps module)
-          state.topicmap.hideAssocsWithPlayer(topicId)                    // update state
-          cyView.remove(topicId)                                          // update view
-        }
-      }
-    }
-  },
-
-  _setAssocVisibility (_, {topicmapId, assocId, visibility}) {
-    if (topicmapId === state.topicmap.id) {
-      const viewAssoc = state.topicmap.getAssocIfExists(assocId)
-      if (viewAssoc) {
-        if (visibility) {
-          viewAssoc.setVisibility(visibility)                             // update state
-          cyView.addAssoc(viewAssoc)                                      // update view
-        } else {
-          // FIXME: call _removeDetailIfOnscreen() for assoc cascade. Don't call topicmap.removeAssocsWithPlayer()
-          // but self implement recursion, compare to removeAssocsWithPlayer() in topicmap.js (dmx-topicmaps module)
-          state.topicmap.removeAssocsWithPlayer(assocId)                  // update state
-          state.topicmap.removeAssoc(assocId)                             // update state
-          cyView.remove(assocId)                                          // update view
-        }
-      }
-    }
-  },
-
-  _processDirectives (_, directives) {
-    // console.log(`Cytoscape Renderer: processing ${directives.length} directives`, directives)
-    directives.forEach(dir => {
-      switch (dir.type) {
-      case 'UPDATE_TOPIC':
-        const topic = new dmx.Topic(dir.arg)
-        updateTopic(topic)
-        updateDetail(topic)
-        break
-      case 'DELETE_TOPIC':
-        deleteTopic(dir.arg)
-        break
-      case 'UPDATE_ASSOC':
-        const assoc = new dmx.Assoc(dir.arg)
-        updateAssoc(assoc)
-        updateDetail(assoc)
-        break
-      case 'DELETE_ASSOC':
-        deleteAssoc(dir.arg)
-        break
-      case 'UPDATE_TOPIC_TYPE':
-        // TODO: cyView.update() would be sufficient if rendering would rely on viewTopic's computed props instead of
-        // per-instance "data" (see cyNode() in cytoscape-view.js). Like "arrow heads" rendering on role type update.
-        updateTopicIcons(dir.arg.uri)
-        break
-      case 'UPDATE_ASSOC_TYPE':
-        // TODO: cyView.update() would be sufficient if rendering would rely on viewAssoc's computed props instead of
-        // per-instance "data" (see cyEdge() in cytoscape-view.js). Like "arrow heads" rendering on role type update.
-        updateAssocColors(dir.arg.uri)
-        break
-      case 'UPDATE_ROLE_TYPE':
-        cyView.update()
-        break
-      }
-    })
-  },
-
-  // === Cytoscape View ===
-
-  // Module internal actions (dispatched from dmx-cytoscape-renderer components or cytoscape-view.js)
-
-  /**
-   * @param   container   the container DOM element for the Cytoscape instance
-   * @param   parent      the dmx-topicmap-panel (a Vue instance)
-   */
-  _initCytoscape ({dispatch}, {container, contextCommands, dropHandler, parent}) {
-    const iaHandler = {
-      topicMoved: setTopicPosition,
-      assocMoved: repositionDetailIfOnscreen,
-      addClass,
-      removeClass,
-      dropHandler
-    }
-    cyView = new CytoscapeView(container, contextCommands, iaHandler, parent, modifiers, dispatch)
-  },
-
-  _syncObject (_, object) {
-    _object = object
-  },
-
-  _syncWritable (_, writable) {
-    state.objectWritable = writable
-  },
-
-  // Note: no debounce here; consecutive calls might relate to *different* details,
-  // in particular when loading a topicmap with several pinned topics which have images
-  _syncDetailSize (_, id) {
-    // Note: at the time assoc parts arrive the detail size needs to be adjusted.
-    // If the assoc is unselected meanwhile the detail record does not exist anymore.
-    const detail = _detail(id)
-    if (!detail) {
-      console.warn(`adjustDetailSize() when detail ${id} is undefined`)
-    }
-    detail && adjustDetailSize(detail)
-  },
-
-  _syncViewport (_, {pan, zoom}) {
-    // update state
-    state.topicmap.setViewport(pan, zoom)
-    Object.values(state.details).forEach(repositionDetail)
-    // update server
-    if (_topicmapWritable) {
-      dmx.rpc.setTopicmapViewport(state.topicmap.id, pan, zoom)
-    }
-  },
-
-  _syncActive (_, id) {
-    state.activeId = id
-  },
-
-  _setModifiers (_, _modifiers) {
-    Object.assign(modifiers, _modifiers)
-  },
-
-  // Cross-Module
-
-  /**
-   * Renders a topic/assoc as selected, and the previously selected one as unselected, if any.
-   * If requested: shows in-map details and plays the fisheye animation.
-   *
-   * Precondition:
-   * - the topicmap rendering is complete
-   *
-   * Postcondition:
-   * - "ele" state is up-to-date
-   *
-   * @param   id
-   *            id of the topic/assoc to render as selected
-   * @param   p
-   *            a promise resolved once topic/assoc data has arrived (global "object" state is up-to-date).
-   *            Note: the detail's size can only be measured once "object" details are rendered.
-   * @param   showDetails
-   *            whether to show topic/assoc in-map details (boolean)
-   */
-  renderAsSelected (_, {id, p, showDetails}) {
-    // Note: if selectById() throws we don't want create the promise. Otherwise we would get 2 error messages instead of
-    // one due to nested promises. renderAsSelected() runs itself in a promise executor function (before an object can
-    // be rendered as selected the topicmap rendering must be complete).
-    const _ele = cyView.selectById(id)     // selectById() restores selection after switching topicmap
-    // Note: programmatic unselect() is required for browser history navigation. If *interactively* selecting a node
-    // Cytoscape removes the current selection before. In contrast if *programmatically* selecting a node Cytoscape does
-    // *not* remove the current selection.
-    const p2 = ele && unselectElement()
-    //
-    if (showDetails) {
-      // Note: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
-      // available. The actual order of these 2 occasions doesn't matter.
-      Promise.all([p, p2])
-        .then(createAndShowSelectionDetail)
-        .then(() => {
-          cyView.autoPan(detail(id).renderedBoundingBox)
-        })
-    } else {
-      cyView.autoPanForNode(_ele)
-    }
-    //
-    ele = _ele
-  },
-
-  renderAsUnselected (_, noViewUpdate) {
-    unselectElement(noViewUpdate)?.then?.(playFisheyeAnimationIfDetailsOnscreen)
-    ele = undefined
-  },
-
-  /**
-   * Renders an element as selected without displaying the element's details.
-   *
-   * Called by host application to visualize a multi selection, or to visually restore the former selection when a
-   * navigation was aborted (by closing a "Unsaved Changes" warning).
-   */
-  _renderAsSelected (_, id) {
-    // Note: when a navigation was aborted (by closing a "Unsaved Changes" warning) Cytoscape has removed the visual
-    // selection from the former object already and the app calls "_renderAsSelected" in order to visually restore the
-    // former selection. In this case calling "_renderAsSelected" when ele is defined already is not an error.
-    cyView.selectById(id)
-  },
-
-  /**
-   * Renders an element as unselected without removing the element's details (and without playing the restore
-   * animation).
-   *
-   * Called by host application to visually remove a multi selection (e.g. after a route switch).
-   *
-   * @throws  if this component is not in single selection state.
-   */
-  _renderAsUnselected (_, id) {
-    if (!ele) {
-      throw Error(`_renderAsUnselected(${id}) when "ele" is not set`)
-    }
-    cyView.unselectById(id)
-  },
-
-  _removeDetail () {
-    removeSelectionDetail()
-  },
-
-  fitTopicmapViewport () {
-    cyView.fit()
-  },
-
-  resetTopicmapViewport () {
-    cyView.reset()
-  }
-}
-
 export default {
-  state,
-  actions
+
+  state: {
+
+    topicmap: undefined,            // The rendered topicmap (dmx.Topicmap)
+
+    topicClasses: {},               // per-topic ID (key) array of class names (value)
+
+    details: {},    // In-map details. Detail records keyed by object ID (created by createDetail() and
+                    // createDetailForSelection()):     ### FIXDOC
+                    //  {
+                    //    id        ID of "object" (Number). May be set before "object" is actually available.
+                    //    object    The object to render (dmx.Topic, dmx.Assoc)
+                    //    node      Getter. The "detail node" (a Cytoscape node). Either "ele" (if "ele" is a node), or
+                    //              the "aux node" (if "ele" is an edge). This node is visually styled (border, size).
+                    //    bbr       The rendered bounding box (x1, y1, x2, y2) of the "detail node". Used by dmx-detail
+                    //              component to calculate position of the detail DOM.
+                    //    pos       The position of the detail DOM (object with "x" and "y" props).
+                    //              Calculated by "adjustDetailSize()".
+                    //    size      The size (in pixel) of the detail DOM (object with "width" and "height" props).
+                    //              Calculated by "adjustDetailSize()".
+                    //    renderedBoundingBox ... of the detail DOM (x1, y1, x2, y2), calculated from "pos" and "size"
+                    //              (a getter). Used for detail auto-panning (see "renderAsSelected()").
+                    //    writable  Getter. True if the current user has WRITE permission for "object" (boolean).
+                    //              Used by dmx-detail component to pass it to the dmx-object-renderer component to
+                    //              control inline editability.
+                    //    pinned    Getter. Whether the detail is pinned (boolean)
+                    //  }
+
+    objectWritable: undefined,      // True if the current user has WRITE permission for the selected object (boolean).
+                                    // Note: the "writable" prop of the selected object's detail record updates
+                                    // reactively. "_object" and "objectWritable" update together, but asynchronously.
+    selection: undefined,           // The selection model for the rendered topicmap (a Selection object, defined in
+                                    // dmx-topicmaps). Initialized together with "topicmap" and "_topicmapWritable" by
+                                    // "renderTopicmap" action.
+                                    // Note: dmx-detail component style updates reactively.
+    activeId: -1                    // ID of active topic, -1 if no one
+                                    // Note: dmx-detail component style updates reactively.
+  },
+
+  actions: {
+
+    // Topicmap Panel protocol
+
+    fetchTopicmap (_, id) {
+      return dmx.rpc.getTopicmap(id)
+    },
+
+    fetchTopicmapAppendix ({rootState, dispatch}, topicmap) {
+      // implicit read permission for 1) topic types, 2) assoc types, and 3) role types
+      const p = []
+      const topicTypeUris = []
+      const assocTypeUris = []
+      const roleTypeUris = []
+      topicmap.topics.forEach(topic => {
+        if (!rootState.typeCache.topicTypes[topic.typeUri] && !topicTypeUris.includes(topic.typeUri)) {
+          topicTypeUris.push(topic.typeUri)
+          p.push(dmx.rpc.getTopicTypeImplicitly(topic.id).then(topicType => dispatch('putTopicType', topicType)))
+        }
+      })
+      topicmap.assocs.forEach(assoc => {
+        if (!rootState.typeCache.assocTypes[assoc.typeUri] && !assocTypeUris.includes(assoc.typeUri)) {
+          assocTypeUris.push(assoc.typeUri)
+          p.push(dmx.rpc.getAssocTypeImplicitly(assoc.id).then(assocType => dispatch('putAssocType', assocType)))
+        }
+        const uri1 = assoc.player1.roleTypeUri
+        if (!rootState.typeCache.roleTypes[uri1] && !roleTypeUris.includes(uri1)) {
+          roleTypeUris.push(uri1)
+          p.push(dmx.rpc.getRoleTypeImplicitly(assoc.id, uri1).then(roleType => dispatch('putRoleType', roleType)))
+        }
+        const uri2 = assoc.player2.roleTypeUri
+        if (!rootState.typeCache.roleTypes[uri2] && !roleTypeUris.includes(uri2)) {
+          roleTypeUris.push(uri2)
+          p.push(dmx.rpc.getRoleTypeImplicitly(assoc.id, uri2).then(roleType => dispatch('putRoleType', roleType)))
+        }
+      })
+      return Promise.all(p)
+    },
+
+    /**
+     * Dispatched from external module dmx-topicmap-panel.
+     *
+     * @returns   a promise resolved once topicmap rendering is complete.
+     */
+    renderTopicmap ({state}, {topicmap, writable, selection}) {
+      _topicmapWritable = writable
+      ele = undefined
+      state.topicmap = topicmap
+      state.selection = selection
+      state.details = {}
+      // Cytoscape node sizing relies on up-to-date topic DOM
+      return nextTick().then(() => {
+        cyView.renderTopicmap(topicmap, writable, selection)
+        return showPinnedDetails(state)
+      })
+    },
+
+    // On logout, before the type cache is diminished, we remove in-map details from screen
+    // to avoid render errors due to missing types.
+    clearTopicmap ({state}) {
+      state.details = {}
+    },
+
+    // Topicmap type specific actions
+
+    /**
+     * Reveals a topic on the topicmap panel.
+     *
+     * @param   topic   the topic to reveal (dmx.Topic).
+     * @param   pos     Optional: the topic position in model coordinates (object with "x", "y" props).
+     *                  If not given it's up to the topicmap renderer to position the topic.
+     */
+    renderTopic ({state}, {topic, pos, autoPan}) {
+      // update state + view
+      const result = _revealTopic(topic, pos, autoPan, state)
+      result.p.then(() => {     // Note: Cytoscape edge can only be added once node is added
+        autoRevealAssocs(topic.id, state)
+        // update server
+        if (_topicmapWritable) {
+          const op = result.op
+          if (op.type === 'add') {
+            dmx.rpc.addTopicToTopicmap(state.topicmap.id, topic.id, op.viewTopic.viewProps)
+          } else if (op.type === 'show') {
+            dmx.rpc.setTopicVisibility(state.topicmap.id, topic.id, true)
+          }
+        }
+      })
+    },
+
+    renderAssoc ({state}, assoc) {
+      // update state + view
+      const op = _revealAssoc(assoc, state)
+      // FIXME: auto-assoc-reveal for assocs?
+      // update server
+      if (_topicmapWritable) {
+        if (op.type === 'add') {
+          dmx.rpc.addAssocToTopicmap(state.topicmap.id, assoc.id, op.viewAssoc.viewProps)
+        } else if (op.type === 'show') {
+          // Note: actually never called by DMX webclient. The "renderAssoc" action is only called after assoc creation;
+          // In this case op.type is always "add". In most cases assocs are revealed through "renderRelatedTopic"
+          // action.
+          dmx.rpc.setAssocVisibility(state.topicmap.id, assoc.id, true)
+        }
+      }
+    },
+
+    renderRelatedTopic ({state}, {relTopic, pos, autoPan}) {
+      // update state + view
+      const result = _revealTopic(relTopic, pos, autoPan, state)
+      result.p.then(() => {     // Note: Cytoscape edge can only be added once node is added
+        const topicOp = result.op
+        const assocOp = _revealAssoc(relTopic.assoc, state)
+        autoRevealAssocs(relTopic.id, state)
+        // update server
+        if (_topicmapWritable) {
+          if (assocOp.type) {
+            // Note: the case the topic is revealed but not the assoc can't happen
+            // Note: if the topic is not revealed (but the assoc is) topicOp.viewTopic is undefined
+            const viewProps = topicOp.viewTopic?.viewProps
+            dmx.rpc.addRelatedTopicToTopicmap(state.topicmap.id, relTopic.id, relTopic.assoc.id, viewProps)
+          }
+        }
+      })
+    },
+
+    /**
+     * Dispatched from application to persist topic position (see e.g. DMX platform's dmx-topicmaps module).
+     * TODO: drop this action and manage persistence within this module (respecting "_topicmapWritable")?
+     * TODO: rename to "storeTopicPosition()"
+     *
+     * Preconditions:
+     * - the topic belongs to the selected topicmap
+     * - the client-side state and view are up-to-date
+     * - the server-state is *not* yet up-to-date
+     */
+    setTopicPosition ({state}, {id, pos}) {
+      // update server state
+      if (_topicmapWritable) {
+        dmx.rpc.setTopicPosition(state.topicmap.id, id, pos)
+      }
+    },
+
+    /**
+     * Dispatched from application to persist topic positions (see e.g. DMX platform's dmx-topicmaps module).
+     * TODO: drop this action and manage persistence within this module (respecting "_topicmapWritable")?
+     * TODO: rename to "storeTopicPositions()"
+     *
+     * Preconditions:
+     * - the topics belong to the selected topicmap
+     * - the client-side state and view are up-to-date
+     * - the server-state is *not* yet up-to-date
+     *
+     * @param   topicCoords    array of 3-prop objects: 'topicId', 'x', 'y'
+     */
+    setTopicPositions ({state}, topicCoords) {
+      // update server state
+      if (_topicmapWritable) {
+        dmx.rpc.setTopicPositions(state.topicmap.id, topicCoords)
+      }
+    },
+
+    setTopicPinned ({state}, {topicId, pinned, showDetails}) {
+      // update state
+      state.topicmap.getTopic(topicId).setPinned(pinned)
+      // update view
+      removeDetailIfUnpinned(topicId, pinned, showDetails, state)
+      // update server
+      if (_topicmapWritable) {
+        dmx.rpc.setTopicViewProps(state.topicmap.id, topicId, {
+          'dmx.topicmaps.pinned': pinned
+        })
+      }
+    },
+
+    setAssocPinned ({state}, {assocId, pinned, showDetails}) {
+      // update state
+      state.topicmap.getAssoc(assocId).setPinned(pinned)
+      // update view
+      removeDetailIfUnpinned(assocId, pinned, showDetails, state)
+      // update server
+      if (_topicmapWritable) {
+        dmx.rpc.setAssocViewProps(state.topicmap.id, assocId, {
+          'dmx.topicmaps.pinned': pinned
+        })
+      }
+    },
+
+    removeObject ({state}, id) {
+      // update state
+      _removeDetailIfOnscreen(id, state)
+      // update view
+      cyView.remove(id)
+    },
+
+    // WebSocket messages
+
+    _addTopicToTopicmap ({state}, {topicmapId, viewTopic}) {
+      if (topicmapId === state.topicmap.id) {
+        const _viewTopic = new dmx.ViewTopic(viewTopic)
+        state.topicmap.addTopic(_viewTopic)                                 // update state
+        cyView.addTopic(_viewTopic)                                         // update view
+      }
+    },
+
+    _addAssocToTopicmap ({state}, {topicmapId, viewAssoc}) {
+      if (topicmapId === state.topicmap.id) {
+        const _viewAssoc = new dmx.ViewAssoc(viewAssoc)
+        state.topicmap.addAssoc(_viewAssoc)                                 // update state
+        cyView.addAssoc(_viewAssoc)                                         // update view
+      }
+    },
+
+    _setTopicPosition ({state}, {topicmapId, topicId, pos}) {
+      if (topicmapId === state.topicmap.id) {
+        // Note: the topic might not be in this topicmap because not readable by current user
+        const viewTopic = state.topicmap.getTopicIfExists(topicId)
+        if (viewTopic) {
+          viewTopic.setPosition(pos)                                        // update state
+          if (viewTopic.isVisible()) {
+            cyView.updateTopicPos(topicId, pos)                             // update view
+          }
+        }
+      }
+    },
+
+    _setTopicVisibility ({state}, {topicmapId, topicId, visibility}) {
+      if (topicmapId === state.topicmap.id) {
+        const viewTopic = state.topicmap.getTopicIfExists(topicId)
+        if (viewTopic) {
+          viewTopic.setVisibility(visibility)                               // update state
+          if (visibility) {
+            cyView.addTopic(viewTopic)                                      // update view
+            autoRevealAssocs(topicId, state)
+          } else {
+            // FIXME: call _removeDetailIfOnscreen() for entire assoc cascade. Don't call
+            // topicmap.hideAssocsWithPlayer() but self implement recursion, compare to
+            // hideAssocsWithPlayer() in topicmap.js (dmx-topicmaps module)
+            state.topicmap.hideAssocsWithPlayer(topicId)                    // update state
+            cyView.remove(topicId)                                          // update view
+          }
+        }
+      }
+    },
+
+    _setAssocVisibility ({state}, {topicmapId, assocId, visibility}) {
+      if (topicmapId === state.topicmap.id) {
+        const viewAssoc = state.topicmap.getAssocIfExists(assocId)
+        if (viewAssoc) {
+          if (visibility) {
+            viewAssoc.setVisibility(visibility)                             // update state
+            cyView.addAssoc(viewAssoc)                                      // update view
+          } else {
+            // FIXME: call _removeDetailIfOnscreen() for assoc cascade. Don't call topicmap.removeAssocsWithPlayer()
+            // but self implement recursion, compare to removeAssocsWithPlayer() in topicmap.js (dmx-topicmaps module)
+            state.topicmap.removeAssocsWithPlayer(assocId)                  // update state
+            state.topicmap.removeAssoc(assocId)                             // update state
+            cyView.remove(assocId)                                          // update view
+          }
+        }
+      }
+    },
+
+    _processDirectives ({state}, directives) {
+      // console.log(`Cytoscape Renderer: processing ${directives.length} directives`, directives)
+      directives.forEach(dir => {
+        switch (dir.type) {
+        case 'UPDATE_TOPIC':
+          const topic = new dmx.Topic(dir.arg)
+          updateTopic(topic, state)
+          updateDetail(topic, state)
+          break
+        case 'DELETE_TOPIC':
+          deleteTopic(dir.arg)
+          break
+        case 'UPDATE_ASSOC':
+          const assoc = new dmx.Assoc(dir.arg)
+          updateAssoc(assoc, state)
+          updateDetail(assoc, state)
+          break
+        case 'DELETE_ASSOC':
+          deleteAssoc(dir.arg)
+          break
+        case 'UPDATE_TOPIC_TYPE':
+          // TODO: cyView.update() would be sufficient if rendering would rely on viewTopic's computed props instead of
+          // per-instance "data" (see cyNode() in cytoscape-view.js). Like "arrow heads" rendering on role type update.
+          updateTopicIcons(dir.arg.uri, state)
+          break
+        case 'UPDATE_ASSOC_TYPE':
+          // TODO: cyView.update() would be sufficient if rendering would rely on viewAssoc's computed props instead of
+          // per-instance "data" (see cyEdge() in cytoscape-view.js). Like "arrow heads" rendering on role type update.
+          updateAssocColors(dir.arg.uri, state)
+          break
+        case 'UPDATE_ROLE_TYPE':
+          cyView.update()
+          break
+        }
+      })
+    },
+
+    // === Cytoscape View ===
+
+    // Module internal actions (dispatched from dmx-cytoscape-renderer components or cytoscape-view.js)
+
+    /**
+     * @param   container   the container DOM element for the Cytoscape instance
+     * @param   parent      the dmx-topicmap-panel (a Vue instance)
+     */
+    _initCytoscape ({state, dispatch}, {container, contextCommands, dropHandler, parent}) {
+      const iaHandler = {
+        topicMoved:  (id, pos)   => setTopicPosition(id, pos, state),
+        assocMoved:  id          => repositionDetailIfOnscreen(id, state),
+        addClass:    (id, clazz) => addClass(id, clazz, state),
+        removeClass: (id, clazz) => removeClass(id, clazz, state),
+        dropHandler
+      }
+      cyView = new CytoscapeView(container, contextCommands, iaHandler, parent, modifiers, dispatch)
+    },
+
+    _syncObject (_, object) {
+      _object = object
+    },
+
+    _syncWritable ({state}, writable) {
+      state.objectWritable = writable
+    },
+
+    // Note: no debounce here; consecutive calls might relate to *different* details,
+    // in particular when loading a topicmap with several pinned topics which have images
+    _syncDetailSize ({state}, id) {
+      // Note: at the time assoc parts arrive the detail size needs to be adjusted.
+      // If the assoc is unselected meanwhile the detail record does not exist anymore.
+      const detail = _detail(id, state)
+      if (!detail) {
+        console.warn(`adjustDetailSize() when detail ${id} is undefined`)
+      }
+      detail && adjustDetailSize(detail)
+    },
+
+    _syncViewport ({state}, {pan, zoom}) {
+      // update state
+      state.topicmap.setViewport(pan, zoom)
+      Object.values(state.details).forEach(repositionDetail)
+      // update server
+      if (_topicmapWritable) {
+        dmx.rpc.setTopicmapViewport(state.topicmap.id, pan, zoom)
+      }
+    },
+
+    _syncActive ({state}, id) {
+      state.activeId = id
+    },
+
+    _setModifiers (_, _modifiers) {
+      Object.assign(modifiers, _modifiers)
+    },
+
+    // Cross-Module
+
+    /**
+     * Renders a topic/assoc as selected, and the previously selected one as unselected, if any.
+     * If requested: shows in-map details and plays the fisheye animation.
+     *
+     * Precondition:
+     * - the topicmap rendering is complete
+     *
+     * Postcondition:
+     * - "ele" state is up-to-date
+     *
+     * @param   id
+     *            id of the topic/assoc to render as selected
+     * @param   p
+     *            a promise resolved once topic/assoc data has arrived (global "object" state is up-to-date).
+     *            Note: the detail's size can only be measured once "object" details are rendered.
+     * @param   showDetails
+     *            whether to show topic/assoc in-map details (boolean)
+     */
+    renderAsSelected ({state}, {id, p, showDetails}) {
+      // Note: if selectById() throws we don't want create the promise. Otherwise we would get 2 error messages instead
+      // of one due to nested promises. renderAsSelected() runs itself in a promise executor function (before an object
+      // can be rendered as selected the topicmap rendering must be complete).
+      const _ele = cyView.selectById(id)     // selectById() restores selection after switching topicmap
+      // Note: programmatic unselect() is required for browser history navigation. If *interactively* selecting a node
+      // Cytoscape removes the current selection before. In contrast if *programmatically* selecting a node Cytoscape
+      // does *not* remove the current selection.
+      const p2 = ele && unselectElement(false, state)     // noViewUpdate=false
+      //
+      if (showDetails) {
+        // Note: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
+        // available. The actual order of these 2 occasions doesn't matter.
+        Promise.all([p, p2])
+          .then(() => createAndShowSelectionDetail(state))
+          .then(() => {
+            cyView.autoPan(detail(id).renderedBoundingBox)
+          })
+      } else {
+        cyView.autoPanForNode(_ele)
+      }
+      //
+      ele = _ele
+    },
+
+    renderAsUnselected ({state}, noViewUpdate) {
+      unselectElement(noViewUpdate, state)?.then?.(() => playFisheyeAnimationIfDetailsOnscreen(state))
+      ele = undefined
+    },
+
+    /**
+     * Renders an element as selected without displaying the element's details.
+     *
+     * Called by host application to visualize a multi selection, or to visually restore the former selection when a
+     * navigation was aborted (by closing a "Unsaved Changes" warning).
+     */
+    _renderAsSelected (_, id) {
+      // Note: when a navigation was aborted (by closing a "Unsaved Changes" warning) Cytoscape has removed the visual
+      // selection from the former object already and the app calls "_renderAsSelected" in order to visually restore the
+      // former selection. In this case calling "_renderAsSelected" when ele is defined already is not an error.
+      cyView.selectById(id)
+    },
+
+    /**
+     * Renders an element as unselected without removing the element's details (and without playing the restore
+     * animation).
+     *
+     * Called by host application to visually remove a multi selection (e.g. after a route switch).
+     *
+     * @throws  if this component is not in single selection state.
+     */
+    _renderAsUnselected (_, id) {
+      if (!ele) {
+        throw Error(`_renderAsUnselected(${id}) when "ele" is not set`)
+      }
+      cyView.unselectById(id)
+    },
+
+    _removeDetail ({state}) {
+      removeSelectionDetail(state)
+    },
+
+    fitTopicmapViewport () {
+      cyView.fit()
+    },
+
+    resetTopicmapViewport () {
+      cyView.reset()
+    }
+  }
 }
 
 // === DMX Model ===
 
 // Update state
 
-function setTopicPosition (id, pos) {
+function setTopicPosition (id, pos, state) {
   state.topicmap.getTopic(id).setPosition(pos)
-  repositionDetailIfOnscreen(id)
+  repositionDetailIfOnscreen(id, state)
 }
 
-function addClass (id, clazz) {
+function addClass (id, clazz, state) {
   // console.log('addClass', id, clazz)
   if (!state.topicClasses[id]) {
     state.topicClasses[id] = []
@@ -553,7 +553,7 @@ function addClass (id, clazz) {
   state.topicClasses[id].push(clazz)
 }
 
-function removeClass (id, clazz) {
+function removeClass (id, clazz, state) {
   // console.log('removeClass', id, clazz)
   // Note: while edge dragging if source equals target Cytoscape does not fire "hoverover" but does fire "hoverout".
   // The same happens if nodes are hovered very fast. So when trying to remove "eh-target" class it might not be
@@ -569,12 +569,12 @@ function removeClass (id, clazz) {
 /**
  * @param   id    a topic ID or an assoc ID
  */
-function autoRevealAssocs (id) {
+function autoRevealAssocs (id, state) {
   state.topicmap.getAssocsWithPlayer(id)
     .filter(viewAssoc => state.topicmap.getOtherPlayer(viewAssoc, id).isVisible())
     .forEach(viewAssoc => {
-      _revealAssoc(viewAssoc)
-      autoRevealAssocs(viewAssoc.id)      // recursion
+      _revealAssoc(viewAssoc, state)
+      autoRevealAssocs(viewAssoc.id, state)      // recursion
     })
 }
 
@@ -584,7 +584,7 @@ function autoRevealAssocs (id) {
  *                    If not given it's up to the topicmap renderer to position the topic.
  * @param   autoPan   Optional: if trueish the topicmap is panned so that the topic is within viewport.
  */
-function _revealTopic (topic, pos, autoPan) {
+function _revealTopic (topic, pos, autoPan, state) {
   // update state
   const op = state.topicmap.revealTopic(topic, pos)
   // update view
@@ -592,7 +592,7 @@ function _revealTopic (topic, pos, autoPan) {
     op,
     p: op.type === 'add' || op.type === 'show' ? nextTick().then(() => {
       // Cytoscape node sizing relies on up-to-date topic DOM
-      cyView.addTopic(initPos(op.viewTopic))
+      cyView.addTopic(initPos(op.viewTopic, state))
       if (autoPan) {
         cyView.autoPanById(topic.id)
       }
@@ -603,7 +603,7 @@ function _revealTopic (topic, pos, autoPan) {
 /**
  * @param   assoc     the assoc to reveal (dmx.Assoc).
  */
-function _revealAssoc (assoc) {
+function _revealAssoc (assoc, state) {
   // update state
   const op = state.topicmap.revealAssoc(assoc)
   // update view
@@ -618,7 +618,7 @@ function _revealAssoc (assoc) {
 /**
  * Processes an UPDATE_TOPIC directive.
  */
-function updateTopic (topic) {
+function updateTopic (topic, state) {
   const viewTopic = state.topicmap.getTopicIfExists(topic.id)
   if (viewTopic) {
     // update state
@@ -627,7 +627,7 @@ function updateTopic (topic) {
     if (viewTopic.isVisible()) {
       nextTick(() => {                      // Cytoscape node sizing relies on up-to-date topic DOM
         cyView.updateTopic(topic.id, {})    // retrigger Cytoscape node rendering
-        repositionDetailIfOnscreen(topic.id)
+        repositionDetailIfOnscreen(topic.id, state)
       })
     }
   }
@@ -636,7 +636,7 @@ function updateTopic (topic) {
 /**
  * Processes an UPDATE_ASSOC directive.
  */
-function updateAssoc (assoc) {
+function updateAssoc (assoc, state) {
   const viewAssoc = state.topicmap.getAssocIfExists(assoc.id)
   if (viewAssoc) {
     // update state
@@ -677,7 +677,7 @@ function deleteAssoc (assoc) {
 /**
  * Processes an UPDATE_TOPIC_TYPE directive.
  */
-function updateTopicIcons (typeUri) {
+function updateTopicIcons (typeUri, state) {
   state.topicmap.topics
     .filter(topic => topic.typeUri === typeUri)
     .filter(topic => topic.isVisible())
@@ -690,14 +690,14 @@ function updateTopicIcons (typeUri) {
       // console.log('updateTopicIcons', topic.id)
       // TODO: immediate feedback, do this *before* saving
       cyView.updateTopic(topic.id, {})    // retrigger Cytoscape node rendering
-      repositionDetailIfOnscreen(topic.id)
+      repositionDetailIfOnscreen(topic.id, state)
     })
 }
 
 /**
  * Processes an UPDATE_ASSOC_TYPE directive.
  */
-function updateAssocColors (typeUri) {
+function updateAssocColors (typeUri, state) {
   state.topicmap.assocs
     .filter(assoc => assoc.typeUri === typeUri)
     .filter(assoc => assoc.isVisible())
@@ -718,7 +718,7 @@ function updateAssocColors (typeUri) {
 /**
  * Auto-position topic if no position is set.
  */
-function initPos (viewTopic) {
+function initPos (viewTopic, state) {
   if (viewTopic.getViewProp('dmx.topicmaps.x') === undefined) {
     const pos = {}
     if (_object) {
@@ -751,7 +751,7 @@ function initPos (viewTopic) {
  * @return  if the restore animation is played: a promise resolved once the animation is complete.
  *          Returns undefined if the detail is not on screen. Returns false if the detail is on screen but pinned.
  */
-function unselectElement (noViewUpdate) {
+function unselectElement (noViewUpdate, state) {
   if (!ele) {
     // Note: normally "ele" is expected to be defined when entering this function.
     // Normally the route is the source of truth, and changing app state is the *effect* of a route change. But there is
@@ -771,7 +771,7 @@ function unselectElement (noViewUpdate) {
     cyView.unselect(ele)
   }
   //
-  return removeSelectionDetail()
+  return removeSelectionDetail(state)
 }
 
 // Details
@@ -779,7 +779,7 @@ function unselectElement (noViewUpdate) {
 /**
  * @return  a promise resolved once the animation is complete.
  */
-function playRestoreAnimation () {
+function playRestoreAnimation (state) {
   return AUTO_LAYOUT ?                                                            /* eslint operator-linebreak: "off" */
     Promise.all(state.topicmap.topics
       .filter(viewTopic => viewTopic.isVisible())
@@ -788,13 +788,13 @@ function playRestoreAnimation () {
     : Promise.resolve()
 }
 
-function showPinnedDetails () {
+function showPinnedDetails (state) {
   state.topicmap.topics
     .filter(topic => topic.isPinned() && topic.isVisible())
-    .forEach(topic => createDetail(topic).then(showDetail))
+    .forEach(topic => createDetail(topic, state).then(() => showDetail(state)))
   state.topicmap.assocs
     .filter(assoc => assoc.isPinned() && assoc.isVisible())
-    .forEach(assoc => createDetail(assoc).then(showDetail))
+    .forEach(assoc => createDetail(assoc, state).then(() => showDetail(state)))
   return state.topicmap
 }
 
@@ -805,7 +805,7 @@ function showPinnedDetails () {
  *
  * @return  a promise for the created detail record
  */
-function createDetail (viewObject) {
+function createDetail (viewObject, state) {
   const id = viewObject.id
   const node = cyView.detailNode(id)
   const detail = {
@@ -851,7 +851,7 @@ function createDetail (viewObject) {
  *
  * @return  the created detail record
  */
-function createDetailForSelection () {
+function createDetailForSelection (state) {
   const id = eleId(ele)
   const node = cyView.detailNode(id)
   let viewObject
@@ -893,18 +893,18 @@ function createDetailForSelection () {
  * @return  a promise resolved once the fisheye animation is complete.
  *          At this moment "detail.pos" and "detail.size" are up-to-date (via side effect).
  */
-function createAndShowSelectionDetail () {
+function createAndShowSelectionDetail (state) {
   if (!ele) {
     console.warn('createDetailForSelection() when "ele" is undefined')
     return
   }
-  return showDetail(createDetailForSelection())
+  return showDetail(createDetailForSelection(state), state)
 }
 
 /**
  * @return  a promise resolved once the fisheye animation is complete
  */
-function showDetail (detail) {
+function showDetail (detail, state) {
   state.details[detail.id] = detail
   return nextTick().then(
     () => adjustDetailSize(detail)
@@ -944,9 +944,9 @@ function adjustDetailSize (detail) {
   })
 }
 
-function removeDetailIfUnpinned (id, pinned, showDetails) {
+function removeDetailIfUnpinned (id, pinned, showDetails, state) {
   if (!pinned && (!isSelected(id) || !showDetails)) {
-    removeDetail(detail(id)).then(playFisheyeAnimationIfDetailsOnscreen)
+    removeDetail(detail(id), state).then(() => playFisheyeAnimationIfDetailsOnscreen(state))
   }
 }
 
@@ -960,15 +960,15 @@ function removeDetailIfUnpinned (id, pinned, showDetails) {
  * @return  if the restore animation is played: a promise resolved once the animation is complete.
  *          Returns undefined if the detail is not on screen. Returns false if the detail is on screen but pinned.
  */
-function removeSelectionDetail () {
-  const detail = selectionDetail()
+function removeSelectionDetail (state) {
+  const detail = selectionDetail(state)
   // Note: the detail record might be removed meanwhile due to async operation (TODO: why excatly?)
   if (!detail) {
     // Note: this is expected behavior if in-map detail are not shown. To avoid this condition more complex state
     // management would be required (in the app's router), in particular in the event of detail panel opening/closing.
     // console.warn(`removeDetail() when detail ${ele.id()} is undefined`)
   }
-  return detail && !detail.pinned && removeDetail(detail)
+  return detail && !detail.pinned && removeDetail(detail, state)
 }
 
 /**
@@ -979,11 +979,11 @@ function removeSelectionDetail () {
  *
  * @return    may undefined
  */
-function selectionDetail () {
+function selectionDetail (state) {
   if (!ele) {
     throw Error('selectionDetail() when nothing is selected')
   }
-  return _detail(eleId(ele))
+  return _detail(eleId(ele), state)
 }
 
 /**
@@ -991,34 +991,34 @@ function selectionDetail () {
  *
  * @return  a promise resolved once the restore animation is complete.
  */
-function removeDetail (detail) {
+function removeDetail (detail, state) {
   // update state
-  _removeDetail(detail)
+  _removeDetail(detail, state)
   // update view
   cyView.hideEdgeHandle()
-  return playRestoreAnimation()
+  return playRestoreAnimation(state)
 }
 
-function _removeDetailIfOnscreen (id) {
+function _removeDetailIfOnscreen (id, state) {
   // update state
-  const detail = _detail(id)
-  detail && _removeDetail(detail)
+  const detail = _detail(id, state)
+  detail && _removeDetail(detail, state)
 }
 
-function _removeDetail (detail) {
+function _removeDetail (detail, state) {
   // update state
   delete state.details[detail.id]
 }
 
-function updateDetail (object) {
-  const detail = _detail(object.id)
+function updateDetail (object, state) {
+  const detail = _detail(object.id, state)
   if (detail) {
     detail.object = object.isType ? object.asType() : object    // logical copy in createDetail()
   }
 }
 
-function repositionDetailIfOnscreen (id) {
-  const detail = _detail(id)
+function repositionDetailIfOnscreen (id, state) {
+  const detail = _detail(id, state)
   detail && repositionDetail(detail)
 }
 
@@ -1026,7 +1026,7 @@ function repositionDetail (detail) {
   detail.bbr = detail.node.renderedBoundingBox({includeOverlays: false})
 }
 
-function playFisheyeAnimationIfDetailsOnscreen () {
+function playFisheyeAnimationIfDetailsOnscreen (state) {
   if (AUTO_LAYOUT && !dmx.utils.isEmpty(state.details)) {
     cyView.playFisheyeAnimation()
   }
@@ -1037,8 +1037,8 @@ function playFisheyeAnimationIfDetailsOnscreen () {
  *
  * @return  the detail record
  */
-function detail (id) {
-  const detail = _detail(id)
+function detail (id, state) {
+  const detail = _detail(id, state)
   if (!detail) {
     throw Error(`detail record ${id} not found`)
   }
@@ -1050,7 +1050,7 @@ function detail (id) {
  *
  * @return  the detail record, or undefined if details are not on screen for that object
  */
-function _detail (id) {
+function _detail (id, state) {
   return state.details[id]
 }
 
