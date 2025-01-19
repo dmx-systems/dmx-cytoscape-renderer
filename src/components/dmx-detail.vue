@@ -1,7 +1,7 @@
 <template>
   <div :class="['dmx-detail', {selected}]" :data-detail-id="detail.id" :style="style">
     <!-- Pin button -->
-    <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="text" :title="pinTitle"
+    <el-button :class="['pin', {unpinned: !pinned}, 'fa', 'fa-thumb-tack']" type="primary" link :title="pinTitle"
       @click="togglePinned">
     </el-button>
     <!--

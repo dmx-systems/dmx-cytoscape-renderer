@@ -480,7 +480,7 @@ export default {
         Promise.all([p, p2])
           .then(() => createAndShowSelectionDetail(state))
           .then(() => {
-            cyView.autoPan(detail(id).renderedBoundingBox)
+            cyView.autoPan(detail(id, state).renderedBoundingBox)
           })
       } else {
         cyView.autoPanForNode(_ele)
@@ -946,7 +946,7 @@ function adjustDetailSize (detail) {
 
 function removeDetailIfUnpinned (id, pinned, showDetails, state) {
   if (!pinned && (!isSelected(id) || !showDetails)) {
-    removeDetail(detail(id), state).then(() => playFisheyeAnimationIfDetailsOnscreen(state))
+    removeDetail(detail(id, state), state).then(() => playFisheyeAnimationIfDetailsOnscreen(state))
   }
 }
 
