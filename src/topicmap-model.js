@@ -791,10 +791,10 @@ function playRestoreAnimation (state) {
 function showPinnedDetails (state) {
   state.topicmap.topics
     .filter(topic => topic.isPinned() && topic.isVisible())
-    .forEach(topic => createDetail(topic, state).then(() => showDetail(state)))
+    .forEach(topic => createDetail(topic, state).then(detail => showDetail(detail, state)))
   state.topicmap.assocs
     .filter(assoc => assoc.isPinned() && assoc.isVisible())
-    .forEach(assoc => createDetail(assoc, state).then(() => showDetail(state)))
+    .forEach(assoc => createDetail(assoc, state).then(detail => showDetail(detail, state)))
   return state.topicmap
 }
 
