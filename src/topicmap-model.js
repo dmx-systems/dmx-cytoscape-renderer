@@ -472,7 +472,7 @@ export default {
       // Note: programmatic unselect() is required for browser history navigation. If *interactively* selecting a node
       // Cytoscape removes the current selection before. In contrast if *programmatically* selecting a node Cytoscape
       // does *not* remove the current selection.
-      const p2 = ele && unselectElement(false, state)     // noViewUpdate=false
+      const p2 = ele && unselectElement(state)
       //
       if (showDetails) {
         // Note: the fisheye animation can only be started once the restore animation is complete, *and* "object" is
@@ -489,8 +489,8 @@ export default {
       ele = _ele
     },
 
-    renderAsUnselected ({state}, noViewUpdate) {
-      unselectElement(noViewUpdate, state)?.then?.(() => playFisheyeAnimationIfDetailsOnscreen(state))
+    renderAsUnselected ({state}) {
+      unselectElement(state)?.then?.(() => playFisheyeAnimationIfDetailsOnscreen(state))
       ele = undefined
     },
 
@@ -751,7 +751,7 @@ function initPos (viewTopic, state) {
  * @return  if the restore animation is played: a promise resolved once the animation is complete.
  *          Returns undefined if the detail is not on screen. Returns false if the detail is on screen but pinned.
  */
-function unselectElement (noViewUpdate, state) {
+function unselectElement (state) {
   if (!ele) {
     // Note: normally "ele" is expected to be defined when entering this function.
     // Normally the route is the source of truth, and changing app state is the *effect* of a route change. But there is
@@ -767,9 +767,7 @@ function unselectElement (noViewUpdate, state) {
   // This is why we maintain an explicit "ele" state.
   // Note 2: unselect() removes the element's selection style when manually stripping selection from route.
   // In this situation cy.elements(":selected") would return a non-empty collection.
-  if (!noViewUpdate) {
-    cyView.unselect(ele)
-  }
+  cyView.unselect(ele)
   //
   return removeSelectionDetail(state)
 }

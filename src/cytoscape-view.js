@@ -112,7 +112,7 @@ export default class CytoscapeView {
    */
   unselect (ele) {
     unregisterUnselectHandlers()
-    ele.unselect()
+    ele.unselect()      // involves element's style/size recalculation
     registerUnselectHandlers()
     return ele
   }
@@ -307,13 +307,15 @@ function instantiateCy (container) {
 function calcNodeSize (ele) {
   const topicId = id(ele)
   const e = document.querySelector(`.dmx-topic[data-id="${topicId}"]`)
-  if (!e) {
-    throw Error(`Calculating size of Cytoscape node ${topicId} failed (topic DOM not on screen)`)
-  }
-  return {
+  return e ? {
     width: e.clientWidth,
     height: e.clientHeight,
+  } : {
+    width: 0,
+    height: 0,
   }
+  // Note: when unselect() is called programmatically in the course of a hide/delete operation, the element's Topic DOM
+  // is removed already. It is safe to return a node size of 0/0 then as the node is about to disappear anyways.
 }
 
 // Context Menus
